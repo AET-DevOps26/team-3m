@@ -4,7 +4,7 @@
 
 Young professionals and retail investors in German-speaking markets lack a unified tool that connects personal expense tracking, investment portfolio management, and AI-driven financial guidance in one place. Existing solutions are fragmented: budgeting apps ignore investment portfolios, brokerage dashboards ignore daily cash flow, and none provide context-aware, tax-relevant advice for the German regulatory environment (Freistellungsauftrag, Vorabpauschale, Quellensteuer).
 
-_Finanzfluss_ Copilot is a Progressive Web App (mobile and desktop) that consolidates personal finance data — transactions, portfolios, market data — and uses a GenAI layer to surface personalized, actionable insights. Stock and ETF data is sourced via Yahoo Finance; the AI component uses Retrieval-Augmented Generation (RAG) over the user's own financial data and curated financial news.
+_Kontor_ is a Progressive Web App (mobile and desktop) that consolidates personal finance data — transactions, portfolios, market data — and uses a GenAI layer to surface personalized, actionable insights. Stock and ETF data is sourced via Yahoo Finance; the AI component uses Retrieval-Augmented Generation (RAG) over the user's own financial data and curated financial news.
 
 ---
 
@@ -123,8 +123,8 @@ Marco receives a reminder that his Freistellungsauftrag is 87 % consumed with tw
 
 ## Constraints
 
-- **Technology**: LangChain-based GenAI service; Yahoo Finance API for market data; microservices architecture.
-- **Platform**: Progressive Web App (no native app store distribution required).
+- **Technology**: Python-based GenAI service; Java Spring Boot Server(s) with jOOQ and Flyway migrations into PostgreSQL; microservices architecture.
+- **Platform**: Progressive React Web App (no native app store distribution required).
 - **Regulatory**: AI outputs must comply with EU AI Act transparency requirements and must not constitute regulated investment advice under MiFID II.
 - **Language / Locale**: Primary locale is German (DE); tax features are scoped to the German regulatory framework in v1. Secondary language is English, but non-German tax features are out of scope for v1.
 - **Data**: No raw financial credentials (bank logins, broker passwords) are stored; only user-uploaded CSV data.

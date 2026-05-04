@@ -103,7 +103,7 @@ Marco receives a reminder that his Freistellungsauftrag is 87 % consumed with tw
 
 **QA-P1** Portfolio overview and charts load within 2 seconds on a standard 4G connection after initial data import.
 
-**QA-P2** AI copilot responses are streamed and the first token appears within 3 seconds of submission.
+**QA-P2** AI advisor responses are streamed and the first token appears within 3 seconds of submission.
 
 ### Security
 

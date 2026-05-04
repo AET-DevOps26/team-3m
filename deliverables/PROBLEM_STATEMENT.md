@@ -11,7 +11,7 @@ _Kontor_ is a Progressive Web App (mobile and desktop) that consolidates persona
 ## Scenarios
 
 **Scenario 1 — The Investor Rebalancing**
-Leon has a portfolio of ETFs and individual stocks. He imports his broker CSV, views his current allocation by sector and region, compares performance against the S&P 500, and asks the AI copilot whether his weighting in tech still makes sense given recent news. The system surfaces a rebalancing suggestion with an explanation grounded in his risk tolerance.
+Leon has a portfolio of ETFs and individual stocks. He imports his broker CSV, views his current allocation by sector and region, compares performance against the S&P 500, and asks the AI advisor whether his weighting in tech still makes sense given recent news. The system surfaces a rebalancing suggestion with an explanation grounded in his risk tolerance.
 
 **Scenario 2 — The Frugal Budgeter**
 Sarah uploads her bank CSV. The app categorises her expenses, visualises spending trends, and the AI identifies that her subscription costs have grown 40 % year-over-year. It suggests three concrete cuts and estimates monthly savings.

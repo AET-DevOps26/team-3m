@@ -89,7 +89,7 @@ Marco receives a reminder that his Freistellungsauftrag is 87 % consumed with tw
 
 **QA-U1** A new user completes the CSV import and views their first portfolio overview within 5 minutes, without external documentation.
 
-**QA-U2** Core interactions (import, view overview, ask copilot) are reachable within 3 taps/clicks from the home screen.
+**QA-U2** Core interactions (import, view overview, ask AI advisor) are reachable within 3 taps/clicks from the home screen.
 
 **QA-U3** The interface is fully responsive and usable on screens from 375 px (mobile) to 1920 px (desktop).
 

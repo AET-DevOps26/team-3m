@@ -17,7 +17,7 @@ Leon has a portfolio of ETFs and individual stocks. He imports his broker CSV, v
 Sarah uploads her bank CSV. The app categorises her expenses, visualises spending trends, and the AI identifies that her subscription costs have grown 40 % year-over-year. It suggests three concrete cuts and estimates monthly savings.
 
 **Scenario 3 — Tax Season**
-Marco receives a reminder that his Freistellungsauftrag is 87 % consumed with two months left in the year. The app flags upcoming dividend payments that will breach the limit and prompts him to review a potential wash-sale opportunity before year-end.
+Marco receives a reminder that his Freistellungsauftrag is 87 % consumed with two months left in the year. The app flags upcoming dividend payments that will breach the limit and helps him review expected taxable dividends, capital gains, and withholding tax before year-end.
 
 ---
 
@@ -57,7 +57,7 @@ Marco receives a reminder that his Freistellungsauftrag is 87 % consumed with tw
 
 **FR-A3** The AI copilot surfaces real-time portfolio recommendations triggered by relevant financial news (RAG pipeline).
 
-### Tax Optimisation & Reporting
+### Tax Reporting & Reminders
 
 **FR-T1** The system reminds the user of Quellensteuer implications for upcoming dividends and capital gains.
 
@@ -65,7 +65,7 @@ Marco receives a reminder that his Freistellungsauftrag is 87 % consumed with tw
 
 **FR-T3** The system sends Vorabpauschale reminders with the estimated amount due at year-end.
 
-**FR-T4** The system identifies potential wash-sale optimisation opportunities and displays them with jurisdiction-specific legal disclaimers.
+**FR-T4** The system generates a tax summary of dividends, capital gains, Quellensteuer, and Freistellungsauftrag utilisation for the selected tax year.
 
 ### Cash Flow & Expense Tracking
 

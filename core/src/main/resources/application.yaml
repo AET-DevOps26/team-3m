@@ -4,3 +4,8 @@ server:
 spring:
   application:
     name: core
+
+app:
+  cors:
+    allowed-origins:
+      - http://localhost:5173

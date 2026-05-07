@@ -1,0 +1,1032 @@
+{
+  "id": "21624a1f-9464-49b2-b728-8a42ab69d21d",
+  "version": "4.0.0",
+  "title": "Analysis Object Model",
+  "type": "ClassDiagram",
+  "nodes": [
+    {
+      "id": "node-user",
+      "width": 190,
+      "height": 190,
+      "type": "class",
+      "position": {
+        "x": 1050,
+        "y": 630
+      },
+      "data": {
+        "name": "User",
+        "methods": [
+          {
+            "id": "method-user-1",
+            "name": "askQuestion()"
+          },
+          {
+            "id": "method-user-2",
+            "name": "importStatement()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "attr-user-financial-goals",
+            "name": "financialGoals"
+          },
+          {
+            "id": "attr-user-preferred-locale",
+            "name": "preferredLocale"
+          },
+          {
+            "id": "2d57ca03-2813-4db8-9ca8-f2eed1d2a390",
+            "name": "riskTolerance"
+          }
+        ]
+      },
+      "measured": {
+        "width": 190,
+        "height": 190
+      }
+    },
+    {
+      "id": "node-financial-account",
+      "width": 210,
+      "height": 130,
+      "type": "class",
+      "position": {
+        "x": 690,
+        "y": 660
+      },
+      "data": {
+        "name": "FinancialAccount",
+        "methods": [],
+        "attributes": [
+          {
+            "id": "attr-financial-account-account-type",
+            "name": "accountType"
+          },
+          {
+            "id": "attr-financial-account-institution",
+            "name": "institution"
+          },
+          {
+            "id": "attr-financial-account-currency",
+            "name": "currency"
+          }
+        ]
+      },
+      "measured": {
+        "width": 210,
+        "height": 130
+      }
+    },
+    {
+      "id": "node-financial-transaction",
+      "width": 230,
+      "height": 190,
+      "type": "class",
+      "position": {
+        "x": 300,
+        "y": 630
+      },
+      "data": {
+        "name": "FinancialTransaction",
+        "methods": [
+          {
+            "id": "method-financial-transaction-1",
+            "name": "categorize()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "attr-financial-transaction-booking-date",
+            "name": "bookingDate"
+          },
+          {
+            "id": "attr-financial-transaction-amount",
+            "name": "amount"
+          },
+          {
+            "id": "attr-financial-transaction-description",
+            "name": "description"
+          },
+          {
+            "id": "attr-financial-transaction-transaction-type",
+            "name": "transactionType"
+          }
+        ]
+      },
+      "measured": {
+        "width": 230,
+        "height": 190
+      }
+    },
+    {
+      "id": "node-budget-envelope",
+      "width": 210,
+      "height": 190,
+      "type": "class",
+      "position": {
+        "x": 150,
+        "y": 910
+      },
+      "data": {
+        "name": "BudgetEnvelope",
+        "methods": [
+          {
+            "id": "method-budget-envelope-1",
+            "name": "trackSpending()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "attr-budget-envelope-name",
+            "name": "name"
+          },
+          {
+            "id": "attr-budget-envelope-spending-limit",
+            "name": "spendingLimit"
+          },
+          {
+            "id": "attr-budget-envelope-current-spending",
+            "name": "currentSpending"
+          },
+          {
+            "id": "04bd07a4-f120-447e-bd6f-3938320975f5",
+            "name": "expenseCategory"
+          }
+        ]
+      },
+      "measured": {
+        "width": 210,
+        "height": 190
+      }
+    },
+    {
+      "id": "node-portfolio",
+      "width": 210,
+      "height": 190,
+      "type": "class",
+      "position": {
+        "x": 1330,
+        "y": 630
+      },
+      "data": {
+        "name": "Portfolio",
+        "methods": [
+          {
+            "id": "method-portfolio-1",
+            "name": "calculateTotalValue()"
+          },
+          {
+            "id": "method-portfolio-2",
+            "name": "compareToBenchmark()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "attr-portfolio-name",
+            "name": "name"
+          },
+          {
+            "id": "attr-portfolio-base-currency",
+            "name": "baseCurrency"
+          },
+          {
+            "id": "attr-portfolio-total-value",
+            "name": "totalValue"
+          }
+        ]
+      },
+      "measured": {
+        "width": 210,
+        "height": 190
+      }
+    },
+    {
+      "id": "node-position",
+      "width": 230,
+      "height": 190,
+      "type": "class",
+      "position": {
+        "x": 1660,
+        "y": 630
+      },
+      "data": {
+        "name": "Position",
+        "methods": [
+          {
+            "id": "method-position-1",
+            "name": "calculateReturn()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "attr-position-quantity",
+            "name": "quantity"
+          },
+          {
+            "id": "attr-position-average-purchase-price",
+            "name": "averagePurchasePrice"
+          },
+          {
+            "id": "attr-position-current-value",
+            "name": "currentValue"
+          },
+          {
+            "id": "attr-position-unrealized-return",
+            "name": "unrealizedReturn"
+          }
+        ]
+      },
+      "measured": {
+        "width": 230,
+        "height": 190
+      }
+    },
+    {
+      "id": "node-asset",
+      "width": 210,
+      "height": 250,
+      "type": "class",
+      "position": {
+        "x": 2000,
+        "y": 600
+      },
+      "data": {
+        "name": "Asset",
+        "methods": [
+          {
+            "id": "method-asset-1",
+            "name": "showDetails()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "attr-asset-symbol",
+            "name": "symbol"
+          },
+          {
+            "id": "attr-asset-name",
+            "name": "name"
+          },
+          {
+            "id": "attr-asset-asset-type",
+            "name": "assetType"
+          },
+          {
+            "id": "attr-asset-country",
+            "name": "country"
+          },
+          {
+            "id": "attr-asset-sector",
+            "name": "sector"
+          },
+          {
+            "id": "attr-asset-management-fee",
+            "name": "managementFee"
+          }
+        ]
+      },
+      "measured": {
+        "width": 210,
+        "height": 250
+      }
+    },
+    {
+      "id": "node-asset-price",
+      "width": 200,
+      "height": 130,
+      "type": "class",
+      "position": {
+        "x": 2370,
+        "y": 560
+      },
+      "data": {
+        "name": "AssetPrice",
+        "methods": [],
+        "attributes": [
+          {
+            "id": "attr-asset-price-current-price",
+            "name": "currentPrice"
+          },
+          {
+            "id": "attr-asset-price-historical-prices",
+            "name": "historicalPrices"
+          },
+          {
+            "id": "attr-asset-price-data-source",
+            "name": "dataSource"
+          }
+        ]
+      },
+      "measured": {
+        "width": 200,
+        "height": 130
+      }
+    },
+    {
+      "id": "node-dividend",
+      "width": 210,
+      "height": 130,
+      "type": "class",
+      "position": {
+        "x": 2370,
+        "y": 730
+      },
+      "data": {
+        "name": "Dividend",
+        "methods": [],
+        "attributes": [
+          {
+            "id": "attr-dividend-payment-date",
+            "name": "paymentDate"
+          },
+          {
+            "id": "attr-dividend-gross-amount",
+            "name": "grossAmount"
+          },
+          {
+            "id": "attr-dividend-withholding-tax",
+            "name": "withholdingTax"
+          }
+        ]
+      },
+      "measured": {
+        "width": 210,
+        "height": 130
+      }
+    },
+    {
+      "id": "node-performance",
+      "width": 230,
+      "height": 190,
+      "type": "class",
+      "position": {
+        "x": 1310,
+        "y": 390
+      },
+      "data": {
+        "name": "Performance",
+        "methods": [
+          {
+            "id": "method-performance-1",
+            "name": "calculateMetrics()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "attr-performance-value-over-time",
+            "name": "valueOverTime"
+          },
+          {
+            "id": "attr-performance-total-return",
+            "name": "totalReturn"
+          },
+          {
+            "id": "attr-performance-volatility",
+            "name": "volatility"
+          },
+          {
+            "id": "attr-performance-internal-rate-of-return",
+            "name": "internalRateOfReturn"
+          }
+        ]
+      },
+      "measured": {
+        "width": 230,
+        "height": 190
+      }
+    },
+    {
+      "id": "node-watchlist",
+      "width": 190,
+      "height": 100,
+      "type": "class",
+      "position": {
+        "x": 1670,
+        "y": 240
+      },
+      "data": {
+        "name": "Watchlist",
+        "methods": [
+          {
+            "id": "method-watchlist-1",
+            "name": "addAsset()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "attr-watchlist-watched-assets",
+            "name": "watchedAssets"
+          }
+        ]
+      },
+      "measured": {
+        "width": 190,
+        "height": 100
+      }
+    },
+    {
+      "id": "node-price-alert",
+      "width": 210,
+      "height": 160,
+      "type": "class",
+      "position": {
+        "x": 2000,
+        "y": 210
+      },
+      "data": {
+        "name": "PriceAlert",
+        "methods": [
+          {
+            "id": "method-price-alert-1",
+            "name": "checkThreshold()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "attr-price-alert-target-price",
+            "name": "targetPrice"
+          },
+          {
+            "id": "attr-price-alert-threshold-direction",
+            "name": "thresholdDirection"
+          },
+          {
+            "id": "attr-price-alert-active-state",
+            "name": "activeState"
+          }
+        ]
+      },
+      "measured": {
+        "width": 210,
+        "height": 160
+      }
+    },
+    {
+      "id": "node-financial-news",
+      "width": 210,
+      "height": 190,
+      "type": "class",
+      "position": {
+        "x": 1850,
+        "y": 960
+      },
+      "data": {
+        "name": "FinancialNews",
+        "methods": [
+          {
+            "id": "method-financial-news-1",
+            "name": "summarize()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "attr-financial-news-headline",
+            "name": "headline"
+          },
+          {
+            "id": "attr-financial-news-source",
+            "name": "source"
+          },
+          {
+            "id": "attr-financial-news-publication-date",
+            "name": "publicationDate"
+          },
+          {
+            "id": "attr-financial-news-summary",
+            "name": "summary"
+          }
+        ]
+      },
+      "measured": {
+        "width": 210,
+        "height": 190
+      }
+    },
+    {
+      "id": "node-advisor-question",
+      "width": 200,
+      "height": 130,
+      "type": "class",
+      "position": {
+        "x": 1220,
+        "y": 950
+      },
+      "data": {
+        "name": "Question",
+        "methods": [
+          {
+            "id": "method-advisor-question-1",
+            "name": "requestInsight()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "attr-advisor-question-question",
+            "name": "question"
+          },
+          {
+            "id": "attr-advisor-question-topic",
+            "name": "topic"
+          }
+        ]
+      },
+      "measured": {
+        "width": 200,
+        "height": 130
+      }
+    },
+    {
+      "id": "node-financial-insight",
+      "width": 230,
+      "height": 190,
+      "type": "class",
+      "position": {
+        "x": 1500,
+        "y": 1260
+      },
+      "data": {
+        "name": "FinancialInsight",
+        "methods": [
+          {
+            "id": "method-financial-insight-1",
+            "name": "explainContext()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "attr-financial-insight-topic",
+            "name": "topic"
+          },
+          {
+            "id": "attr-financial-insight-explanation",
+            "name": "explanation"
+          },
+          {
+            "id": "attr-financial-insight-supporting-context",
+            "name": "supportingContext"
+          },
+          {
+            "id": "attr-financial-insight-non-advice-disclaimer",
+            "name": "nonAdviceDisclaimer"
+          }
+        ]
+      },
+      "measured": {
+        "width": 230,
+        "height": 190
+      }
+    },
+    {
+      "id": "node-recommendation",
+      "width": 220,
+      "height": 160,
+      "type": "class",
+      "position": {
+        "x": 1500,
+        "y": 1520
+      },
+      "data": {
+        "name": "Recommendation",
+        "methods": [
+          {
+            "id": "method-recommendation-1",
+            "name": "estimateEffect()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "attr-recommendation-suggested-action",
+            "name": "suggestedAction"
+          },
+          {
+            "id": "attr-recommendation-rationale",
+            "name": "rationale"
+          },
+          {
+            "id": "attr-recommendation-expected-effect",
+            "name": "expectedEffect"
+          }
+        ]
+      },
+      "measured": {
+        "width": 220,
+        "height": 160
+      }
+    },
+    {
+      "id": "node-tax-allowance",
+      "width": 240,
+      "height": 190,
+      "type": "class",
+      "position": {
+        "x": 830,
+        "y": 920
+      },
+      "data": {
+        "name": "TaxAllowance",
+        "methods": [
+          {
+            "id": "method-tax-allowance-1",
+            "name": "calculateUsage()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "attr-tax-allowance-tax-year",
+            "name": "taxYear"
+          },
+          {
+            "id": "attr-tax-allowance-freistellungsauftrag-limit",
+            "name": "freistellungsauftragLimit"
+          },
+          {
+            "id": "attr-tax-allowance-consumed-amount",
+            "name": "consumedAmount"
+          },
+          {
+            "id": "attr-tax-allowance-remaining-amount",
+            "name": "remainingAmount"
+          }
+        ]
+      },
+      "measured": {
+        "width": 240,
+        "height": 190
+      }
+    },
+    {
+      "id": "node-tax-relevant-event",
+      "width": 220,
+      "height": 160,
+      "type": "class",
+      "position": {
+        "x": 450,
+        "y": 910
+      },
+      "data": {
+        "name": "TaxEvent",
+        "methods": [],
+        "attributes": [
+          {
+            "id": "attr-tax-relevant-event-event-type",
+            "name": "eventType"
+          },
+          {
+            "id": "attr-tax-relevant-event-event-date",
+            "name": "eventDate"
+          },
+          {
+            "id": "attr-tax-relevant-event-taxable-amount",
+            "name": "taxableAmount"
+          },
+          {
+            "id": "attr-tax-relevant-event-withheld-tax",
+            "name": "withheldTax"
+          }
+        ]
+      },
+      "measured": {
+        "width": 220,
+        "height": 160
+      }
+    },
+    {
+      "id": "node-tax-summary",
+      "width": 240,
+      "height": 250,
+      "type": "class",
+      "position": {
+        "x": 590,
+        "y": 1110
+      },
+      "data": {
+        "name": "TaxSummary",
+        "methods": [
+          {
+            "id": "method-tax-summary-1",
+            "name": "summarizeTaxYear()"
+          }
+        ],
+        "attributes": [
+          {
+            "id": "attr-tax-summary-tax-year",
+            "name": "taxYear"
+          },
+          {
+            "id": "attr-tax-summary-dividends",
+            "name": "dividends"
+          },
+          {
+            "id": "attr-tax-summary-capital-gains",
+            "name": "capitalGains"
+          },
+          {
+            "id": "attr-tax-summary-quellensteuer",
+            "name": "quellensteuer"
+          },
+          {
+            "id": "attr-tax-summary-allowance-usage",
+            "name": "allowanceUsage"
+          },
+          {
+            "id": "attr-tax-summary-vorabpauschale-estimate",
+            "name": "vorabpauschaleEstimate"
+          }
+        ]
+      },
+      "measured": {
+        "width": 240,
+        "height": 250
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-user-financial-account",
+      "source": "node-user",
+      "target": "node-financial-account",
+      "type": "ClassAggregation",
+      "sourceHandle": "left",
+      "targetHandle": "right",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-user-portfolio",
+      "source": "node-user",
+      "target": "node-portfolio",
+      "type": "ClassAggregation",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-user-watchlist",
+      "source": "node-user",
+      "target": "node-watchlist",
+      "type": "ClassComposition",
+      "sourceHandle": "top",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-user-advisor-question",
+      "source": "node-user",
+      "target": "node-advisor-question",
+      "type": "ClassAggregation",
+      "sourceHandle": "bottom-mid-right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-user-tax-allowance",
+      "source": "node-user",
+      "target": "node-tax-allowance",
+      "type": "ClassAggregation",
+      "sourceHandle": "bottom-mid-left",
+      "targetHandle": "right",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-financial-account-financial-transaction",
+      "source": "node-financial-account",
+      "target": "node-financial-transaction",
+      "type": "ClassAggregation",
+      "sourceHandle": "left",
+      "targetHandle": "right",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-financial-transaction-budget-envelope",
+      "source": "node-financial-transaction",
+      "target": "node-budget-envelope",
+      "type": "ClassUnidirectional",
+      "sourceHandle": "bottom-left",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-portfolio-position",
+      "source": "node-portfolio",
+      "target": "node-position",
+      "type": "ClassComposition",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-portfolio-performance",
+      "source": "node-portfolio",
+      "target": "node-performance",
+      "type": "ClassComposition",
+      "sourceHandle": "top",
+      "targetHandle": "bottom",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-position-asset",
+      "source": "node-position",
+      "target": "node-asset",
+      "type": "ClassUnidirectional",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-asset-asset-price",
+      "source": "node-asset",
+      "target": "node-asset-price",
+      "type": "ClassAggregation",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-asset-dividend",
+      "source": "node-asset",
+      "target": "node-dividend",
+      "type": "ClassAggregation",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-watchlist-asset",
+      "source": "node-watchlist",
+      "target": "node-asset",
+      "type": "ClassUnidirectional",
+      "sourceHandle": "bottom",
+      "targetHandle": "top-mid-left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-watchlist-price-alert",
+      "source": "node-watchlist",
+      "target": "node-price-alert",
+      "type": "ClassComposition",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-price-alert-asset",
+      "source": "node-price-alert",
+      "target": "node-asset",
+      "type": "ClassUnidirectional",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-financial-news-asset",
+      "source": "node-financial-news",
+      "target": "node-asset",
+      "type": "ClassUnidirectional",
+      "sourceHandle": "top",
+      "targetHandle": "bottom-mid-left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-advisor-question-financial-insight",
+      "source": "node-advisor-question",
+      "target": "node-financial-insight",
+      "type": "ClassUnidirectional",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-financial-insight-financial-transaction",
+      "source": "node-financial-insight",
+      "target": "node-financial-transaction",
+      "type": "ClassDependency",
+      "sourceHandle": "left-bottom",
+      "targetHandle": "bottom",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-financial-insight-position",
+      "source": "node-financial-insight",
+      "target": "node-position",
+      "type": "ClassDependency",
+      "sourceHandle": "right-top",
+      "targetHandle": "bottom",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-financial-insight-financial-news",
+      "source": "node-financial-insight",
+      "target": "node-financial-news",
+      "type": "ClassDependency",
+      "sourceHandle": "right-mid-top",
+      "targetHandle": "bottom",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-financial-insight-recommendation",
+      "source": "node-financial-insight",
+      "target": "node-recommendation",
+      "type": "ClassComposition",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-recommendation-asset",
+      "source": "node-recommendation",
+      "target": "node-asset",
+      "type": "ClassUnidirectional",
+      "sourceHandle": "right",
+      "targetHandle": "bottom",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-recommendation-budget-envelope",
+      "source": "node-recommendation",
+      "target": "node-budget-envelope",
+      "type": "ClassUnidirectional",
+      "sourceHandle": "left",
+      "targetHandle": "bottom",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-tax-allowance-tax-relevant-event",
+      "source": "node-tax-allowance",
+      "target": "node-tax-relevant-event",
+      "type": "ClassAggregation",
+      "sourceHandle": "left-mid-top",
+      "targetHandle": "right",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-tax-allowance-tax-summary",
+      "source": "node-tax-allowance",
+      "target": "node-tax-summary",
+      "type": "ClassComposition",
+      "sourceHandle": "left",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "edge-tax-relevant-event-financial-transaction",
+      "source": "node-tax-relevant-event",
+      "target": "node-financial-transaction",
+      "type": "ClassDependency",
+      "sourceHandle": "top",
+      "targetHandle": "bottom-right",
+      "data": {
+        "points": []
+      }
+    }
+  ],
+  "assessments": {}
+}

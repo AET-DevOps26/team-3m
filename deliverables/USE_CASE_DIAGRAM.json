@@ -1,0 +1,686 @@
+{
+  "id": "0c5182e1-0646-4664-aacd-237d04399c01",
+  "version": "4.0.0",
+  "title": "Use Case Diagram",
+  "type": "UseCaseDiagram",
+  "nodes": [
+    {
+      "id": "0394a8ea-ebd5-467b-9bb5-1b5ee93556e5",
+      "width": 1560,
+      "height": 1460,
+      "type": "useCaseSystem",
+      "position": {
+        "x": 60,
+        "y": -40
+      },
+      "data": {
+        "name": "Kontor"
+      },
+      "measured": {
+        "width": 1560,
+        "height": 1460
+      }
+    },
+    {
+      "id": "grp00001-0000-0000-0000-000000000001",
+      "width": 860,
+      "height": 620,
+      "type": "useCaseSystem",
+      "position": {
+        "x": 230,
+        "y": 0
+      },
+      "data": {
+        "name": "Portfolio Management"
+      },
+      "measured": {
+        "width": 860,
+        "height": 620
+      }
+    },
+    {
+      "id": "grp00001-0000-0000-0000-000000000002",
+      "width": 1040,
+      "height": 260,
+      "type": "useCaseSystem",
+      "position": {
+        "x": 550,
+        "y": 670
+      },
+      "data": {
+        "name": "Financial Research"
+      },
+      "measured": {
+        "width": 1040,
+        "height": 260
+      }
+    },
+    {
+      "id": "grp00001-0000-0000-0000-000000000003",
+      "width": 770,
+      "height": 170,
+      "type": "useCaseSystem",
+      "position": {
+        "x": 730,
+        "y": 1060
+      },
+      "data": {
+        "name": "Tax Reporting"
+      },
+      "measured": {
+        "width": 770,
+        "height": 170
+      }
+    },
+    {
+      "id": "grp00001-0000-0000-0000-000000000004",
+      "width": 550,
+      "height": 240,
+      "type": "useCaseSystem",
+      "position": {
+        "x": 100,
+        "y": 1150
+      },
+      "data": {
+        "name": "Expense Tracking"
+      },
+      "measured": {
+        "width": 550,
+        "height": 240
+      }
+    },
+    {
+      "id": "db39fc2e-728c-438c-9c07-30ea5eb267f6",
+      "width": 100,
+      "height": 150,
+      "type": "useCaseActor",
+      "position": {
+        "x": -110,
+        "y": 660
+      },
+      "data": {
+        "name": "User"
+      },
+      "measured": {
+        "width": 100,
+        "height": 150
+      }
+    },
+    {
+      "id": "85859ada-6713-4936-8c69-b6405e5320fb",
+      "width": 160,
+      "height": 100,
+      "type": "useCase",
+      "position": {
+        "x": 40,
+        "y": 20
+      },
+      "parentId": "grp00001-0000-0000-0000-000000000001",
+      "data": {
+        "name": "Import Transactions"
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "85218df0-1022-491d-92a3-3f3f581bec01",
+      "width": 160,
+      "height": 100,
+      "type": "useCase",
+      "position": {
+        "x": 50,
+        "y": 150
+      },
+      "parentId": "grp00001-0000-0000-0000-000000000001",
+      "data": {
+        "name": "View Portfolio Overview"
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "f08743e0-0103-4542-9377-b3dac9bcd635",
+      "width": 160,
+      "height": 100,
+      "type": "useCase",
+      "position": {
+        "x": 550,
+        "y": 110
+      },
+      "parentId": "grp00001-0000-0000-0000-000000000001",
+      "data": {
+        "name": "View Performance Charts"
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "efea58c9-db78-4975-9c02-f9e4a62b75df",
+      "width": 160,
+      "height": 100,
+      "type": "useCase",
+      "position": {
+        "x": 440,
+        "y": 250
+      },
+      "parentId": "grp00001-0000-0000-0000-000000000001",
+      "data": {
+        "name": "View Performance Metrics"
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "0c9e023e-dd09-4ff3-a859-0cbc4b2d8a2c",
+      "width": 160,
+      "height": 100,
+      "type": "useCase",
+      "position": {
+        "x": 660,
+        "y": 280
+      },
+      "parentId": "grp00001-0000-0000-0000-000000000001",
+      "data": {
+        "name": "View Portfolio Allocation"
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "3c87fb78-09b5-4223-8994-101bb1a66068",
+      "width": 160,
+      "height": 100,
+      "type": "useCase",
+      "position": {
+        "x": 480,
+        "y": 400
+      },
+      "parentId": "grp00001-0000-0000-0000-000000000001",
+      "data": {
+        "name": "Compare Portfolio Against Benchmark"
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "99a3a511-49a2-4f45-b4d3-fc0fc62dddf0",
+      "width": 160,
+      "height": 100,
+      "type": "useCase",
+      "position": {
+        "x": 660,
+        "y": 480
+      },
+      "parentId": "grp00001-0000-0000-0000-000000000001",
+      "data": {
+        "name": "View Dividend Calendar"
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "428af80b-b775-48dc-af17-2e89ab7953b5",
+      "width": 160,
+      "height": 100,
+      "type": "useCase",
+      "position": {
+        "x": 195,
+        "y": 15
+      },
+      "parentId": "grp00001-0000-0000-0000-000000000002",
+      "data": {
+        "name": "Manage Watchlist"
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "3a094d8d-5fe9-4b72-a85e-1832ff9a8b3c",
+      "width": 160,
+      "height": 100,
+      "type": "useCase",
+      "position": {
+        "x": 320,
+        "y": 140
+      },
+      "parentId": "grp00001-0000-0000-0000-000000000002",
+      "data": {
+        "name": "View Asset Details"
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "6ffc607c-eeca-41a7-88de-404a7617d903",
+      "width": 160,
+      "height": 100,
+      "type": "useCase",
+      "position": {
+        "x": 60,
+        "y": 140
+      },
+      "parentId": "grp00001-0000-0000-0000-000000000002",
+      "data": {
+        "name": "Compare Assets"
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "be51c70c-e49e-48a8-873d-1abb1c5be140",
+      "width": 160,
+      "height": 100,
+      "type": "useCase",
+      "position": {
+        "x": 340,
+        "y": 80
+      },
+      "parentId": "grp00001-0000-0000-0000-000000000001",
+      "data": {
+        "name": "Consult AI Advisor"
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "7465531c-cc6a-4404-bd65-7eb97b142b3a",
+      "width": 160,
+      "height": 100,
+      "type": "useCase",
+      "position": {
+        "x": 375,
+        "y": 125
+      },
+      "parentId": "grp00001-0000-0000-0000-000000000004",
+      "data": {
+        "name": "Get Expense Suggestions"
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "359166dd-7405-451c-b7a9-ed0977717bb1",
+      "width": 160,
+      "height": 100,
+      "type": "useCase",
+      "position": {
+        "x": 310,
+        "y": 60
+      },
+      "parentId": "grp00001-0000-0000-0000-000000000003",
+      "data": {
+        "name": "Track Tax Exemption Usage"
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "d8ea66ad-68c8-4e9d-88cc-b901f4bba080",
+      "width": 160,
+      "height": 100,
+      "type": "useCase",
+      "position": {
+        "x": 20,
+        "y": 60
+      },
+      "parentId": "grp00001-0000-0000-0000-000000000003",
+      "data": {
+        "name": "View Tax Summary"
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "6f57b0e3-d1d3-448b-bcdf-508a57b469c1",
+      "width": 160,
+      "height": 100,
+      "type": "useCase",
+      "position": {
+        "x": 205,
+        "y": 45
+      },
+      "parentId": "grp00001-0000-0000-0000-000000000004",
+      "data": {
+        "name": "Categorise Transactions"
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "5961a6b5-1bc5-4142-8ec0-c296a92797ed",
+      "width": 160,
+      "height": 100,
+      "type": "useCase",
+      "position": {
+        "x": 25,
+        "y": 125
+      },
+      "parentId": "grp00001-0000-0000-0000-000000000004",
+      "data": {
+        "name": "View Spending Trends"
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "3389aa20-0779-46fd-a89c-184107bf6fd1",
+      "width": 160,
+      "height": 100,
+      "type": "useCase",
+      "position": {
+        "x": 580,
+        "y": 140
+      },
+      "parentId": "grp00001-0000-0000-0000-000000000002",
+      "data": {
+        "name": "Set Price Alert"
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "1d90ce21-cc2c-408f-a11f-5915c081bf9e",
+      "width": 160,
+      "height": 100,
+      "type": "useCase",
+      "position": {
+        "x": 860,
+        "y": 140
+      },
+      "parentId": "grp00001-0000-0000-0000-000000000002",
+      "data": {
+        "name": "Receive Price Alert Notification"
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    },
+    {
+      "id": "2c344ac3-f8e8-40c4-a445-1da69ce53a50",
+      "width": 160,
+      "height": 100,
+      "type": "useCase",
+      "position": {
+        "x": 590,
+        "y": 60
+      },
+      "parentId": "grp00001-0000-0000-0000-000000000003",
+      "data": {
+        "name": "Receive Tax Reminder"
+      },
+      "measured": {
+        "width": 160,
+        "height": 100
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e3b33eee-a01d-4e3e-b1cd-16fc765a6c12",
+      "source": "db39fc2e-728c-438c-9c07-30ea5eb267f6",
+      "target": "85218df0-1022-491d-92a3-3f3f581bec01",
+      "type": "UseCaseAssociation",
+      "sourceHandle": "right-top",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "95903fb4-3c6c-4d72-b61e-d61777b0e697",
+      "source": "db39fc2e-728c-438c-9c07-30ea5eb267f6",
+      "target": "f08743e0-0103-4542-9377-b3dac9bcd635",
+      "type": "UseCaseAssociation",
+      "sourceHandle": "right-top",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "26f9d6a1-211e-4aa6-8f95-eeabd29a2fd9",
+      "source": "db39fc2e-728c-438c-9c07-30ea5eb267f6",
+      "target": "efea58c9-db78-4975-9c02-f9e4a62b75df",
+      "type": "UseCaseAssociation",
+      "sourceHandle": "right-top",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "8889c195-ea65-4518-9c13-35a8d596349a",
+      "source": "db39fc2e-728c-438c-9c07-30ea5eb267f6",
+      "target": "0c9e023e-dd09-4ff3-a859-0cbc4b2d8a2c",
+      "type": "UseCaseAssociation",
+      "sourceHandle": "right-top",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "1e38b419-2956-4289-b95e-8b06416387d0",
+      "source": "85859ada-6713-4936-8c69-b6405e5320fb",
+      "target": "db39fc2e-728c-438c-9c07-30ea5eb267f6",
+      "type": "UseCaseAssociation",
+      "sourceHandle": "left",
+      "targetHandle": "right-top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "684643f5-79b7-4efd-8676-05cf7e9a2bd8",
+      "source": "db39fc2e-728c-438c-9c07-30ea5eb267f6",
+      "target": "428af80b-b775-48dc-af17-2e89ab7953b5",
+      "type": "UseCaseAssociation",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "0ec7aac1-4828-4491-927d-2aa9999009e8",
+      "source": "db39fc2e-728c-438c-9c07-30ea5eb267f6",
+      "target": "6ffc607c-eeca-41a7-88de-404a7617d903",
+      "type": "UseCaseAssociation",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "4273a820-b836-406e-8afa-bb3cfbec655e",
+      "source": "d8ea66ad-68c8-4e9d-88cc-b901f4bba080",
+      "target": "db39fc2e-728c-438c-9c07-30ea5eb267f6",
+      "type": "UseCaseAssociation",
+      "sourceHandle": "left",
+      "targetHandle": "right-bottom",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "255a3072-7c70-4678-bfc8-e96a0369a31f",
+      "source": "6f57b0e3-d1d3-448b-bcdf-508a57b469c1",
+      "target": "db39fc2e-728c-438c-9c07-30ea5eb267f6",
+      "type": "UseCaseAssociation",
+      "sourceHandle": "left",
+      "targetHandle": "bottom-right",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "e750a346-bbf1-4ed9-b100-25ccb5f56d7b",
+      "source": "5961a6b5-1bc5-4142-8ec0-c296a92797ed",
+      "target": "db39fc2e-728c-438c-9c07-30ea5eb267f6",
+      "type": "UseCaseAssociation",
+      "sourceHandle": "left",
+      "targetHandle": "bottom-right",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "b73ed76d-b63d-4414-9c59-ae606ab05860",
+      "source": "6ffc607c-eeca-41a7-88de-404a7617d903",
+      "target": "3a094d8d-5fe9-4b72-a85e-1832ff9a8b3c",
+      "type": "UseCaseInclude",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "c804a959-48c8-4913-8f57-67c76c899f33",
+      "source": "3389aa20-0779-46fd-a89c-184107bf6fd1",
+      "target": "3a094d8d-5fe9-4b72-a85e-1832ff9a8b3c",
+      "type": "UseCaseExtend",
+      "sourceHandle": "left",
+      "targetHandle": "right",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "98d8a25b-c975-4314-a279-ea75bf6623d2",
+      "source": "1d90ce21-cc2c-408f-a11f-5915c081bf9e",
+      "target": "3389aa20-0779-46fd-a89c-184107bf6fd1",
+      "type": "UseCaseExtend",
+      "sourceHandle": "left",
+      "targetHandle": "right",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "92f01fdf-090a-49c2-8696-4e53baabd0ed",
+      "source": "7465531c-cc6a-4404-bd65-7eb97b142b3a",
+      "target": "5961a6b5-1bc5-4142-8ec0-c296a92797ed",
+      "type": "UseCaseExtend",
+      "sourceHandle": "left",
+      "targetHandle": "right",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "5b3c8d64-7db6-46d8-a839-4b2e57982fb5",
+      "source": "2c344ac3-f8e8-40c4-a445-1da69ce53a50",
+      "target": "359166dd-7405-451c-b7a9-ed0977717bb1",
+      "type": "UseCaseExtend",
+      "sourceHandle": "left",
+      "targetHandle": "right",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "447f3d3f-c71e-4709-87fe-0c20b0e152a8",
+      "source": "d8ea66ad-68c8-4e9d-88cc-b901f4bba080",
+      "target": "359166dd-7405-451c-b7a9-ed0977717bb1",
+      "type": "UseCaseInclude",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "a51279ef-c12d-4355-884b-ba82690aa36f",
+      "source": "99a3a511-49a2-4f45-b4d3-fc0fc62dddf0",
+      "target": "db39fc2e-728c-438c-9c07-30ea5eb267f6",
+      "type": "UseCaseAssociation",
+      "sourceHandle": "left",
+      "targetHandle": "right-top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "1e35079d-3372-4539-b617-512853bccaf9",
+      "source": "3c87fb78-09b5-4223-8994-101bb1a66068",
+      "target": "db39fc2e-728c-438c-9c07-30ea5eb267f6",
+      "type": "UseCaseAssociation",
+      "sourceHandle": "left",
+      "targetHandle": "right-top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "cc1a2b3d-4e5f-6789-abcd-ef0123456701",
+      "source": "db39fc2e-728c-438c-9c07-30ea5eb267f6",
+      "target": "be51c70c-e49e-48a8-873d-1abb1c5be140",
+      "type": "UseCaseAssociation",
+      "sourceHandle": "right-top",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "cc1a2b3d-4e5f-6789-abcd-ef0123456702",
+      "source": "db39fc2e-728c-438c-9c07-30ea5eb267f6",
+      "target": "3a094d8d-5fe9-4b72-a85e-1832ff9a8b3c",
+      "type": "UseCaseAssociation",
+      "sourceHandle": "right",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "cc1a2b3d-4e5f-6789-abcd-ef0123456703",
+      "source": "db39fc2e-728c-438c-9c07-30ea5eb267f6",
+      "target": "359166dd-7405-451c-b7a9-ed0977717bb1",
+      "type": "UseCaseAssociation",
+      "sourceHandle": "right-bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    }
+  ],
+  "assessments": {}
+}

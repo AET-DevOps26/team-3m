@@ -1,0 +1,575 @@
+{
+  "id": "4d9418a9-953a-469d-9fe8-b800bbad0dd1",
+  "version": "4.0.0",
+  "title": "Component Diagram",
+  "type": "ComponentDiagram",
+  "nodes": [
+    {
+      "id": "b9ef37dc-31d7-4080-977a-1f4a0b2dfbf2",
+      "width": 590,
+      "height": 610,
+      "type": "componentSubsystem",
+      "position": {
+        "x": 190,
+        "y": 800
+      },
+      "data": {
+        "name": "Kontor",
+        "isComponentSubsystemHeaderShown": true
+      },
+      "measured": {
+        "width": 590,
+        "height": 610
+      }
+    },
+    {
+      "id": "0630fbc8-c342-4836-b6ed-da36ea1de9ce",
+      "width": 180,
+      "height": 120,
+      "type": "component",
+      "position": {
+        "x": 340,
+        "y": 80
+      },
+      "parentId": "b9ef37dc-31d7-4080-977a-1f4a0b2dfbf2",
+      "data": {
+        "name": "Portfolio",
+        "isComponentHeaderShown": true
+      },
+      "measured": {
+        "width": 180,
+        "height": 120
+      }
+    },
+    {
+      "id": "1409b6eb-eec5-4172-9b77-9702d528001c",
+      "width": 180,
+      "height": 120,
+      "type": "component",
+      "position": {
+        "x": 50,
+        "y": 80
+      },
+      "parentId": "b9ef37dc-31d7-4080-977a-1f4a0b2dfbf2",
+      "data": {
+        "name": "Transactions",
+        "isComponentHeaderShown": true
+      },
+      "measured": {
+        "width": 180,
+        "height": 120
+      }
+    },
+    {
+      "id": "c3f6cc17-a093-42d6-b8ad-74fe93617874",
+      "width": 180,
+      "height": 120,
+      "type": "component",
+      "position": {
+        "x": 350,
+        "y": 340
+      },
+      "parentId": "b9ef37dc-31d7-4080-977a-1f4a0b2dfbf2",
+      "data": {
+        "name": "Tax",
+        "isComponentHeaderShown": true
+      },
+      "measured": {
+        "width": 180,
+        "height": 120
+      }
+    },
+    {
+      "id": "cfaac857-b52f-4294-bde5-e9b1a39483d0",
+      "width": 180,
+      "height": 120,
+      "type": "component",
+      "position": {
+        "x": 90,
+        "y": 450
+      },
+      "parentId": "b9ef37dc-31d7-4080-977a-1f4a0b2dfbf2",
+      "data": {
+        "name": "Budgeting",
+        "isComponentHeaderShown": true
+      },
+      "measured": {
+        "width": 180,
+        "height": 120
+      }
+    },
+    {
+      "id": "de4a99ff-d500-4e27-816d-59ece8450cfa",
+      "width": 610,
+      "height": 250,
+      "type": "componentSubsystem",
+      "position": {
+        "x": 980,
+        "y": 800
+      },
+      "data": {
+        "name": "Kontor AI",
+        "isComponentSubsystemHeaderShown": true
+      },
+      "measured": {
+        "width": 610,
+        "height": 250
+      }
+    },
+    {
+      "id": "7fc29f11-5212-4aa9-9640-7ccd90371003",
+      "width": 180,
+      "height": 120,
+      "type": "component",
+      "position": {
+        "x": 40,
+        "y": 90
+      },
+      "parentId": "de4a99ff-d500-4e27-816d-59ece8450cfa",
+      "data": {
+        "name": "Advisor",
+        "isComponentHeaderShown": true
+      },
+      "measured": {
+        "width": 180,
+        "height": 120
+      }
+    },
+    {
+      "id": "8709ac0c-4761-4ffb-bc4f-1124c7469954",
+      "width": 690,
+      "height": 430,
+      "type": "componentSubsystem",
+      "position": {
+        "x": 900,
+        "y": 1280
+      },
+      "data": {
+        "name": "Market News & Research",
+        "isComponentSubsystemHeaderShown": true
+      },
+      "measured": {
+        "width": 690,
+        "height": 430
+      }
+    },
+    {
+      "id": "13817ac9-aec7-4db0-83b4-652bc5e522fe",
+      "width": 180,
+      "height": 120,
+      "type": "component",
+      "position": {
+        "x": 450,
+        "y": 270
+      },
+      "parentId": "8709ac0c-4761-4ffb-bc4f-1124c7469954",
+      "data": {
+        "name": "News Aggregator",
+        "isComponentHeaderShown": true
+      },
+      "measured": {
+        "width": 180,
+        "height": 120
+      }
+    },
+    {
+      "id": "bb8eade9-73d7-458a-9227-f19ef4f5ff74",
+      "width": 180,
+      "height": 120,
+      "type": "component",
+      "position": {
+        "x": 50,
+        "y": 100
+      },
+      "parentId": "8709ac0c-4761-4ffb-bc4f-1124c7469954",
+      "data": {
+        "name": "Stock Search",
+        "isComponentHeaderShown": true
+      },
+      "measured": {
+        "width": 180,
+        "height": 120
+      }
+    },
+    {
+      "id": "100c5433-17f1-4701-aa57-0228c2d4ff55",
+      "width": 180,
+      "height": 120,
+      "type": "component",
+      "position": {
+        "x": 50,
+        "y": 270
+      },
+      "parentId": "8709ac0c-4761-4ffb-bc4f-1124c7469954",
+      "data": {
+        "name": "Watchlist",
+        "isComponentHeaderShown": true
+      },
+      "measured": {
+        "width": 180,
+        "height": 120
+      }
+    },
+    {
+      "id": "51e39c9d-1bdc-46a6-ba71-d0204f826a2b",
+      "width": 180,
+      "height": 120,
+      "type": "component",
+      "position": {
+        "x": 390,
+        "y": 90
+      },
+      "parentId": "de4a99ff-d500-4e27-816d-59ece8450cfa",
+      "data": {
+        "name": "News Processor",
+        "isComponentHeaderShown": true
+      },
+      "measured": {
+        "width": 180,
+        "height": 120
+      }
+    },
+    {
+      "id": "4a1f6d00-e9be-4bc4-bacb-14183e19d86e",
+      "width": 30,
+      "height": 30,
+      "type": "componentInterface",
+      "position": {
+        "x": 30,
+        "y": 860
+      },
+      "data": {
+        "name": "CSV Import"
+      },
+      "measured": {
+        "width": 30,
+        "height": 30
+      }
+    },
+    {
+      "id": "b5186a85-ac90-41f2-b2d3-627a4e8848c2",
+      "width": 30,
+      "height": 30,
+      "type": "componentInterface",
+      "position": {
+        "x": 440,
+        "y": 280
+      },
+      "parentId": "b9ef37dc-31d7-4080-977a-1f4a0b2dfbf2",
+      "data": {
+        "name": "Asset Service"
+      },
+      "measured": {
+        "width": 30,
+        "height": 30
+      }
+    },
+    {
+      "id": "050f2546-79a7-4d90-91a1-b2061bc729b6",
+      "width": 30,
+      "height": 30,
+      "type": "componentInterface",
+      "position": {
+        "x": 90,
+        "y": 350
+      },
+      "parentId": "b9ef37dc-31d7-4080-977a-1f4a0b2dfbf2",
+      "data": {
+        "name": "Transaction Service"
+      },
+      "measured": {
+        "width": 30,
+        "height": 30
+      }
+    },
+    {
+      "id": "4a73bd7a-6406-428d-b523-01c008d5bac2",
+      "width": 30,
+      "height": 30,
+      "type": "componentInterface",
+      "position": {
+        "x": 490,
+        "y": 140
+      },
+      "parentId": "8709ac0c-4761-4ffb-bc4f-1124c7469954",
+      "data": {
+        "name": "News Service"
+      },
+      "measured": {
+        "width": 30,
+        "height": 30
+      }
+    },
+    {
+      "id": "ceb73768-e43b-4219-8931-77bf39b52321",
+      "width": 30,
+      "height": 30,
+      "type": "componentInterface",
+      "position": {
+        "x": 300,
+        "y": 110
+      },
+      "parentId": "8709ac0c-4761-4ffb-bc4f-1124c7469954",
+      "data": {
+        "name": "Stock Service"
+      },
+      "measured": {
+        "width": 30,
+        "height": 30
+      }
+    },
+    {
+      "id": "3f7957b1-a448-4714-9ebd-b02eede63a17",
+      "width": 30,
+      "height": 30,
+      "type": "componentInterface",
+      "position": {
+        "x": 1700,
+        "y": 1560
+      },
+      "data": {
+        "name": "News Service"
+      },
+      "measured": {
+        "width": 30,
+        "height": 30
+      }
+    },
+    {
+      "id": "a17e364a-1041-49bc-8291-86da31ba3204",
+      "width": 30,
+      "height": 30,
+      "type": "componentInterface",
+      "position": {
+        "x": 290,
+        "y": 70
+      },
+      "parentId": "de4a99ff-d500-4e27-816d-59ece8450cfa",
+      "data": {
+        "name": "News Search Service"
+      },
+      "measured": {
+        "width": 30,
+        "height": 30
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "0f1c7053-975e-4dfd-90dc-e0b2baefb966",
+      "source": "1409b6eb-eec5-4172-9b77-9702d528001c",
+      "target": "4a1f6d00-e9be-4bc4-bacb-14183e19d86e",
+      "type": "ComponentProvidedInterface",
+      "sourceHandle": "left",
+      "targetHandle": "right",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "1226ed0d-a20d-4077-9da2-04c203cc4b00",
+      "source": "0630fbc8-c342-4836-b6ed-da36ea1de9ce",
+      "target": "b5186a85-ac90-41f2-b2d3-627a4e8848c2",
+      "type": "ComponentProvidedInterface",
+      "sourceHandle": "bottom-right",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "9baf8607-8659-460b-8f8f-caecf0e71db7",
+      "source": "c3f6cc17-a093-42d6-b8ad-74fe93617874",
+      "target": "050f2546-79a7-4d90-91a1-b2061bc729b6",
+      "type": "ComponentRequiredInterface",
+      "sourceHandle": "left",
+      "targetHandle": "right",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "d1c09f29-a89e-4616-a382-5e0b490ef0a8",
+      "source": "ab192d9c-3df2-4951-9679-17f7079c51f2",
+      "target": "b5186a85-ac90-41f2-b2d3-627a4e8848c2",
+      "type": "ComponentDependency",
+      "sourceHandle": "right",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "046c6402-72c3-4a30-8bb7-89060f9d2094",
+      "source": "1409b6eb-eec5-4172-9b77-9702d528001c",
+      "target": "050f2546-79a7-4d90-91a1-b2061bc729b6",
+      "type": "ComponentProvidedInterface",
+      "sourceHandle": "bottom",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "4a48800b-2f4c-4825-9da6-f8cf2a1a7940",
+      "source": "7fc29f11-5212-4aa9-9640-7ccd90371003",
+      "target": "b5186a85-ac90-41f2-b2d3-627a4e8848c2",
+      "type": "ComponentRequiredInterface",
+      "sourceHandle": "bottom-left",
+      "targetHandle": "right",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "a269d209-10a2-4dd3-84f0-406a2a7184c8",
+      "source": "13817ac9-aec7-4db0-83b4-652bc5e522fe",
+      "target": "4a73bd7a-6406-428d-b523-01c008d5bac2",
+      "type": "ComponentProvidedInterface",
+      "sourceHandle": "top",
+      "targetHandle": "bottom",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "8db9ec0e-8e55-41ec-8479-f65e48b0b9a8",
+      "source": "51e39c9d-1bdc-46a6-ba71-d0204f826a2b",
+      "target": "4a73bd7a-6406-428d-b523-01c008d5bac2",
+      "type": "ComponentRequiredInterface",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "459620c0-80f4-4156-b475-f921ad14011c",
+      "source": "bb8eade9-73d7-458a-9227-f19ef4f5ff74",
+      "target": "ceb73768-e43b-4219-8931-77bf39b52321",
+      "type": "ComponentProvidedInterface",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "89716f35-0aa0-4479-9f37-ff14164c7955",
+      "source": "100c5433-17f1-4701-aa57-0228c2d4ff55",
+      "target": "ceb73768-e43b-4219-8931-77bf39b52321",
+      "type": "ComponentRequiredInterface",
+      "sourceHandle": "right",
+      "targetHandle": "bottom",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "7b564040-d92a-4eff-a7f6-32f12922839a",
+      "source": "cfaac857-b52f-4294-bde5-e9b1a39483d0",
+      "target": "050f2546-79a7-4d90-91a1-b2061bc729b6",
+      "type": "ComponentRequiredInterface",
+      "sourceHandle": "top",
+      "targetHandle": "bottom",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "aeb43367-245f-464d-bf44-946e7dd36643",
+      "source": "0630fbc8-c342-4836-b6ed-da36ea1de9ce",
+      "target": "050f2546-79a7-4d90-91a1-b2061bc729b6",
+      "type": "ComponentRequiredInterface",
+      "sourceHandle": "bottom-left",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "f36b8921-ae81-4313-b0c7-d27933ef796d",
+      "source": "13817ac9-aec7-4db0-83b4-652bc5e522fe",
+      "target": "3f7957b1-a448-4714-9ebd-b02eede63a17",
+      "type": "ComponentRequiredInterface",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "5071eaeb-9aca-4c2e-8ae1-679b5bf5d2cb",
+      "source": "100c5433-17f1-4701-aa57-0228c2d4ff55",
+      "target": "4a73bd7a-6406-428d-b523-01c008d5bac2",
+      "type": "ComponentRequiredInterface",
+      "sourceHandle": "right-bottom",
+      "targetHandle": "left",
+      "data": {
+        "points": [
+          {
+            "x": 1131,
+            "y": 1646
+          },
+          {
+            "x": 1258.41796875,
+            "y": 1646
+          },
+          {
+            "x": 1258.41796875,
+            "y": 1435
+          },
+          {
+            "x": 1385,
+            "y": 1435
+          }
+        ]
+      }
+    },
+    {
+      "id": "d3543e2a-3cf0-4131-851f-7fa3cc1bb77e",
+      "source": "7fc29f11-5212-4aa9-9640-7ccd90371003",
+      "target": "a17e364a-1041-49bc-8291-86da31ba3204",
+      "type": "ComponentRequiredInterface",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "ddd0d1f5-05da-4265-96b9-98c9d8c0f92c",
+      "source": "a17e364a-1041-49bc-8291-86da31ba3204",
+      "target": "51e39c9d-1bdc-46a6-ba71-d0204f826a2b",
+      "type": "ComponentProvidedInterface",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "b6c6540c-aa19-40ba-826e-f0156f20165a",
+      "source": "7fc29f11-5212-4aa9-9640-7ccd90371003",
+      "target": "c3f6cc17-a093-42d6-b8ad-74fe93617874",
+      "type": "ComponentDependency",
+      "sourceHandle": "bottom",
+      "targetHandle": "right-top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "0d02e0ae-1645-456c-b94f-0e5e06384e59",
+      "source": "7fc29f11-5212-4aa9-9640-7ccd90371003",
+      "target": "bb8eade9-73d7-458a-9227-f19ef4f5ff74",
+      "type": "ComponentDependency",
+      "sourceHandle": "bottom-right",
+      "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    }
+  ],
+  "assessments": {}
+}

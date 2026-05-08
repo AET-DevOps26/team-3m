@@ -36,7 +36,7 @@ tasks.named('test') {
 
 spotless {
 	java {
-		googleJavaFormat('1.24.0')
+		eclipse()
 		removeUnusedImports()
 		trimTrailingWhitespace()
 		endWithNewline()
@@ -53,6 +53,8 @@ tasks.withType(JavaCompile).configureEach {
 	options.errorprone {
 		disableWarningsInGeneratedCode = true
 	}
+	// Gradle 9 defaults to --should-stop=ifError=INIT which Error Prone doesn't support
+	options.compilerArgs += ['-XDshould-stop.ifError=FLOW']
 	// Required for Error Prone to access internal compiler APIs on Java 21+
 	options.forkOptions.jvmArgs += [
 		'--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED',

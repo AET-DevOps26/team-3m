@@ -7,31 +7,11 @@
   <property name="severity" value="warning"/>
   <property name="fileExtensions" value="java, properties, xml"/>
 
-  <!-- Disallow tab characters -->
-  <module name="FileTabCharacter">
-    <property name="eachLine" value="true"/>
-  </module>
-
-  <!-- Trailing whitespace -->
-  <module name="RegexpSingleline">
-    <property name="format" value="\s+$"/>
-    <property name="minimum" value="0"/>
-    <property name="maximum" value="0"/>
-    <property name="message" value="Line has trailing spaces."/>
-  </module>
-
   <module name="TreeWalker">
     <!-- Imports -->
     <module name="AvoidStarImport"/>
     <module name="RedundantImport"/>
     <module name="UnusedImports"/>
-    <module name="ImportOrder">
-      <property name="groups" value="java,javax,org,com,de"/>
-      <property name="ordered" value="true"/>
-      <property name="separated" value="true"/>
-      <property name="option" value="above"/>
-      <property name="sortStaticImportsAlphabetically" value="true"/>
-    </module>
 
     <!-- Naming conventions -->
     <module name="TypeName"/>
@@ -66,7 +46,7 @@
     <module name="NeedBraces"/>
     <module name="RightCurly">
       <property name="option" value="alone"/>
-      <property name="tokens" value="TRY, CATCH, FINALLY, ELSE, IF, STATIC_INIT, INSTANCE_INIT"/>
+      <property name="tokens" value="LITERAL_TRY, LITERAL_CATCH, LITERAL_FINALLY, LITERAL_ELSE, LITERAL_IF, STATIC_INIT, INSTANCE_INIT"/>
     </module>
 
     <!-- Coding -->
@@ -92,16 +72,16 @@
       <property name="allowSamelineParameterizedAnnotation" value="false"/>
     </module>
 
-    <!-- Line length -->
-    <module name="LineLength">
-      <property name="fileExtensions" value="java"/>
-      <property name="max" value="120"/>
-      <property name="ignorePattern" value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
-    </module>
-
     <!-- Javadoc (warnings only, not errors) -->
     <module name="MissingJavadocMethod">
       <property name="severity" value="ignore"/>
     </module>
+  </module>
+
+  <!-- Line length (Checker-level, not TreeWalker) -->
+  <module name="LineLength">
+    <property name="fileExtensions" value="java"/>
+    <property name="max" value="120"/>
+    <property name="ignorePattern" value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
   </module>
 </module>

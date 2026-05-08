@@ -20,10 +20,8 @@ public class WebConfig implements WebMvcConfigurer {
 
 	@Override
 	public void addCorsMappings(CorsRegistry registry) {
-		registry.addMapping("/**")
-				.allowedOrigins(corsProperties.allowedOrigins().toArray(String[]::new))
-				.allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-				.allowedHeaders("*");
+		registry.addMapping("/**").allowedOrigins(corsProperties.allowedOrigins().toArray(String[]::new))
+				.allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS").allowedHeaders("*");
 	}
 
 	@ConfigurationProperties(prefix = "app.cors")

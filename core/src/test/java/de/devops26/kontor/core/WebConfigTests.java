@@ -27,10 +27,8 @@ class WebConfigTests {
 
 	@Test
 	void allowsConfiguredFrontendOrigins() throws Exception {
-		mockMvc.perform(options("/hello")
-						.header("Origin", "http://localhost:5173")
-						.header("Access-Control-Request-Method", "GET"))
-				.andExpect(status().isOk())
+		mockMvc.perform(options("/hello").header("Origin", "http://localhost:5173")
+				.header("Access-Control-Request-Method", "GET")).andExpect(status().isOk())
 				.andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:5173"));
 	}
 }

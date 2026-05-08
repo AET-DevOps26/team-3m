@@ -73,6 +73,7 @@ tasks.withType(JavaCompile).configureEach {
 dependencyCheck {
 	failBuildOnCVSS = 7
 	suppressionFile = "${rootDir}/config/owasp/suppressions.xml"
+	scanConfigurations = ['runtimeClasspath', 'compileClasspath']
 	data {
 		directory = "${System.getProperty('user.home')}/.gradle/dependency-check-data"
 	}

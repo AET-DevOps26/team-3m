@@ -4,13 +4,13 @@ on:
   push:
     branches: [main]
     paths:
-      - 'core/**'
-      - '.github/workflows/server-lint.yml'
+      - "core/**"
+      - ".github/workflows/server-lint.yml"
   pull_request:
     branches: [main]
     paths:
-      - 'core/**'
-      - '.github/workflows/server-lint.yml'
+      - "core/**"
+      - ".github/workflows/server-lint.yml"
 
 jobs:
   lint:
@@ -29,8 +29,8 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          java-version: '25'
-          distribution: 'temurin'
+          java-version: "25"
+          distribution: "temurin"
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -56,8 +56,7 @@ jobs:
           restore-keys: owasp-nvd-${{ runner.os }}-
 
       - name: Run OWASP Dependency Check
-        timeout-minutes: 20
-        run: ./gradlew dependencyCheckAnalyze
+        run: ./gradlew dependencyCheckAnalyze --info
 
       - name: Upload OWASP Report
         if: always()

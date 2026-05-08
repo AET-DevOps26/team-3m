@@ -78,7 +78,9 @@ dependencyCheck {
 		directory = "${System.getProperty('user.home')}/.gradle/dependency-check-data"
 	}
 	nvd {
-		apiKey = System.getenv('NVD_API_KEY') ?: ''
+		apiKey = System.getenv('NVD_API_KEY')
+		delay = 0
+		validForHours = 24
 	}
 	analyzers {
 		ossIndex {

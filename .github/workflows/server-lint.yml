@@ -16,6 +16,8 @@ jobs:
   lint:
     name: Lint & Static Analysis
     runs-on: ubuntu-latest
+    env:
+      NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
     defaults:
       run:
         working-directory: core
@@ -56,8 +58,6 @@ jobs:
       - name: Run OWASP Dependency Check
         timeout-minutes: 20
         run: ./gradlew dependencyCheckAnalyze
-        env:
-          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
 
       - name: Upload OWASP Report
         if: always()

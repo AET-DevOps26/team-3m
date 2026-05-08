@@ -1,0 +1,59 @@
+name: Server Lint
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'core/**'
+      - '.github/workflows/server-lint.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'core/**'
+      - '.github/workflows/server-lint.yml'
+
+jobs:
+  lint:
+    name: Lint & Static Analysis
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: core
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Check Formatting (Spotless)
+        run: ./gradlew spotlessCheck
+
+      - name: Run Checkstyle
+        run: ./gradlew checkstyleMain checkstyleTest
+
+      - name: Run Static Analysis (Error Prone)
+        run: ./gradlew compileJava compileTestJava
+
+      - name: Run OWASP Dependency Check
+        run: ./gradlew dependencyCheckAnalyze
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+
+      - name: Upload OWASP Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: owasp-dependency-check-report
+          path: core/build/reports/dependency-check-report.html
+          retention-days: 30
+
+      - name: Run Gradle Dependency Updates Check
+        run: ./gradlew dependencyUpdates -Drevision=release

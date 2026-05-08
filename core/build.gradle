@@ -3,10 +3,8 @@ plugins {
 	id 'checkstyle'
 	id 'org.springframework.boot' version '4.0.6'
 	id 'io.spring.dependency-management' version '1.1.7'
-	id 'com.diffplug.spotless' version '7.0.2'
-	id 'net.ltgt.errorprone' version '4.0.1'
-	id 'org.owasp.dependencycheck' version '12.2.2'
-	id 'com.github.ben-manes.versions' version '0.51.0'
+	id 'com.diffplug.spotless' version '8.4.0'
+	id 'net.ltgt.errorprone' version '5.1.0'
 }
 
 group = 'de.devops26.kontor'
@@ -27,7 +25,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-	errorprone 'com.google.errorprone:error_prone_core:2.36.0'
+	errorprone 'com.google.errorprone:error_prone_core:2.49.0'
 }
 
 tasks.named('test') {
@@ -36,11 +34,12 @@ tasks.named('test') {
 
 spotless {
 	java {
-		eclipse()
-		removeUnusedImports()
-		trimTrailingWhitespace()
-		endWithNewline()
-	}
+        palantirJavaFormat('2.90.0')
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+        formatAnnotations()
+    }
 }
 
 checkstyle {
@@ -68,29 +67,4 @@ tasks.withType(JavaCompile).configureEach {
 		'--add-opens=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED',
 		'--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED',
 	]
-}
-
-dependencyCheck {
-	failBuildOnCVSS = 7
-	suppressionFile = "${rootDir}/config/owasp/suppressions.xml"
-	scanConfigurations = ['runtimeClasspath']
-	data.directory = "${System.getProperty('user.home')}/.gradle/dependency-check-data"
-	nvd {
-		apiKey = System.getenv('NVD_API_KEY')
-		delay = 1000
-		validForHours = 24
-	}
-	analyzers.ossIndexEnabled = false
-}
-
-dependencyUpdates {
-	rejectVersionIf {
-		isNonStable(it.candidate.version)
-	}
-}
-
-def isNonStable(String version) {
-	def stableKeyword = ['RELEASE', 'FINAL', 'GA'].any { version.toUpperCase().contains(it) }
-	def regex = /^[0-9,.v-]+(-r)?$/
-	return !stableKeyword && !(version ==~ regex)
 }

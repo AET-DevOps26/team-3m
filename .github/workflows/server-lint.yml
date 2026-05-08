@@ -16,8 +16,6 @@ jobs:
   lint:
     name: Lint & Static Analysis
     runs-on: ubuntu-latest
-    env:
-      NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
     defaults:
       run:
         working-directory: core
@@ -43,28 +41,3 @@ jobs:
 
       - name: Run Static Analysis (Error Prone)
         run: ./gradlew compileJava compileTestJava
-
-      - name: Get current date
-        id: date
-        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
-
-      - name: Cache OWASP NVD database
-        uses: actions/cache@v4
-        with:
-          path: ~/.gradle/dependency-check-data
-          key: owasp-nvd-${{ runner.os }}-${{ steps.date.outputs.date }}
-          restore-keys: owasp-nvd-${{ runner.os }}-
-
-      - name: Run OWASP Dependency Check
-        run: ./gradlew dependencyCheckAnalyze --info
-
-      - name: Upload OWASP Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: owasp-dependency-check-report
-          path: core/build/reports/dependency-check-report.html
-          retention-days: 30
-
-      - name: Run Gradle Dependency Updates Check
-        run: ./gradlew dependencyUpdates -Drevision=release

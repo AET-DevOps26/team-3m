@@ -54,7 +54,7 @@ jobs:
           restore-keys: owasp-nvd-${{ runner.os }}-
 
       - name: Run OWASP Dependency Check
-        timeout-minutes: 15
+        timeout-minutes: 20
         run: ./gradlew dependencyCheckAnalyze
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}

@@ -1,0 +1,6 @@
+services:
+  server:
+    build:
+      context: ./core
+    ports:
+      - "8080:8080"

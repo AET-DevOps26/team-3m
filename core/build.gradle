@@ -73,20 +73,14 @@ tasks.withType(JavaCompile).configureEach {
 dependencyCheck {
 	failBuildOnCVSS = 7
 	suppressionFile = "${rootDir}/config/owasp/suppressions.xml"
-	scanConfigurations = ['runtimeClasspath', 'compileClasspath']
-	data {
-		directory = "${System.getProperty('user.home')}/.gradle/dependency-check-data"
-	}
+	scanConfigurations = ['runtimeClasspath']
+	data.directory = "${System.getProperty('user.home')}/.gradle/dependency-check-data"
 	nvd {
 		apiKey = System.getenv('NVD_API_KEY')
 		delay = 0
 		validForHours = 24
 	}
-	analyzers {
-		ossIndex {
-			enabled = false
-		}
-	}
+	analyzers.ossIndexEnabled = false
 }
 
 dependencyUpdates {

@@ -15,20 +15,23 @@ import org.springframework.web.context.WebApplicationContext;
 @SpringBootTest
 class WebConfigTests {
 
-	@Autowired
-	private WebApplicationContext context;
+    @Autowired
+    private WebApplicationContext context;
 
-	private MockMvc mockMvc;
+    private MockMvc mockMvc;
 
-	@BeforeEach
-	void setUp() {
-		mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
-	}
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
+    }
 
-	@Test
-	void allowsConfiguredFrontendOrigins() throws Exception {
-		mockMvc.perform(options("/hello").header("Origin", "http://localhost:5173")
-				.header("Access-Control-Request-Method", "GET")).andExpect(status().isOk())
-				.andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:5173"));
-	}
+    @Test
+    void allowsConfiguredFrontendOrigins() throws Exception {
+        mockMvc
+                .perform(options("/hello")
+                        .header("Origin", "http://localhost:5173")
+                        .header("Access-Control-Request-Method", "GET"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:5173"));
+    }
 }

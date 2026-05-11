@@ -76,9 +76,7 @@ export function StartPage() {
         <div className="flex flex-col items-center gap-3 text-center">
           <div className="flex items-center gap-3">
             <Rocket className="size-8 text-primary" />
-            <h1 className="text-4xl font-bold tracking-tight">
-              Kontor
-            </h1>
+            <h1 className="text-4xl font-bold tracking-tight">Kontor</h1>
           </div>
           <p className="text-lg text-muted-foreground">
             Team 3M &mdash; DevOps Project

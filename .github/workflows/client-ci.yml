@@ -5,12 +5,12 @@ on:
     branches: [main]
     paths:
       - "client/**"
-      - ".github/workflows/client-lint.yml"
+      - ".github/workflows/client-ci.yml"
   pull_request:
     branches: [main]
     paths:
       - "client/**"
-      - ".github/workflows/client-lint.yml"
+      - ".github/workflows/client-ci.yml"
   workflow_dispatch:
 
 permissions:

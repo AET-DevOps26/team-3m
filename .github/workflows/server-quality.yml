@@ -1,0 +1,44 @@
+name: Server Quality
+
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      working-directory:
+        required: true
+        type: string
+
+
+jobs:
+  quality:
+    name: Lint & Static Analysis
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          java-version: "25"
+          distribution: "temurin"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Check Formatting (Spotless)
+        run: ./gradlew spotlessCheck
+
+      - name: Run Checkstyle
+        run: ./gradlew checkstyleMain checkstyleTest
+
+      - name: Run Static Analysis (Error Prone)
+        run: ./gradlew compileJava compileTestJava

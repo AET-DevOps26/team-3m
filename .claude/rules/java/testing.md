@@ -11,7 +11,6 @@ paths:
 - **JUnit 6** (`@Test`, `@ParameterizedTest`, `@Nested`, `@DisplayName`)
 - **AssertJ** for fluent assertions (`assertThat(result).isEqualTo(expected)`)
 - **Mockito** for mocking dependencies
-- **Testcontainers** for integration tests requiring databases or services
 
 ## Test Organization
 

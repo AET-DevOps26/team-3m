@@ -10,7 +10,7 @@ Run the Spring Boot server and React client:
 docker compose up --build
 ```
 
-The client is available at http://localhost:5173 and the server at http://localhost:8080.
+The client is available at <http://localhost:5173> and the server at <http://localhost:8080>.
 
 ## AI Agent Setup
 
@@ -28,11 +28,9 @@ Coding rules live in `.claude/rules/` and are automatically loaded based on the 
 │   ├── patterns.md      # Repository pattern, API envelope, service classes
 │   └── code-review.md   # Review checklist, security triggers, severity levels
 ├── java/                # Apply to *.java, pom.xml, build.gradle*
-│   ├── coding-stlye.md  # Records, sealed classes, Optional, modern Java (16+)
+│   ├── coding-style.md  # Records, sealed classes, Optional, modern Java (16+)
 │   ├── patterns.md      # Constructor injection, Spring conventions, Flyway, jOOQ
-│   ├── security.md      # SQL injection prevention, secrets management
-│   ├── testing.md       # JUnit 6, AssertJ, Mockito, Testcontainers
-│   └── hooks.md         # google-java-format, checkstyle, compilation hooks
+│   └── testing.md       # JUnit 6, AssertJ, Mockito, Testcontainers
 └── typescript/          # Apply to *.ts, *.tsx, *.js, *.jsx
     ├── coding-style.md  # Biome, kebab-case files, React patterns, Zod, shadcn/ui
     ├── patterns.md      # Custom hooks, data fetching, repository pattern

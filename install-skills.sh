@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+shopt -s nullglob
 cd "$(dirname "$0")"
 npx skills experimental_install
 mkdir -p .claude/skills

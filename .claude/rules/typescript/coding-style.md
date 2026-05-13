@@ -21,7 +21,7 @@ paths:
 
 - When adding Shadcn/UI components, always use the Shadcn CLI — never add them from memory
 - Avoid excessive use of the `Card` component
-- Use the **shadcn** and **shadcn-ui** skill or the shadcn MCP
+- Use the **shadcn** skill or the shadcn MCP
 
 ## React Components
 
@@ -244,4 +244,3 @@ const validated: UserInput = userSchema.parse(input)
 
 - No `console.log` statements in production code
 - Use proper logging libraries instead
-- See hooks for automatic detection

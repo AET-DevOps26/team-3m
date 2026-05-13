@@ -30,7 +30,7 @@ Coding rules live in `.claude/rules/` and are automatically loaded based on the 
 ├── java/                # Apply to *.java, pom.xml, build.gradle*
 │   ├── coding-style.md  # Records, sealed classes, Optional, modern Java (16+)
 │   ├── patterns.md      # Constructor injection, Spring conventions, Flyway, jOOQ
-│   └── testing.md       # JUnit 6, AssertJ, Mockito, Testcontainers
+│   └── testing.md       # JUnit Jupiter 5, AssertJ, Mockito, Testcontainers
 └── typescript/          # Apply to *.ts, *.tsx, *.js, *.jsx
     ├── coding-style.md  # Biome, kebab-case files, React patterns, Zod, shadcn/ui
     ├── patterns.md      # Custom hooks, data fetching, repository pattern

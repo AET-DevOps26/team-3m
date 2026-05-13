@@ -1,16 +1,17 @@
 name: Server Quality
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "core/**"
-      - ".github/workflows/server-lint.yml"
-  pull_request:
-    branches: [main]
-    paths:
-      - "core/**"
-      - ".github/workflows/server-lint.yml"
+  workflow_call:
+    inputs:
+      working-directory:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      working-directory:
+        required: true
+        type: string
+
 
 jobs:
   quality:
@@ -18,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: core
+        working-directory: ${{ inputs.working-directory }}
 
     steps:
       - name: Checkout

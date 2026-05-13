@@ -8,7 +8,7 @@ _Kontor_ is a Progressive Web App (mobile and desktop) that consolidates persona
 |-------|-----------|
 | Frontend | React 19, TypeScript 5.9, Vite 7, Tailwind CSS 4, shadcn/ui, Radix UI |
 | Backend | Java 25, Spring Boot 4, Gradle (microservices) |
-| Linting/Formatting | Biome (frontend), google-java-format + checkstyle (backend) |
+| Linting/Formatting | Biome (frontend), Spotless (Palantir Java Format) + Checkstyle + Error Prone (backend) |
 
 ## Commands
 
@@ -35,6 +35,9 @@ Each microservice lives in its own directory with a Gradle wrapper.
 | Build | `./gradlew build` |
 | Test | `./gradlew test` |
 | Compile check | `./gradlew compileJava` |
+| Format check | `./gradlew spotlessCheck` |
+| Format fix | `./gradlew spotlessApply` |
+| Lint | `./gradlew checkstyleMain checkstyleTest` |
 
 ## Rules
 

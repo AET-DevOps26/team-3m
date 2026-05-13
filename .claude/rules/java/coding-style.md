@@ -8,9 +8,17 @@ paths:
 
 ## Formatting
 
-- **google-java-format** or **Checkstyle** (Google or Sun style) for enforcement
+Enforced by three tools — do not manually fix formatting or linting errors, run the toolchain instead:
+
+| Tool | Purpose | Check | Fix |
+|------|---------|-------|-----|
+| Spotless (Palantir Java Format 2.90.0) | Code formatting | `./gradlew spotlessCheck` | `./gradlew spotlessApply` |
+| Checkstyle 13.4.2 (Google style base) | Style & convention linting | `./gradlew checkstyleMain checkstyleTest` | — (manual) |
+| Error Prone 2.49.0 | Compile-time bug detection | `./gradlew compileJava compileTestJava` | — (manual) |
+
+- **Indent:** 4 spaces (enforced by Checkstyle)
+- **Max line length:** 100 characters
 - One public top-level type per file
-- Consistent indent: 2 or 4 spaces (match project standard)
 - Member order: constants, fields, constructors, public methods, protected, private
 
 ## Immutability

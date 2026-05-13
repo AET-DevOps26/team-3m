@@ -6,7 +6,7 @@ Closes #
 
 ## Changes
 
-<!-- Bullet list of the notable changes -->
+<!-- What changed from a user perspective: summarize the changes in a bulleted list -->
 
 -
 

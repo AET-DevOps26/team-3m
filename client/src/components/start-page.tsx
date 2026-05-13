@@ -1,27 +1,27 @@
-import { Code, Layers, Loader2, Rocket, Server, Users } from "lucide-react";
-import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Code, Layers, Loader2, Rocket, Server, Users } from "lucide-react"
+import { useState } from "react"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+} from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
 
 type ConnectionStatus =
   | { state: "idle" }
   | { state: "loading" }
   | { state: "success"; message: string; statusCode: number; latencyMs: number }
-  | { state: "error"; error: string };
+  | { state: "error"; error: string }
 
 const teamMembers = [
   { name: "Mathilde", role: "UI/UX Expert" },
   { name: "Magnus", role: "DevOps Expert" },
   { name: "Maximilian", role: "Java Expert" },
-];
+]
 
 const techStack = [
   "React",
@@ -37,36 +37,36 @@ const techStack = [
   "FastAPI",
   "Kubernetes",
   "Docker",
-];
+]
 
 export function StartPage() {
-  const [status, setStatus] = useState<ConnectionStatus>({ state: "idle" });
+  const [status, setStatus] = useState<ConnectionStatus>({ state: "idle" })
 
   async function testConnection() {
-    setStatus({ state: "loading" });
-    const start = performance.now();
+    setStatus({ state: "loading" })
+    const start = performance.now()
     try {
-      const res = await fetch("http://localhost:8080/hello");
-      const latencyMs = Math.round(performance.now() - start);
+      const res = await fetch("http://localhost:8080/hello")
+      const latencyMs = Math.round(performance.now() - start)
       if (!res.ok) {
         setStatus({
           state: "error",
           error: `HTTP ${res.status} ${res.statusText}`,
-        });
-        return;
+        })
+        return
       }
-      const message = await res.text();
+      const message = await res.text()
       setStatus({
         state: "success",
         message,
         statusCode: res.status,
         latencyMs,
-      });
+      })
     } catch (e) {
       setStatus({
         state: "error",
         error: e instanceof Error ? e.message : "Unknown error",
-      });
+      })
     }
   }
 
@@ -193,5 +193,5 @@ export function StartPage() {
         </Card>
       </div>
     </div>
-  );
+  )
 }

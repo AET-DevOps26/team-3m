@@ -1,7 +1,7 @@
-import { StartPage } from "@/components/start-page";
+import { StartPage } from "@/components/start-page"
 
 export function App() {
-  return <StartPage />;
+  return <StartPage />
 }
 
-export default App;
+export default App

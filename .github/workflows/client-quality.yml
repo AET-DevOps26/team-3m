@@ -1,16 +1,7 @@
-name: Client CI
+name: Client Quality
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "client/**"
-      - ".github/workflows/client-ci.yml"
-  pull_request:
-    branches: [main]
-    paths:
-      - "client/**"
-      - ".github/workflows/client-ci.yml"
+  workflow_call:
   workflow_dispatch:
 
 permissions:

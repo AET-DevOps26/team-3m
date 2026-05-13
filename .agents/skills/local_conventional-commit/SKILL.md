@@ -1,6 +1,6 @@
 ---
 name: conventional-commit
-description: Generate conventional commit messages from git diffs, staged changes, or user descriptions. Use this skill whenever the user asks to write a commit message, wants help with a commit, mentions "conventional commit", asks to summarize changes for a commit, or says anything like "commit this", "write a commit", "what should my commit message be", or "help me commit". Also trigger when the user provides a git diff or describes code changes and expects a commit-ready output. Even casual phrasing like "commit msg" or "how should I commit this" should trigger this skill.
+description: (Team 3M) Generate conventional commit messages from git diffs, staged changes, or user descriptions. Use this skill whenever the user asks to write a commit message, wants help with a commit, mentions "conventional commit", asks to summarize changes for a commit, or says anything like "commit this", "write a commit", "what should my commit message be", or "help me commit". Also trigger when the user provides a git diff or describes code changes and expects a commit-ready output. Even casual phrasing like "commit msg" or "how should I commit this" should trigger this skill.
 ---
 
 # Conventional Commits Skill

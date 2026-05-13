@@ -81,9 +81,31 @@ npx skills update
 npx skills remove <skill-name>
 ```
 
-Only skills prefixed with `local_` (e.g. `.claude/skills/local_conventional-commit/`) are tracked in git. Externally synced skills are ignored via `.gitignore`.
+Only skills prefixed with `local_` (e.g. `.agents/skills/local_conventional-commit/`) are tracked in git. Externally synced skills are ignored via `.gitignore`.
 
-To install skills from the lock file and symlink agent skills to Claude Code:
+#### Creating a local skill
+
+Local skills are project-specific skills that live in the repository. To create one:
+
+1. Create a directory in `.agents/skills/` with a `local_` prefix (e.g. `.agents/skills/local_my-skill/`).
+2. Add a `SKILL.md` file with frontmatter and instructions:
+   ```markdown
+   ---
+   name: my-skill
+   description: Short description of when and how the skill should be triggered.
+   ---
+
+   # My Skill
+
+   Instructions for the agent...
+   ```
+3. Run `./install-skills.sh` to symlink the skill into `.claude/skills/`.
+
+The `local_` prefix ensures the skill is tracked in git and not overwritten by external skill updates.
+
+#### Install skills
+
+To install skills from the lock file and symlink all agent skills (including local ones) to Claude Code:
 
 ```bash
 ./install-skills.sh

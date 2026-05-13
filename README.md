@@ -42,7 +42,7 @@ Coding rules live in `.claude/rules/` and are automatically loaded based on the 
 - **Common rules** apply to all code. Language-specific rules extend them — they don't replace them.
 - Each language-specific file declares a `paths` frontmatter (e.g. `**/*.java`) so agents load only the relevant rules for the files being edited.
 - When common and language-specific rules conflict, the language-specific rule takes precedence.
-- Currently this only works for claude-code, so to make use of it in codex, the files are linked in the AGENTS.override.md file for codex to load
+- Currently, this only works for Claude Code, so to use it in Codex, link the files in `AGENTS.override.md` for Codex to load.
 
 #### Managing rules
 

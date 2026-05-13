@@ -1,4 +1,21 @@
 services:
+  db:
+    image: pgvector/pgvector:pg18-trixie
+    environment:
+      POSTGRES_DB: team3m
+      POSTGRES_USER: team3m
+      POSTGRES_PASSWORD: team3m
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U team3m -d team3m"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
   core:
     build:
       context: ./core
@@ -25,3 +42,6 @@ services:
       timeout: 3s
       retries: 5
       start_period: 10s
+
+volumes:
+  postgres_data:

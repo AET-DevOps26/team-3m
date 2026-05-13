@@ -1,0 +1,57 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  client-quality:
+    uses: ./.github/workflows/client-quality.yml
+
+  server-quality:
+    uses: ./.github/workflows/server-quality.yml
+    with:
+      working-directory: core
+
+  release:
+    name: Semantic Release
+    needs: [client-quality, server-quality]
+    runs-on: ubuntu-latest
+    outputs:
+      released: ${{ steps.semantic.outputs.new_release_published }}
+      version: ${{ steps.semantic.outputs.new_release_version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Semantic Release
+        id: semantic
+        uses: cycjimmy/semantic-release-action@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  client-docker:
+    needs: release
+    uses: ./.github/workflows/docker-build-push.yml
+    with:
+      context: client
+      image-name: kontor-client
+      version: ${{ needs.release.outputs.version }}
+      released: ${{ needs.release.outputs.released == 'true' }}
+
+  server-docker:
+    needs: release
+    uses: ./.github/workflows/docker-build-push.yml
+    with:
+      context: core
+      image-name: kontor-core
+      version: ${{ needs.release.outputs.version }}
+      released: ${{ needs.release.outputs.released == 'true' }}

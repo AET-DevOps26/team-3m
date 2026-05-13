@@ -1,6 +1,13 @@
 {
   "version": 1,
   "skills": {
+    "docker-patterns": {
+      "source": "affaan-m/everything-claude-code",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/docker-patterns/SKILL.md",
+      "computedHash": "2750c564c7b600fbbfd44de2c693955c677c18c872d06019fa896ab770c69ed9"
+    },
     "shadcn": {
       "source": "shadcn/ui",
       "sourceType": "github",

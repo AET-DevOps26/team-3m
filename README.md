@@ -68,6 +68,8 @@ Skills extend AI coding agents with reusable instructions. They live in `.claude
 ```bash
 # Add a skill (e.g. shadcn/ui)
 npx skills add shadcn/ui
+# or
+npx skills add https://github.com/affaan-m/everything-claude-code/tree/main/skills/docker-patterns -a claude-code -a codex
 
 # List installed skills
 npx skills list

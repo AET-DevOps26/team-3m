@@ -21,6 +21,11 @@ on:
         required: false
         type: boolean
         default: false
+      ref:
+        description: "Git ref to checkout (defaults to triggering event SHA)"
+        required: false
+        type: string
+        default: ""
       push:
         description: "Push image to registry"
         required: false
@@ -49,6 +54,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.sha }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4

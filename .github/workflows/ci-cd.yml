@@ -27,6 +27,7 @@ jobs:
     outputs:
       released: ${{ steps.semantic.outputs.new_release_published }}
       version: ${{ steps.semantic.outputs.new_release_version }}
+      sha: ${{ steps.sha.outputs.sha }}
 
     steps:
       - name: Checkout
@@ -42,6 +43,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Get post-release commit SHA
+        id: sha
+        run: |
+          git pull --ff-only origin main || true
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
   client-docker:
     needs: release
     uses: ./.github/workflows/docker-build-push.yml
@@ -50,6 +57,7 @@ jobs:
       image-name: kontor-client
       version: ${{ needs.release.outputs.version }}
       released: ${{ needs.release.outputs.released == 'true' }}
+      ref: ${{ needs.release.outputs.sha }}
 
   server-docker:
     needs: release
@@ -59,3 +67,4 @@ jobs:
       image-name: kontor-core
       version: ${{ needs.release.outputs.version }}
       released: ${{ needs.release.outputs.released == 'true' }}
+      ref: ${{ needs.release.outputs.sha }}

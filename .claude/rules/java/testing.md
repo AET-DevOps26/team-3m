@@ -8,7 +8,7 @@ paths:
 
 ## Test Framework
 
-- **JUnit 6** (`@Test`, `@ParameterizedTest`, `@Nested`, `@DisplayName`)
+- **JUnit 5 (Jupiter)** (`@Test`, `@ParameterizedTest`, `@Nested`, `@DisplayName`)
 - **AssertJ** for fluent assertions (`assertThat(result).isEqualTo(expected)`)
 - **Mockito** for mocking dependencies
 

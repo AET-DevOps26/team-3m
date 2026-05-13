@@ -6,6 +6,10 @@ spring:
     name: core
 
 app:
+  database:
+    url: jdbc:postgresql://localhost:5432/team3m
+    username: team3m
+    password: team3m
   cors:
     allowed-origins:
       - http://localhost:5173

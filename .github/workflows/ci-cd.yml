@@ -46,8 +46,8 @@ jobs:
       - name: Get post-release commit SHA
         id: sha
         run: |
-          git pull --ff-only origin main || true
-          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          git fetch origin main
+          echo "sha=$(git rev-parse origin/main)" >> "$GITHUB_OUTPUT"
 
   client-docker:
     needs: release

@@ -6,30 +6,30 @@ import {
   Rocket,
   Server,
   Users,
-} from "lucide-react";
-import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+} from "lucide-react"
+import { useState } from "react"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+} from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
 
 type ConnectionStatus =
   | { state: "idle" }
   | { state: "loading" }
   | { state: "success"; message: string; statusCode: number; latencyMs: number }
-  | { state: "error"; error: string };
+  | { state: "error"; error: string }
 
 const teamMembers = [
   { name: "Mathilde", role: "UI/UX Expert" },
   { name: "Magnus", role: "DevOps Expert" },
   { name: "Maximilian", role: "Java Expert" },
-];
+]
 
 const techStack = [
   "React",
@@ -45,49 +45,49 @@ const techStack = [
   "FastAPI",
   "Kubernetes",
   "Docker",
-];
+]
 
 export function StartPage() {
   const [serverStatus, setServerStatus] = useState<ConnectionStatus>({
     state: "idle",
-  });
+  })
   const [databaseStatus, setDatabaseStatus] = useState<ConnectionStatus>({
     state: "idle",
-  });
+  })
 
   async function testConnection(
     endpoint: string,
     setConnectionStatus: (status: ConnectionStatus) => void,
   ) {
-    setConnectionStatus({ state: "loading" });
-    const start = performance.now();
+    setConnectionStatus({ state: "loading" })
+    const start = performance.now()
 
     try {
-      const response = await fetch(endpoint);
-      const latencyMs = Math.round(performance.now() - start);
+      const response = await fetch(endpoint)
+      const latencyMs = Math.round(performance.now() - start)
 
       if (!response.ok) {
-        const errorMessage = await response.text();
+        const errorMessage = await response.text()
         setConnectionStatus({
           state: "error",
           error:
             errorMessage || `HTTP ${response.status} ${response.statusText}`,
-        });
-        return;
+        })
+        return
       }
 
-      const message = await response.text();
+      const message = await response.text()
       setConnectionStatus({
         state: "success",
         message,
         statusCode: response.status,
         latencyMs,
-      });
+      })
     } catch (error) {
       setConnectionStatus({
         state: "error",
         error: error instanceof Error ? error.message : "Unknown error",
-      });
+      })
     }
   }
 
@@ -105,7 +105,7 @@ export function StartPage() {
           </div>
           <p className="font-mono text-foreground">{status.message}</p>
         </div>
-      );
+      )
     }
 
     if (status.state === "error") {
@@ -114,10 +114,10 @@ export function StartPage() {
           <Badge variant="destructive">{label} Connection Failed</Badge>
           <p className="font-mono text-destructive">{status.error}</p>
         </div>
-      );
+      )
     }
 
-    return null;
+    return null
   }
 
   return (
@@ -253,5 +253,5 @@ export function StartPage() {
         </Card>
       </div>
     </div>
-  );
+  )
 }

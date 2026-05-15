@@ -16,6 +16,8 @@
 
 ## Setup
 
+The repository includes a root `.env.example` and a local `.env` with the default compose values. Update `.env` if you want to change the Postgres credentials or database name.
+
 ```sh
 docker compose up --build
 ```
@@ -73,8 +75,6 @@ cd core
 ![Analysis Object Model](deliverables/models/ANALYSIS_OBJECT_MODEL.svg)
 
 ---
-
-The repository includes a root `.env.example` and a local `.env` with the default compose values. Update `.env` if you want to change the Postgres credentials or database name.
 
 ## AI Agent Setup
 

@@ -1,35 +1,38 @@
 import {
   Code,
   Database,
+  FileSpreadsheet,
   Layers,
   Loader2,
   Rocket,
   Server,
   Users,
-} from "lucide-react";
-import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+} from "lucide-react"
+import { useState } from "react"
+import { Link } from "react-router-dom"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+} from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import { API_BASE_URL } from "@/lib/config"
 
 type ConnectionStatus =
   | { state: "idle" }
   | { state: "loading" }
   | { state: "success"; message: string; statusCode: number; latencyMs: number }
-  | { state: "error"; error: string };
+  | { state: "error"; error: string }
 
 const teamMembers = [
   { name: "Mathilde", role: "UI/UX Expert" },
   { name: "Magnus", role: "DevOps Expert" },
   { name: "Maximilian", role: "Java Expert" },
-];
+]
 
 const techStack = [
   "React",
@@ -45,49 +48,49 @@ const techStack = [
   "FastAPI",
   "Kubernetes",
   "Docker",
-];
+]
 
 export function StartPage() {
   const [serverStatus, setServerStatus] = useState<ConnectionStatus>({
     state: "idle",
-  });
+  })
   const [databaseStatus, setDatabaseStatus] = useState<ConnectionStatus>({
     state: "idle",
-  });
+  })
 
   async function testConnection(
     endpoint: string,
     setConnectionStatus: (status: ConnectionStatus) => void,
   ) {
-    setConnectionStatus({ state: "loading" });
-    const start = performance.now();
+    setConnectionStatus({ state: "loading" })
+    const start = performance.now()
 
     try {
-      const response = await fetch(endpoint);
-      const latencyMs = Math.round(performance.now() - start);
+      const response = await fetch(endpoint)
+      const latencyMs = Math.round(performance.now() - start)
 
       if (!response.ok) {
-        const errorMessage = await response.text();
+        const errorMessage = await response.text()
         setConnectionStatus({
           state: "error",
           error:
             errorMessage || `HTTP ${response.status} ${response.statusText}`,
-        });
-        return;
+        })
+        return
       }
 
-      const message = await response.text();
+      const message = await response.text()
       setConnectionStatus({
         state: "success",
         message,
         statusCode: response.status,
         latencyMs,
-      });
+      })
     } catch (error) {
       setConnectionStatus({
         state: "error",
         error: error instanceof Error ? error.message : "Unknown error",
-      });
+      })
     }
   }
 
@@ -105,7 +108,7 @@ export function StartPage() {
           </div>
           <p className="font-mono text-foreground">{status.message}</p>
         </div>
-      );
+      )
     }
 
     if (status.state === "error") {
@@ -114,10 +117,10 @@ export function StartPage() {
           <Badge variant="destructive">{label} Connection Failed</Badge>
           <p className="font-mono text-destructive">{status.error}</p>
         </div>
-      );
+      )
     }
 
-    return null;
+    return null
   }
 
   return (
@@ -204,7 +207,7 @@ export function StartPage() {
               Server Connection
             </CardTitle>
             <CardDescription>
-              Test the backend API and database at localhost:8080
+              Test the backend API and database at {API_BASE_URL}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -212,7 +215,7 @@ export function StartPage() {
               <Button
                 variant="outline"
                 onClick={() =>
-                  testConnection("http://localhost:8080/hello", setServerStatus)
+                  testConnection(`${API_BASE_URL}/hello`, setServerStatus)
                 }
                 disabled={serverStatus.state === "loading"}
               >
@@ -229,10 +232,7 @@ export function StartPage() {
               <Button
                 variant="outline"
                 onClick={() =>
-                  testConnection(
-                    "http://localhost:8080/database",
-                    setDatabaseStatus,
-                  )
+                  testConnection(`${API_BASE_URL}/database`, setDatabaseStatus)
                 }
                 disabled={databaseStatus.state === "loading"}
               >
@@ -251,7 +251,27 @@ export function StartPage() {
             {renderConnectionStatus("Database", databaseStatus)}
           </CardContent>
         </Card>
+
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileSpreadsheet className="size-4" />
+              Data Import
+            </CardTitle>
+            <CardDescription>
+              Import financial transactions from CSV files
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link to="/import">
+              <Button variant="outline">
+                <FileSpreadsheet />
+                Import CSV
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
       </div>
     </div>
-  );
+  )
 }

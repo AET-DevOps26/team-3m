@@ -743,19 +743,8 @@
   "edges": [
     {
       "id": "edge-user-financial-account",
-      "source": "node-user",
-      "target": "node-financial-account",
-      "type": "ClassAggregation",
-      "sourceHandle": "left",
-      "targetHandle": "right",
-      "data": {
-        "points": []
-      }
-    },
-    {
-      "id": "edge-user-portfolio",
-      "source": "node-user",
-      "target": "node-portfolio",
+      "source": "node-financial-account",
+      "target": "node-user",
       "type": "ClassAggregation",
       "sourceHandle": "right",
       "targetHandle": "left",
@@ -764,45 +753,56 @@
       }
     },
     {
+      "id": "edge-user-portfolio",
+      "source": "node-portfolio",
+      "target": "node-user",
+      "type": "ClassAggregation",
+      "sourceHandle": "left",
+      "targetHandle": "right",
+      "data": {
+        "points": []
+      }
+    },
+    {
       "id": "edge-user-watchlist",
-      "source": "node-user",
-      "target": "node-watchlist",
+      "source": "node-watchlist",
+      "target": "node-user",
       "type": "ClassComposition",
-      "sourceHandle": "top",
-      "targetHandle": "left",
+      "sourceHandle": "left",
+      "targetHandle": "top",
       "data": {
         "points": []
       }
     },
     {
       "id": "edge-user-advisor-question",
-      "source": "node-user",
-      "target": "node-advisor-question",
+      "source": "node-advisor-question",
+      "target": "node-user",
       "type": "ClassAggregation",
-      "sourceHandle": "bottom-mid-right",
-      "targetHandle": "left",
+      "sourceHandle": "left",
+      "targetHandle": "bottom-mid-right",
       "data": {
         "points": []
       }
     },
     {
       "id": "edge-user-tax-allowance",
-      "source": "node-user",
-      "target": "node-tax-allowance",
+      "source": "node-tax-allowance",
+      "target": "node-user",
       "type": "ClassAggregation",
-      "sourceHandle": "bottom-mid-left",
-      "targetHandle": "right",
+      "sourceHandle": "right",
+      "targetHandle": "bottom-mid-left",
       "data": {
         "points": []
       }
     },
     {
       "id": "edge-financial-account-financial-transaction",
-      "source": "node-financial-account",
-      "target": "node-financial-transaction",
+      "source": "node-financial-transaction",
+      "target": "node-financial-account",
       "type": "ClassAggregation",
-      "sourceHandle": "left",
-      "targetHandle": "right",
+      "sourceHandle": "right",
+      "targetHandle": "left",
       "data": {
         "points": []
       }
@@ -820,22 +820,22 @@
     },
     {
       "id": "edge-portfolio-position",
-      "source": "node-portfolio",
-      "target": "node-position",
+      "source": "node-position",
+      "target": "node-portfolio",
       "type": "ClassComposition",
-      "sourceHandle": "right",
-      "targetHandle": "left",
+      "sourceHandle": "left",
+      "targetHandle": "right",
       "data": {
         "points": []
       }
     },
     {
       "id": "edge-portfolio-performance",
-      "source": "node-portfolio",
-      "target": "node-performance",
+      "source": "node-performance",
+      "target": "node-portfolio",
       "type": "ClassComposition",
-      "sourceHandle": "top",
-      "targetHandle": "bottom",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
       "data": {
         "points": []
       }
@@ -853,22 +853,22 @@
     },
     {
       "id": "edge-asset-asset-price",
-      "source": "node-asset",
-      "target": "node-asset-price",
+      "source": "node-asset-price",
+      "target": "node-asset",
       "type": "ClassAggregation",
-      "sourceHandle": "right",
-      "targetHandle": "left",
+      "sourceHandle": "left",
+      "targetHandle": "right-mid-top",
       "data": {
         "points": []
       }
     },
     {
       "id": "edge-asset-dividend",
-      "source": "node-asset",
-      "target": "node-dividend",
+      "source": "node-dividend",
+      "target": "node-asset",
       "type": "ClassAggregation",
-      "sourceHandle": "right",
-      "targetHandle": "left",
+      "sourceHandle": "left",
+      "targetHandle": "right-mid-bottom",
       "data": {
         "points": []
       }
@@ -886,11 +886,11 @@
     },
     {
       "id": "edge-watchlist-price-alert",
-      "source": "node-watchlist",
-      "target": "node-price-alert",
+      "source": "node-price-alert",
+      "target": "node-watchlist",
       "type": "ClassComposition",
-      "sourceHandle": "right",
-      "targetHandle": "left",
+      "sourceHandle": "left",
+      "targetHandle": "right",
       "data": {
         "points": []
       }
@@ -963,11 +963,11 @@
     },
     {
       "id": "edge-financial-insight-recommendation",
-      "source": "node-financial-insight",
-      "target": "node-recommendation",
+      "source": "node-recommendation",
+      "target": "node-financial-insight",
       "type": "ClassComposition",
-      "sourceHandle": "bottom",
-      "targetHandle": "top",
+      "sourceHandle": "top",
+      "targetHandle": "bottom",
       "data": {
         "points": []
       }
@@ -996,22 +996,22 @@
     },
     {
       "id": "edge-tax-allowance-tax-relevant-event",
-      "source": "node-tax-allowance",
-      "target": "node-tax-relevant-event",
+      "source": "node-tax-relevant-event",
+      "target": "node-tax-allowance",
       "type": "ClassAggregation",
-      "sourceHandle": "left-mid-top",
-      "targetHandle": "right",
+      "sourceHandle": "right",
+      "targetHandle": "left-mid-top",
       "data": {
         "points": []
       }
     },
     {
       "id": "edge-tax-allowance-tax-summary",
-      "source": "node-tax-allowance",
-      "target": "node-tax-summary",
+      "source": "node-tax-summary",
+      "target": "node-tax-allowance",
       "type": "ClassComposition",
-      "sourceHandle": "left",
-      "targetHandle": "top",
+      "sourceHandle": "top",
+      "targetHandle": "left",
       "data": {
         "points": []
       }

@@ -56,10 +56,10 @@ Coding rules live in `.claude/rules/` and are automatically loaded based on the 
 
 MCP (Model Context Protocol) servers provide tool integrations for AI coding agents. They are configured in two places to support both Claude Code and Codex:
 
-| File | Agent |
-|------|-------|
-| `.mcp.json` | Claude Code (Anthropic) |
-| `.codex/config.toml` | Codex (OpenAI) |
+| File                 | Agent                   |
+| -------------------- | ----------------------- |
+| `.mcp.json`          | Claude Code (Anthropic) |
+| `.codex/config.toml` | Codex (OpenAI)          |
 
 Both files define the same servers — keep them in sync when adding or removing MCP servers.
 
@@ -91,6 +91,7 @@ Local skills are project-specific skills that live in the repository. To create 
 
 1. Create a directory in `.agents/skills/` with a `local_` prefix (e.g. `.agents/skills/local_my-skill/`).
 2. Add a `SKILL.md` file with frontmatter and instructions:
+
    ```markdown
    ---
    name: my-skill
@@ -101,6 +102,7 @@ Local skills are project-specific skills that live in the repository. To create 
 
    Instructions for the agent...
    ```
+
 3. Run `./install-skills.sh` to symlink the skill into `.claude/skills/`.
 
 The `local_` prefix ensures the skill is tracked in git and not overwritten by external skill updates.

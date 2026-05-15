@@ -78,6 +78,10 @@ cd core
 
 This project is configured for AI coding agents (Claude Code, Codex). Rules, skills, and MCP servers ensure agents follow consistent standards across the codebase.
 
+### Project Instructions
+
+[`CLAUDE.md`](CLAUDE.md) is the top-level instruction file for Claude Code. It is automatically loaded at the start of every agent session and provides the agent with project context, commands, and coding rules. [`AGENTS.md`](AGENTS.md) serves the same purpose for Codex. For more information, see the [Claude Code docs on CLAUDE.md](https://code.claude.com/docs/en/claude-directory#ce-claude-md).
+
 ### Rules
 
 Coding rules live in `.claude/rules/` and are automatically loaded based on the files being edited. They enforce consistent style, testing, security, and architectural patterns. For more information, see the [Claude Code Docs](https://code.claude.com/docs/en/memory).

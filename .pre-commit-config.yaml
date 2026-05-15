@@ -21,15 +21,9 @@ repos:
         entry: bash -c 'cd client && npx biome check --write --files-ignore-unknown=true --no-errors-on-unmatched "${@#client/}"' --
         language: system
         files: ^client/
-      - id: gradle-spotless-check
-        name: Spotless Check
-        entry: bash -c 'cd core && ./gradlew spotlessCheck'
-        language: system
-        files: ^core/.*\.java$
-        pass_filenames: false
-      - id: gradle-checkstyle
-        name: Checkstyle
-        entry: bash -c 'cd core && ./gradlew checkstyleMain checkstyleTest'
+      - id: gradle-core-quality
+        name: Spotless and Checkstyle
+        entry: bash -c 'cd core && ./gradlew spotlessCheck checkstyleMain checkstyleTest'
         language: system
         files: ^core/.*\.java$
         pass_filenames: false

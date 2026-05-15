@@ -7,3 +7,5 @@
 !.claude/skills/local_*
 .agents/skills/*
 !.agents/skills/local_*
+
+.env

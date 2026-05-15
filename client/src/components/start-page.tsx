@@ -1,27 +1,35 @@
-import { Code, Layers, Loader2, Rocket, Server, Users } from "lucide-react"
-import { useState } from "react"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import {
+  Code,
+  Database,
+  Layers,
+  Loader2,
+  Rocket,
+  Server,
+  Users,
+} from "lucide-react";
+import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 type ConnectionStatus =
   | { state: "idle" }
   | { state: "loading" }
   | { state: "success"; message: string; statusCode: number; latencyMs: number }
-  | { state: "error"; error: string }
+  | { state: "error"; error: string };
 
 const teamMembers = [
   { name: "Mathilde", role: "UI/UX Expert" },
   { name: "Magnus", role: "DevOps Expert" },
   { name: "Maximilian", role: "Java Expert" },
-]
+];
 
 const techStack = [
   "React",
@@ -37,37 +45,79 @@ const techStack = [
   "FastAPI",
   "Kubernetes",
   "Docker",
-]
+];
 
 export function StartPage() {
-  const [status, setStatus] = useState<ConnectionStatus>({ state: "idle" })
+  const [serverStatus, setServerStatus] = useState<ConnectionStatus>({
+    state: "idle",
+  });
+  const [databaseStatus, setDatabaseStatus] = useState<ConnectionStatus>({
+    state: "idle",
+  });
 
-  async function testConnection() {
-    setStatus({ state: "loading" })
-    const start = performance.now()
+  async function testConnection(
+    endpoint: string,
+    setConnectionStatus: (status: ConnectionStatus) => void,
+  ) {
+    setConnectionStatus({ state: "loading" });
+    const start = performance.now();
+
     try {
-      const res = await fetch("http://localhost:8080/hello")
-      const latencyMs = Math.round(performance.now() - start)
-      if (!res.ok) {
-        setStatus({
+      const response = await fetch(endpoint);
+      const latencyMs = Math.round(performance.now() - start);
+
+      if (!response.ok) {
+        const errorMessage = await response.text();
+        setConnectionStatus({
           state: "error",
-          error: `HTTP ${res.status} ${res.statusText}`,
-        })
-        return
+          error:
+            errorMessage || `HTTP ${response.status} ${response.statusText}`,
+        });
+        return;
       }
-      const message = await res.text()
-      setStatus({
+
+      const message = await response.text();
+      setConnectionStatus({
         state: "success",
         message,
-        statusCode: res.status,
+        statusCode: response.status,
         latencyMs,
-      })
-    } catch (e) {
-      setStatus({
+      });
+    } catch (error) {
+      setConnectionStatus({
         state: "error",
-        error: e instanceof Error ? e.message : "Unknown error",
-      })
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
     }
+  }
+
+  function renderConnectionStatus(label: string, status: ConnectionStatus) {
+    if (status.state === "success") {
+      return (
+        <div className="space-y-2 rounded-lg border border-chart-1/30 bg-chart-1/5 p-3 text-sm">
+          <div className="flex items-center gap-2">
+            <Badge className="bg-chart-1/20 text-chart-5">
+              {label} Connected
+            </Badge>
+            <span className="text-muted-foreground">
+              {status.statusCode} OK &middot; {status.latencyMs}ms
+            </span>
+          </div>
+          <p className="font-mono text-foreground">{status.message}</p>
+        </div>
+      );
+    }
+
+    if (status.state === "error") {
+      return (
+        <div className="space-y-1 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
+          <Badge variant="destructive">{label} Connection Failed</Badge>
+          <p className="font-mono text-destructive">{status.error}</p>
+        </div>
+      );
+    }
+
+    return null;
   }
 
   return (
@@ -154,44 +204,54 @@ export function StartPage() {
               Server Connection
             </CardTitle>
             <CardDescription>
-              Test the backend API at localhost:8080
+              Test the backend API and database at localhost:8080
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button
-              variant="outline"
-              onClick={testConnection}
-              disabled={status.state === "loading"}
-            >
-              {status.state === "loading" && (
-                <Loader2 className="animate-spin" />
-              )}
-              {status.state === "loading" ? "Connecting..." : "Test Connection"}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                onClick={() =>
+                  testConnection("http://localhost:8080/hello", setServerStatus)
+                }
+                disabled={serverStatus.state === "loading"}
+              >
+                {serverStatus.state === "loading" ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <Server />
+                )}
+                {serverStatus.state === "loading"
+                  ? "Connecting..."
+                  : "Test Server"}
+              </Button>
 
-            {status.state === "success" && (
-              <div className="space-y-2 rounded-lg border border-chart-1/30 bg-chart-1/5 p-3 text-sm">
-                <div className="flex items-center gap-2">
-                  <Badge className="bg-chart-1/20 text-chart-5">
-                    Connected
-                  </Badge>
-                  <span className="text-muted-foreground">
-                    {status.statusCode} OK &middot; {status.latencyMs}ms
-                  </span>
-                </div>
-                <p className="font-mono text-foreground">{status.message}</p>
-              </div>
-            )}
+              <Button
+                variant="outline"
+                onClick={() =>
+                  testConnection(
+                    "http://localhost:8080/database",
+                    setDatabaseStatus,
+                  )
+                }
+                disabled={databaseStatus.state === "loading"}
+              >
+                {databaseStatus.state === "loading" ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <Database />
+                )}
+                {databaseStatus.state === "loading"
+                  ? "Connecting..."
+                  : "Test Database"}
+              </Button>
+            </div>
 
-            {status.state === "error" && (
-              <div className="space-y-1 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
-                <Badge variant="destructive">Connection Failed</Badge>
-                <p className="font-mono text-destructive">{status.error}</p>
-              </div>
-            )}
+            {renderConnectionStatus("Server", serverStatus)}
+            {renderConnectionStatus("Database", databaseStatus)}
           </CardContent>
         </Card>
       </div>
     </div>
-  )
+  );
 }

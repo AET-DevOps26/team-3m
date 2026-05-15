@@ -6,6 +6,10 @@ spring:
     name: core
 
 app:
+  database:
+    url: ${APP_DATABASE_URL:jdbc:postgresql://localhost:5432/team3m}
+    username: ${APP_DATABASE_USERNAME:team3m}
+    password: ${APP_DATABASE_PASSWORD:change-me-local}
   cors:
     allowed-origins:
       - http://localhost:5173

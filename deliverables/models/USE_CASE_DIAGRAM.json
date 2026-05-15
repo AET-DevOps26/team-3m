@@ -40,41 +40,41 @@
     },
     {
       "id": "grp00001-0000-0000-0000-000000000002",
-      "width": 1040,
-      "height": 260,
+      "width": 780,
+      "height": 290,
       "type": "useCaseSystem",
       "position": {
-        "x": 550,
-        "y": 670
+        "x": 780,
+        "y": 660
       },
       "data": {
         "name": "Financial Research"
       },
       "measured": {
-        "width": 1040,
-        "height": 260
+        "width": 780,
+        "height": 290
       }
     },
     {
       "id": "grp00001-0000-0000-0000-000000000003",
-      "width": 770,
-      "height": 170,
+      "width": 730,
+      "height": 200,
       "type": "useCaseSystem",
       "position": {
-        "x": 730,
-        "y": 1060
+        "x": 830,
+        "y": 1070
       },
       "data": {
         "name": "Tax Reporting"
       },
       "measured": {
-        "width": 770,
-        "height": 170
+        "width": 730,
+        "height": 200
       }
     },
     {
       "id": "grp00001-0000-0000-0000-000000000004",
-      "width": 550,
+      "width": 660,
       "height": 240,
       "type": "useCaseSystem",
       "position": {
@@ -85,7 +85,7 @@
         "name": "Expense Tracking"
       },
       "measured": {
-        "width": 550,
+        "width": 660,
         "height": 240
       }
     },
@@ -238,8 +238,8 @@
       "height": 100,
       "type": "useCase",
       "position": {
-        "x": 195,
-        "y": 15
+        "x": 200,
+        "y": 10
       },
       "parentId": "grp00001-0000-0000-0000-000000000002",
       "data": {
@@ -256,8 +256,8 @@
       "height": 100,
       "type": "useCase",
       "position": {
-        "x": 320,
-        "y": 140
+        "x": 340,
+        "y": 170
       },
       "parentId": "grp00001-0000-0000-0000-000000000002",
       "data": {
@@ -275,7 +275,7 @@
       "type": "useCase",
       "position": {
         "x": 60,
-        "y": 140
+        "y": 170
       },
       "parentId": "grp00001-0000-0000-0000-000000000002",
       "data": {
@@ -310,8 +310,8 @@
       "height": 100,
       "type": "useCase",
       "position": {
-        "x": 375,
-        "y": 125
+        "x": 470,
+        "y": 110
       },
       "parentId": "grp00001-0000-0000-0000-000000000004",
       "data": {
@@ -328,7 +328,7 @@
       "height": 100,
       "type": "useCase",
       "position": {
-        "x": 310,
+        "x": 550,
         "y": 60
       },
       "parentId": "grp00001-0000-0000-0000-000000000003",
@@ -364,8 +364,8 @@
       "height": 100,
       "type": "useCase",
       "position": {
-        "x": 205,
-        "y": 45
+        "x": 260,
+        "y": 120
       },
       "parentId": "grp00001-0000-0000-0000-000000000004",
       "data": {
@@ -401,47 +401,11 @@
       "type": "useCase",
       "position": {
         "x": 580,
-        "y": 140
+        "y": 90
       },
       "parentId": "grp00001-0000-0000-0000-000000000002",
       "data": {
         "name": "Set Price Alert"
-      },
-      "measured": {
-        "width": 160,
-        "height": 100
-      }
-    },
-    {
-      "id": "1d90ce21-cc2c-408f-a11f-5915c081bf9e",
-      "width": 160,
-      "height": 100,
-      "type": "useCase",
-      "position": {
-        "x": 860,
-        "y": 140
-      },
-      "parentId": "grp00001-0000-0000-0000-000000000002",
-      "data": {
-        "name": "Receive Price Alert Notification"
-      },
-      "measured": {
-        "width": 160,
-        "height": 100
-      }
-    },
-    {
-      "id": "2c344ac3-f8e8-40c4-a445-1da69ce53a50",
-      "width": 160,
-      "height": 100,
-      "type": "useCase",
-      "position": {
-        "x": 590,
-        "y": 60
-      },
-      "parentId": "grp00001-0000-0000-0000-000000000003",
-      "data": {
-        "name": "Receive Tax Reminder"
       },
       "measured": {
         "width": 160,
@@ -543,7 +507,7 @@
       "source": "6f57b0e3-d1d3-448b-bcdf-508a57b469c1",
       "target": "db39fc2e-728c-438c-9c07-30ea5eb267f6",
       "type": "UseCaseAssociation",
-      "sourceHandle": "left",
+      "sourceHandle": "top",
       "targetHandle": "bottom-right",
       "data": {
         "points": []
@@ -554,7 +518,7 @@
       "source": "5961a6b5-1bc5-4142-8ec0-c296a92797ed",
       "target": "db39fc2e-728c-438c-9c07-30ea5eb267f6",
       "type": "UseCaseAssociation",
-      "sourceHandle": "left",
+      "sourceHandle": "top",
       "targetHandle": "bottom-right",
       "data": {
         "points": []
@@ -567,50 +531,6 @@
       "type": "UseCaseInclude",
       "sourceHandle": "right",
       "targetHandle": "left",
-      "data": {
-        "points": []
-      }
-    },
-    {
-      "id": "c804a959-48c8-4913-8f57-67c76c899f33",
-      "source": "3389aa20-0779-46fd-a89c-184107bf6fd1",
-      "target": "3a094d8d-5fe9-4b72-a85e-1832ff9a8b3c",
-      "type": "UseCaseExtend",
-      "sourceHandle": "left",
-      "targetHandle": "right",
-      "data": {
-        "points": []
-      }
-    },
-    {
-      "id": "98d8a25b-c975-4314-a279-ea75bf6623d2",
-      "source": "1d90ce21-cc2c-408f-a11f-5915c081bf9e",
-      "target": "3389aa20-0779-46fd-a89c-184107bf6fd1",
-      "type": "UseCaseExtend",
-      "sourceHandle": "left",
-      "targetHandle": "right",
-      "data": {
-        "points": []
-      }
-    },
-    {
-      "id": "92f01fdf-090a-49c2-8696-4e53baabd0ed",
-      "source": "7465531c-cc6a-4404-bd65-7eb97b142b3a",
-      "target": "5961a6b5-1bc5-4142-8ec0-c296a92797ed",
-      "type": "UseCaseExtend",
-      "sourceHandle": "left",
-      "targetHandle": "right",
-      "data": {
-        "points": []
-      }
-    },
-    {
-      "id": "5b3c8d64-7db6-46d8-a839-4b2e57982fb5",
-      "source": "2c344ac3-f8e8-40c4-a445-1da69ce53a50",
-      "target": "359166dd-7405-451c-b7a9-ed0977717bb1",
-      "type": "UseCaseExtend",
-      "sourceHandle": "left",
-      "targetHandle": "right",
       "data": {
         "points": []
       }
@@ -677,6 +597,39 @@
       "type": "UseCaseAssociation",
       "sourceHandle": "right-bottom",
       "targetHandle": "top",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "4282501b-d4de-42b4-9d7a-3fcf3b2c3b62",
+      "source": "3389aa20-0779-46fd-a89c-184107bf6fd1",
+      "target": "db39fc2e-728c-438c-9c07-30ea5eb267f6",
+      "type": "UseCaseAssociation",
+      "sourceHandle": "left",
+      "targetHandle": "right",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "0ae9ca08-b004-4309-92cc-ac355e58c4e2",
+      "source": "3389aa20-0779-46fd-a89c-184107bf6fd1",
+      "target": "3a094d8d-5fe9-4b72-a85e-1832ff9a8b3c",
+      "type": "UseCaseInclude",
+      "sourceHandle": "bottom",
+      "targetHandle": "right",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "cc28747a-0fea-4629-a3bb-e415be08cb7b",
+      "source": "7465531c-cc6a-4404-bd65-7eb97b142b3a",
+      "target": "db39fc2e-728c-438c-9c07-30ea5eb267f6",
+      "type": "UseCaseAssociation",
+      "sourceHandle": "top",
+      "targetHandle": "bottom-right",
       "data": {
         "points": []
       }

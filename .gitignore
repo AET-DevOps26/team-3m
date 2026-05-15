@@ -1,1 +1,9 @@
 *.DS_STORE
+.claude/settings.local.json
+*.vscode
+
+# Ignore non-local skills (synced externally)
+.claude/skills/*
+!.claude/skills/local_*
+.agents/skills/*
+!.agents/skills/local_*

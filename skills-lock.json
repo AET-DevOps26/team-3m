@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "skills": {
+    "docker-patterns": {
+      "source": "affaan-m/everything-claude-code",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/docker-patterns/SKILL.md",
+      "computedHash": "2750c564c7b600fbbfd44de2c693955c677c18c872d06019fa896ab770c69ed9"
+    },
+    "shadcn": {
+      "source": "shadcn/ui",
+      "sourceType": "github",
+      "skillPath": "skills/shadcn/SKILL.md",
+      "computedHash": "80a6226e78f6d1fe464214ae0ef449d49d8ffaa3e7704f011e9b418c678ad4d1"
+    },
+    "springboot-patterns": {
+      "source": "affaan-m/everything-claude-code",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/springboot-patterns/SKILL.md",
+      "computedHash": "bc422225a6b9f72cc69c45b2c4b8828d8a2c35c2fe2a893700932178f49e3900"
+    },
+    "springboot-security": {
+      "source": "affaan-m/everything-claude-code",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/springboot-security/SKILL.md",
+      "computedHash": "85450647da9a2d1390da8c75c04cad6b56e48158af1de1862329ebcffec2e199"
+    }
+  }
+}

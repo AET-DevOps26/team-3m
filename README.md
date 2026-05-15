@@ -2,17 +2,6 @@
 
 **Kontor** is a Progressive Web App that consolidates personal finance data - transactions, portfolios, and market data - and uses a GenAI layer to surface personalised, actionable insights. Stock and ETF data is sourced via Yahoo Finance; the AI component uses Retrieval-Augmented Generation (RAG) over the user's own financial data and curated financial news.
 
-## Table of Contents
-
-- [Tech Stack](#tech-stack)
-- [Setup](#setup)
-  - [Docker (recommended)](#docker-recommended)
-  - [Local Development](#local-development)
-- [Structure](#structure)
-- [UML Models](#uml-models)
-- [CI/CD](#cicd)
-- [AI Agent Setup](#ai-agent-setup)
-
 ---
 
 ## Tech Stack
@@ -26,10 +15,6 @@
 ---
 
 ## Setup
-
-### Docker (recommended)
-
-Requires [Docker](https://docs.docker.com/get-docker/) with Compose.
 
 ```sh
 docker compose up --build
@@ -50,8 +35,6 @@ npm install
 npm run dev
 ```
 
-The dev server starts at <http://localhost:5173>.
-
 | Task             | Command             |
 | ---------------- | ------------------- |
 | Type check       | `npm run typecheck` |
@@ -67,8 +50,6 @@ cd core
 ./gradlew build
 ```
 
-The server starts at <http://localhost:8080>.
-
 | Task          | Command                                   |
 | ------------- | ----------------------------------------- |
 | Test          | `./gradlew test`                          |
@@ -78,35 +59,6 @@ The server starts at <http://localhost:8080>.
 | Lint          | `./gradlew checkstyleMain checkstyleTest` |
 
 ---
-
-## Structure
-
-```
-team-3m/
-├── client/                  # React client (Vite, TypeScript, shadcn/ui)
-│   ├── src/
-│   │   ├── components/      # UI components
-│   │   ├── lib/             # Utilities and helpers
-│   │   └── App.tsx
-│   └── Dockerfile
-├── core/                    # Spring Boot server (Java 25, Gradle)
-│   ├── src/
-│   │   └── main/java/de/devops26/kontor/core/
-│   └── Dockerfile
-├── deliverables/
-│   ├── models/              # UML diagrams (SVG)
-│   └── PROBLEM_STATEMENT.md
-├── resources/               # Project documentation and best practices
-├── .github/
-│   └── workflows/           # GitHub Actions CI pipelines
-├── .claude/rules/           # AI coding agent rules
-├── .agents/skills/          # AI coding agent skills
-└── docker-compose.yml
-```
-
----
-
-## UML Models
 
 ### Top Level Architecture
 
@@ -119,17 +71,6 @@ team-3m/
 ### Analysis Object Model
 
 ![Analysis Object Model](deliverables/models/ANALYSIS_OBJECT_MODEL.svg)
-
----
-
-## CI/CD
-
-CI runs automatically on every pull request via GitHub Actions:
-
-| Workflow             | Trigger               | Checks                                                     |
-| -------------------- | --------------------- | ---------------------------------------------------------- |
-| `client-quality.yml` | PR touching `client/` | Type check, lint (Biome)                                   |
-| `server-quality.yml` | PR touching `core/`   | Compile, format (Spotless), lint (Checkstyle, Error Prone) |
 
 ---
 

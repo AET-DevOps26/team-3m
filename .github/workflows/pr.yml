@@ -1,0 +1,33 @@
+name: PR CI/CD
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  client-quality:
+    uses: ./.github/workflows/client-quality.yml
+
+  server-quality:
+    uses: ./.github/workflows/server-quality.yml
+    with:
+      working-directory: core
+
+  client-docker:
+    needs: client-quality
+    uses: ./.github/workflows/docker-build-push.yml
+    with:
+      context: client
+      image-name: kontor-client
+
+  server-docker:
+    needs: server-quality
+    uses: ./.github/workflows/docker-build-push.yml
+    with:
+      context: core
+      image-name: kontor-core

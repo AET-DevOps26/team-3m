@@ -88,7 +88,7 @@ This project is configured for AI coding agents (Claude Code, Codex). Rules, ski
 
 Coding rules live in `.claude/rules/` and are automatically loaded based on the files being edited. They enforce consistent style, testing, security, and architectural patterns. For more information, see the [Claude Code Docs](https://code.claude.com/docs/en/memory).
 
-```
+```text
 .claude/rules/
 ├── common/              # Apply to all code
 │   ├── coding-style.md  # Immutability, KISS/DRY/YAGNI, naming, file organization

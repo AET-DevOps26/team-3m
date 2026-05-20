@@ -87,7 +87,13 @@ export function RecoveryHost() {
             <AlertDialogAction
               key={option.label}
               variant={option.variant ?? "default"}
-              onClick={() => runRecovery(option)}
+              onClick={(event) => {
+                // AlertDialogAction closes the dialog by default, which would
+                // trigger handleClose via onOpenChange and advance the queue
+                // before runRecovery's finally fires.
+                event.preventDefault()
+                void runRecovery(option)
+              }}
             >
               {option.label}
             </AlertDialogAction>
@@ -106,7 +112,15 @@ function showToast(error: RecoverableError) {
     action: first
       ? {
           label: first.label,
-          onClick: () => first.action(),
+          onClick: () => {
+            void Promise.resolve(first.action()).catch((cause) => {
+              publishRecoverableError(
+                RecoverableError.wrapping(cause, {
+                  title: "Recovery action failed",
+                }),
+              )
+            })
+          },
         }
       : undefined,
   })

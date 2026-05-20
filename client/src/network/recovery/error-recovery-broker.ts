@@ -6,7 +6,11 @@ const listeners = new Set<Listener>()
 
 export function publishRecoverableError(error: RecoverableError): void {
   for (const listener of listeners) {
-    listener(error)
+    try {
+      listener(error)
+    } catch (cause) {
+      console.error("recoverable error listener threw", cause)
+    }
   }
 }
 

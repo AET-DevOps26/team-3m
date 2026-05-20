@@ -3,6 +3,8 @@ package de.devops26.kontor.core.transaction;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -15,6 +17,8 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/api/v1/financial-transactions")
 public class FinancialTransactionController {
+
+    private static final Logger log = LoggerFactory.getLogger(FinancialTransactionController.class);
 
     private final FinancialTransactionService service;
 
@@ -39,8 +43,8 @@ public class FinancialTransactionController {
 
     @ExceptionHandler(IOException.class)
     public ResponseEntity<Map<String, Object>> handleIoException(IOException ex) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(errorBody("Failed to read uploaded file: " + ex.getMessage()));
+        log.warn("Failed to read uploaded CSV", ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorBody("Failed to read uploaded file"));
     }
 
     private static Map<String, Object> errorBody(String message) {

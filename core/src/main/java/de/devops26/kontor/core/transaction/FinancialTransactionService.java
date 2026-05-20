@@ -8,7 +8,9 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
@@ -28,8 +30,13 @@ public class FinancialTransactionService {
     private static final int MAX_LEN_IBAN = 34;
     private static final int MAX_LEN_PAYMENT_REFERENCE = 255;
     private static final int MAX_LEN_MCC_CODE = 4;
+    private static final int MAX_PRECISION_AMOUNT = 18;
     private static final int MAX_SCALE_AMOUNT = 6;
+    private static final int MAX_PRECISION_SHARES = 20;
     private static final int MAX_SCALE_SHARES = 10;
+
+    private static final Set<String> REQUIRED_HEADERS =
+            Set.of("datetime", "date", "account_type", "category", "type", "amount", "currency", "transaction_id");
 
     private final FinancialTransactionRepository repository;
 
@@ -51,6 +58,12 @@ public class FinancialTransactionService {
 
         try (var reader = new InputStreamReader(input, StandardCharsets.UTF_8);
                 var parser = format.parse(reader)) {
+            var missing = new LinkedHashSet<>(REQUIRED_HEADERS);
+            missing.removeAll(parser.getHeaderNames());
+            if (!missing.isEmpty()) {
+                throw new CsvParsingException(
+                        "CSV is missing required header(s): " + String.join(", ", missing), List.of());
+            }
             int rowNumber = 1;
             for (CSVRecord record : parser) {
                 rowNumber++;
@@ -85,16 +98,42 @@ public class FinancialTransactionService {
         var assetClass = optionalString(record, "asset_class", MAX_LEN_ASSET_CLASS, rowNumber, errors);
         var name = optionalString(record, "name", MAX_LEN_NAME, rowNumber, errors);
         var symbol = optionalString(record, "symbol", MAX_LEN_SYMBOL, rowNumber, errors);
-        var shares = parseOptional(record, "shares", rowNumber, errors, value -> parseAmount(value, MAX_SCALE_SHARES));
-        var price = parseOptional(record, "price", rowNumber, errors, value -> parseAmount(value, MAX_SCALE_AMOUNT));
-        var amount = parseRequired(record, "amount", rowNumber, errors, value -> parseAmount(value, MAX_SCALE_AMOUNT));
-        var fee = parseOptional(record, "fee", rowNumber, errors, value -> parseAmount(value, MAX_SCALE_AMOUNT));
-        var tax = parseOptional(record, "tax", rowNumber, errors, value -> parseAmount(value, MAX_SCALE_AMOUNT));
+        var shares = parseOptional(
+                record,
+                "shares",
+                rowNumber,
+                errors,
+                value -> parseAmount(value, MAX_PRECISION_SHARES, MAX_SCALE_SHARES));
+        var price = parseOptional(
+                record,
+                "price",
+                rowNumber,
+                errors,
+                value -> parseAmount(value, MAX_PRECISION_AMOUNT, MAX_SCALE_AMOUNT));
+        var amount = parseRequired(
+                record,
+                "amount",
+                rowNumber,
+                errors,
+                value -> parseAmount(value, MAX_PRECISION_AMOUNT, MAX_SCALE_AMOUNT));
+        var fee = parseOptional(
+                record, "fee", rowNumber, errors, value -> parseAmount(value, MAX_PRECISION_AMOUNT, MAX_SCALE_AMOUNT));
+        var tax = parseOptional(
+                record, "tax", rowNumber, errors, value -> parseAmount(value, MAX_PRECISION_AMOUNT, MAX_SCALE_AMOUNT));
         var currency = requireNonBlank(record, "currency", MAX_LEN_CURRENCY, rowNumber, errors);
         var originalAmount = parseOptional(
-                record, "original_amount", rowNumber, errors, value -> parseAmount(value, MAX_SCALE_AMOUNT));
+                record,
+                "original_amount",
+                rowNumber,
+                errors,
+                value -> parseAmount(value, MAX_PRECISION_AMOUNT, MAX_SCALE_AMOUNT));
         var originalCurrency = optionalString(record, "original_currency", MAX_LEN_CURRENCY, rowNumber, errors);
-        var fxRate = parseOptional(record, "fx_rate", rowNumber, errors, value -> parseAmount(value, MAX_SCALE_AMOUNT));
+        var fxRate = parseOptional(
+                record,
+                "fx_rate",
+                rowNumber,
+                errors,
+                value -> parseAmount(value, MAX_PRECISION_AMOUNT, MAX_SCALE_AMOUNT));
         var description = blankToNull(record, "description");
         var transactionId = parseRequired(record, "transaction_id", rowNumber, errors, UUID::fromString);
         var counterpartyName = optionalString(record, "counterparty_name", MAX_LEN_NAME, rowNumber, errors);
@@ -177,10 +216,15 @@ public class FinancialTransactionService {
         return value;
     }
 
-    private BigDecimal parseAmount(String value, int maxScale) {
+    private BigDecimal parseAmount(String value, int maxPrecision, int maxScale) {
         var amount = new BigDecimal(value);
         if (amount.scale() > maxScale) {
             throw new IllegalArgumentException("more than " + maxScale + " fractional digits");
+        }
+        int maxIntegerDigits = maxPrecision - maxScale;
+        int integerDigits = Math.max(amount.precision() - amount.scale(), 0);
+        if (integerDigits > maxIntegerDigits) {
+            throw new IllegalArgumentException("integer part exceeds " + maxIntegerDigits + " digits");
         }
         return amount;
     }

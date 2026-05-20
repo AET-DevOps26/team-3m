@@ -6,7 +6,7 @@ import {
   Loader2,
   Upload,
 } from "lucide-react"
-import { useRef, useState } from "react"
+import { type ChangeEvent, type DragEvent, useId, useState } from "react"
 import { Link } from "react-router-dom"
 import { toast } from "sonner"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -120,7 +120,10 @@ export function ImportTransactionsPage() {
 }
 
 function isCsvFile(file: File): boolean {
-  return file.type === ACCEPTED_TYPE || file.name.endsWith(ACCEPTED_EXTENSION)
+  return (
+    file.type === ACCEPTED_TYPE ||
+    file.name.toLowerCase().endsWith(ACCEPTED_EXTENSION)
+  )
 }
 
 interface CsvDropzoneProps {
@@ -131,7 +134,7 @@ interface CsvDropzoneProps {
 function CsvDropzone({ onFileSelected, disabled }: CsvDropzoneProps) {
   const [isDragOver, setIsDragOver] = useState(false)
   const [invalidMessage, setInvalidMessage] = useState<string | null>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputId = useId()
 
   function handleFile(file: File) {
     if (!isCsvFile(file)) {
@@ -144,7 +147,7 @@ function CsvDropzone({ onFileSelected, disabled }: CsvDropzoneProps) {
     onFileSelected(file)
   }
 
-  function handleDrop(event: React.DragEvent) {
+  function handleDrop(event: DragEvent<HTMLLabelElement>) {
     event.preventDefault()
     setIsDragOver(false)
     if (disabled) return
@@ -155,39 +158,37 @@ function CsvDropzone({ onFileSelected, disabled }: CsvDropzoneProps) {
     }
   }
 
-  function handleDragOver(event: React.DragEvent) {
+  function handleDragOver(event: DragEvent<HTMLLabelElement>) {
     event.preventDefault()
     if (!disabled) {
       setIsDragOver(true)
     }
   }
 
-  function handleDragLeave(event: React.DragEvent) {
-    event.preventDefault()
+  function handleDragLeave(event: DragEvent<HTMLLabelElement>) {
+    if (event.currentTarget.contains(event.relatedTarget as Node | null)) {
+      return
+    }
     setIsDragOver(false)
   }
 
-  function handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
+  function handleInputChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
     if (file) {
       handleFile(file)
     }
-    if (inputRef.current) {
-      inputRef.current.value = ""
-    }
+    event.target.value = ""
   }
 
   return (
     <div className="space-y-2">
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
+      <label
+        htmlFor={inputId}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
-        disabled={disabled}
         className={cn(
-          "flex w-full flex-col items-center gap-3 rounded-lg border-2 border-dashed p-6 transition-colors sm:p-10",
+          "flex w-full cursor-pointer flex-col items-center gap-3 rounded-lg border-2 border-dashed p-6 transition-colors sm:p-10",
           isDragOver
             ? "border-primary bg-primary/5"
             : "border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50",
@@ -209,13 +210,14 @@ function CsvDropzone({ onFileSelected, disabled }: CsvDropzoneProps) {
           </p>
         </div>
         <input
-          ref={inputRef}
+          id={inputId}
           type="file"
           accept=".csv,text/csv"
           onChange={handleInputChange}
-          className="hidden"
+          disabled={disabled}
+          className="sr-only"
         />
-      </button>
+      </label>
 
       {invalidMessage && (
         <div

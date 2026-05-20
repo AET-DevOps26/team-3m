@@ -1,5 +1,6 @@
 export interface PluralizeOptions {
   plural?: string
+  locale?: string
 }
 
 export function pluralize(
@@ -8,5 +9,9 @@ export function pluralize(
   options: PluralizeOptions = {},
 ): string {
   const plural = options.plural ?? `${singular}s`
-  return `${count} ${count === 1 ? singular : plural}`
+  const locale =
+    options.locale ??
+    (typeof navigator !== "undefined" ? navigator.language : "en")
+  const rules = new Intl.PluralRules(locale)
+  return `${count} ${rules.select(count) === "one" ? singular : plural}`
 }

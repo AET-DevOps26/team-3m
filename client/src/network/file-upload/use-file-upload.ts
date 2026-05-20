@@ -1,14 +1,16 @@
 import { type UseMutationResult, useMutation } from "@tanstack/react-query"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import { ZodError } from "zod"
 import { APIError, type ErrorFormatter } from "../errors"
 import { uploadFile } from "./upload-file"
 
 export interface UseFileUploadOptions<T> {
   path: string
   fieldName?: string
-  errorFormatter: ErrorFormatter
+  errorFormatter?: ErrorFormatter
   parseResponse?: (raw: unknown) => T
   onSuccess?: (data: T, file: File) => void
+  silent?: boolean
 }
 
 export type UseFileUploadResult<T> = UseMutationResult<T, APIError, File> & {
@@ -22,27 +24,40 @@ export function useFileUpload<T>(
 ): UseFileUploadResult<T> {
   const [progress, setProgress] = useState(0)
   const [activeFileName, setActiveFileName] = useState<string | null>(null)
+  const abortRef = useRef<AbortController | null>(null)
 
   const mutation = useMutation<T, APIError, File>({
     mutationFn: async (file) => {
-      const raw = await uploadFile<unknown>({
-        path: options.path,
-        file,
-        fieldName: options.fieldName,
-        onProgress: setProgress,
-      })
-      if (!options.parseResponse) {
-        return raw as T
-      }
+      const controller = new AbortController()
+      abortRef.current = controller
       try {
-        return options.parseResponse(raw)
-      } catch (cause) {
-        throw new APIError({
-          code: "parse",
-          message: "Unexpected server response",
-          cause,
-          details: raw,
+        const raw = await uploadFile<unknown>({
+          path: options.path,
+          file,
+          fieldName: options.fieldName,
+          onProgress: setProgress,
+          signal: controller.signal,
         })
+        if (!options.parseResponse) {
+          return raw as T
+        }
+        try {
+          return options.parseResponse(raw)
+        } catch (cause) {
+          if (cause instanceof ZodError) {
+            throw new APIError({
+              code: "parse",
+              message: "Unexpected server response",
+              cause,
+              details: cause.issues,
+            })
+          }
+          throw cause
+        }
+      } finally {
+        if (abortRef.current === controller) {
+          abortRef.current = null
+        }
       }
     },
     onMutate: (file) => {
@@ -54,10 +69,18 @@ export function useFileUpload<T>(
     },
     meta: {
       errorFormatter: options.errorFormatter,
+      silent: options.silent,
     },
   })
 
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort()
+    }
+  }, [])
+
   function reset() {
+    abortRef.current?.abort()
     setProgress(0)
     setActiveFileName(null)
     mutation.reset()

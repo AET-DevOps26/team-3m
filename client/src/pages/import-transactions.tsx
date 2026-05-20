@@ -6,7 +6,13 @@ import {
   Loader2,
   Upload,
 } from "lucide-react"
-import { type ChangeEvent, type DragEvent, useId, useState } from "react"
+import {
+  type ChangeEvent,
+  type DragEvent,
+  useId,
+  useMemo,
+  useState,
+} from "react"
 import { Link } from "react-router-dom"
 import { toast } from "sonner"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -39,7 +45,10 @@ export function ImportTransactionsPage() {
     },
   })
 
-  const validationFailure = extractValidationFailure(importCsv.error)
+  const validationFailure = useMemo(
+    () => extractValidationFailure(importCsv.error),
+    [importCsv.error],
+  )
   const otherErrorMessage =
     !validationFailure && importCsv.error ? importCsv.error.message : null
 
@@ -135,6 +144,7 @@ function CsvDropzone({ onFileSelected, disabled }: CsvDropzoneProps) {
   const [isDragOver, setIsDragOver] = useState(false)
   const [invalidMessage, setInvalidMessage] = useState<string | null>(null)
   const inputId = useId()
+  const invalidMessageId = useId()
 
   function handleFile(file: File) {
     if (!isCsvFile(file)) {
@@ -187,6 +197,7 @@ function CsvDropzone({ onFileSelected, disabled }: CsvDropzoneProps) {
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
+        aria-label="Drop a CSV file here or press Enter to choose a file"
         className={cn(
           "flex w-full cursor-pointer flex-col items-center gap-3 rounded-lg border-2 border-dashed p-6 transition-colors sm:p-10",
           isDragOver
@@ -215,12 +226,15 @@ function CsvDropzone({ onFileSelected, disabled }: CsvDropzoneProps) {
           accept=".csv,text/csv"
           onChange={handleInputChange}
           disabled={disabled}
+          aria-describedby={invalidMessage ? invalidMessageId : undefined}
+          aria-invalid={invalidMessage ? true : undefined}
           className="sr-only"
         />
       </label>
 
       {invalidMessage && (
         <div
+          id={invalidMessageId}
           role="alert"
           className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive"
         >

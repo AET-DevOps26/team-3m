@@ -24,16 +24,27 @@ export function uploadFile<T>(options: UploadFileOptions): Promise<T> {
     const xhr = new XMLHttpRequest()
     xhr.open("POST", `${API_BASE_URL}${path}`)
 
+    let settled = false
+    function settle() {
+      settled = true
+    }
+
     if (onProgress) {
       xhr.upload.addEventListener("progress", (event) => {
-        if (event.lengthComputable) {
-          onProgress(Math.round((event.loaded / event.total) * 100))
-        }
+        if (settled || !event.lengthComputable) return
+        onProgress(Math.round((event.loaded / event.total) * 100))
       })
     }
 
     xhr.addEventListener("load", () => {
-      const data = parseResponse(xhr.responseText)
+      settle()
+      let data: unknown
+      try {
+        data = parseResponseBody(xhr.responseText)
+      } catch (cause) {
+        reject(cause as APIError)
+        return
+      }
 
       if (xhr.status >= 200 && xhr.status < 300) {
         resolve(data as T)
@@ -51,6 +62,7 @@ export function uploadFile<T>(options: UploadFileOptions): Promise<T> {
     })
 
     xhr.addEventListener("error", () => {
+      settle()
       reject(
         new APIError({
           code: "network",
@@ -60,6 +72,7 @@ export function uploadFile<T>(options: UploadFileOptions): Promise<T> {
     })
 
     xhr.addEventListener("abort", () => {
+      settle()
       reject(new APIError({ code: "aborted", message: "Upload cancelled" }))
     })
 
@@ -71,14 +84,19 @@ export function uploadFile<T>(options: UploadFileOptions): Promise<T> {
   })
 }
 
-function parseResponse(text: string): unknown {
+function parseResponseBody(text: string): unknown {
   if (text === "") {
     return null
   }
   try {
     return JSON.parse(text)
-  } catch {
-    return text
+  } catch (cause) {
+    throw new APIError({
+      code: "parse",
+      message: "Server returned an unparsable response",
+      cause,
+      details: text,
+    })
   }
 }
 

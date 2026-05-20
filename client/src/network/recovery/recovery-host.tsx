@@ -21,8 +21,18 @@ const DIALOG_MIN_OPTIONS = 2
 export function RecoveryHost() {
   const [current, setCurrent] = useState<RecoverableError | null>(null)
   const queueRef = useRef<RecoverableError[]>([])
+  const currentRef = useRef<RecoverableError | null>(null)
 
   useEffect(() => {
+    function enqueue(error: RecoverableError) {
+      if (currentRef.current !== null) {
+        queueRef.current = [...queueRef.current, error]
+        return
+      }
+      currentRef.current = error
+      setCurrent(error)
+    }
+
     return subscribeToRecoverableErrors((error) => {
       if (error.recoveryOptions.length >= DIALOG_MIN_OPTIONS) {
         enqueue(error)
@@ -30,21 +40,12 @@ export function RecoveryHost() {
       }
       showToast(error)
     })
-
-    function enqueue(error: RecoverableError) {
-      setCurrent((existing) => {
-        if (existing) {
-          queueRef.current = [...queueRef.current, error]
-          return existing
-        }
-        return error
-      })
-    }
   }, [])
 
   function handleClose() {
     const [next, ...rest] = queueRef.current
     queueRef.current = rest
+    currentRef.current = next ?? null
     setCurrent(next ?? null)
   }
 

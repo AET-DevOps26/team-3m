@@ -12,28 +12,25 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
 
 @SpringBootTest
+@AutoConfigureMockMvc
 @ActiveProfiles("test")
 class FinancialTransactionImportIntegrationTest {
 
     @Autowired
-    private WebApplicationContext context;
+    private MockMvc mockMvc;
 
     @Autowired
     private DSLContext dsl;
 
-    private MockMvc mockMvc;
-
     @BeforeEach
-    void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
+    void cleanDatabase() {
         dsl.deleteFrom(FINANCIAL_TRANSACTION).execute();
     }
 
@@ -48,7 +45,8 @@ class FinancialTransactionImportIntegrationTest {
 
         mockMvc.perform(multipart("/api/v1/financial-transactions/import").file(csvFile))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.importedCount").value(8));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.importedCount").value(8));
 
         var count = dsl.fetchCount(FINANCIAL_TRANSACTION);
         assertThat(count).isEqualTo(8);
@@ -83,7 +81,7 @@ class FinancialTransactionImportIntegrationTest {
         mockMvc.perform(multipart("/api/v1/financial-transactions/import").file(csvFile))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.errors[0].field").value("amount"));
+                .andExpect(jsonPath("$.details[0].field").value("amount"));
 
         var count = dsl.fetchCount(FINANCIAL_TRANSACTION);
         assertThat(count).isEqualTo(0);
@@ -97,7 +95,7 @@ class FinancialTransactionImportIntegrationTest {
 
         mockMvc.perform(multipart("/api/v1/financial-transactions/import").file(csvFile))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors[0].field").value("transaction_id"));
+                .andExpect(jsonPath("$.details[0].field").value("transaction_id"));
 
         var count = dsl.fetchCount(FINANCIAL_TRANSACTION);
         assertThat(count).isEqualTo(0);

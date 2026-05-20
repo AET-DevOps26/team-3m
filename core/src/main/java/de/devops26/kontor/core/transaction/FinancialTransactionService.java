@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -35,6 +36,37 @@ public class FinancialTransactionService {
     private static final int MAX_PRECISION_SHARES = 20;
     private static final int MAX_SCALE_SHARES = 10;
 
+    private static final int MAX_ECHOED_VALUE_LENGTH = 32;
+    private static final int MAX_ROWS = 50_000;
+    private static final int MAX_ERRORS = 50;
+
+    // We might want to later ignore when a user sends headers
+    // that are not in this set (but warn the user that the header was ignored and not stored)
+    private static final Set<String> ALLOWED_HEADERS = Set.of(
+            "datetime",
+            "date",
+            "account_type",
+            "category",
+            "type",
+            "asset_class",
+            "name",
+            "symbol",
+            "shares",
+            "price",
+            "amount",
+            "fee",
+            "tax",
+            "currency",
+            "original_amount",
+            "original_currency",
+            "fx_rate",
+            "description",
+            "transaction_id",
+            "counterparty_name",
+            "counterparty_iban",
+            "payment_reference",
+            "mcc_code");
+
     private static final Set<String> REQUIRED_HEADERS =
             Set.of("datetime", "date", "account_type", "category", "type", "amount", "currency", "transaction_id");
 
@@ -58,21 +90,24 @@ public class FinancialTransactionService {
 
         try (var reader = new InputStreamReader(input, StandardCharsets.UTF_8);
                 var parser = format.parse(reader)) {
-            var missing = new LinkedHashSet<>(REQUIRED_HEADERS);
-            missing.removeAll(parser.getHeaderNames());
-            if (!missing.isEmpty()) {
-                throw new CsvParsingException(
-                        "CSV is missing required header(s): " + String.join(", ", missing), List.of());
-            }
+            validateHeaders(parser.getHeaderNames());
             int rowNumber = 1;
             for (CSVRecord record : parser) {
                 rowNumber++;
+                if (rows.size() >= MAX_ROWS) {
+                    throw new CsvParsingException(
+                            "CSV exceeds the maximum supported row count of " + MAX_ROWS, List.of());
+                }
                 var rowErrors = new ArrayList<CsvRowValidationError>();
                 var row = parseRow(record, rowNumber, rowErrors);
-                if (rowErrors.isEmpty()) {
+                if (rowErrors.isEmpty() && row != null) {
                     rows.add(row);
                 } else {
                     errors.addAll(rowErrors);
+                    if (errors.size() >= MAX_ERRORS) {
+                        throw new CsvParsingException(
+                                "Too many validation errors (stopped after " + MAX_ERRORS + ")", errors);
+                    }
                 }
             }
         }
@@ -89,9 +124,31 @@ public class FinancialTransactionService {
         return new CsvImportResult(count, "Successfully imported " + count + " transaction(s)");
     }
 
+    private static void validateHeaders(List<String> headerNames) {
+        var missing = new LinkedHashSet<>(REQUIRED_HEADERS);
+        missing.removeAll(headerNames);
+        if (!missing.isEmpty()) {
+            throw new CsvParsingException(
+                    "CSV is missing required header(s): " + String.join(", ", missing), List.of());
+        }
+        var unknown = new LinkedHashSet<String>();
+        for (var name : headerNames) {
+            if (name == null || name.isBlank()) {
+                throw new CsvParsingException("CSV contains a blank header column", List.of());
+            }
+            if (!ALLOWED_HEADERS.contains(name)) {
+                unknown.add(name);
+            }
+        }
+        if (!unknown.isEmpty()) {
+            throw new CsvParsingException("CSV contains unknown header(s): " + String.join(", ", unknown), List.of());
+        }
+    }
+
     private TransactionCsvRow parseRow(CSVRecord record, int rowNumber, List<CsvRowValidationError> errors) {
-        var datetime = parseRequired(record, "datetime", rowNumber, errors, this::parseOffsetDateTime);
-        var date = parseRequired(record, "date", rowNumber, errors, LocalDate::parse);
+        var datetime =
+                parseRequired(record, "datetime", rowNumber, errors, FinancialTransactionService::parseOffsetDateTime);
+        var date = parseRequired(record, "date", rowNumber, errors, FinancialTransactionService::parseLocalDate);
         var accountType = requireNonBlank(record, "account_type", MAX_LEN_ACCOUNT_TYPE, rowNumber, errors);
         var category = requireNonBlank(record, "category", MAX_LEN_CATEGORY, rowNumber, errors);
         var type = requireNonBlank(record, "type", MAX_LEN_TYPE, rowNumber, errors);
@@ -142,6 +199,10 @@ public class FinancialTransactionService {
                 optionalString(record, "payment_reference", MAX_LEN_PAYMENT_REFERENCE, rowNumber, errors);
         var mccCode = optionalString(record, "mcc_code", MAX_LEN_MCC_CODE, rowNumber, errors);
 
+        if (!errors.isEmpty()) {
+            return null;
+        }
+
         return new TransactionCsvRow(
                 datetime,
                 date,
@@ -168,8 +229,12 @@ public class FinancialTransactionService {
                 mccCode);
     }
 
-    private OffsetDateTime parseOffsetDateTime(String value) {
-        return OffsetDateTime.parse(value);
+    private static OffsetDateTime parseOffsetDateTime(String value) {
+        return OffsetDateTime.parse(value, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+    }
+
+    private static LocalDate parseLocalDate(String value) {
+        return LocalDate.parse(value, DateTimeFormatter.ISO_LOCAL_DATE);
     }
 
     private <T> T parseRequired(
@@ -182,7 +247,7 @@ public class FinancialTransactionService {
         try {
             return parser.parse(value);
         } catch (RuntimeException e) {
-            errors.add(new CsvRowValidationError(rowNumber, field, "invalid value '" + value + "': " + e.getMessage()));
+            errors.add(invalidValueError(rowNumber, field, value));
             return null;
         }
     }
@@ -238,9 +303,15 @@ public class FinancialTransactionService {
         try {
             return parser.parse(value);
         } catch (RuntimeException e) {
-            errors.add(new CsvRowValidationError(rowNumber, field, "invalid value '" + value + "': " + e.getMessage()));
+            errors.add(invalidValueError(rowNumber, field, value));
             return null;
         }
+    }
+
+    private static CsvRowValidationError invalidValueError(int rowNumber, String field, String value) {
+        var truncated =
+                value.length() > MAX_ECHOED_VALUE_LENGTH ? value.substring(0, MAX_ECHOED_VALUE_LENGTH) + "..." : value;
+        return new CsvRowValidationError(rowNumber, field, "invalid value: '" + truncated + "'");
     }
 
     private String blankToNull(CSVRecord record, String field) {

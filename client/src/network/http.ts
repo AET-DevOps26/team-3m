@@ -80,8 +80,13 @@ function parsePayload(text: string, parse: "json" | "text"): unknown {
   }
   try {
     return JSON.parse(text)
-  } catch {
-    return text
+  } catch (cause) {
+    throw new APIError({
+      code: "parse",
+      message: "Server returned an unparsable response",
+      cause,
+      details: text,
+    })
   }
 }
 

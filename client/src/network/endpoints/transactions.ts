@@ -1,6 +1,5 @@
 import { z } from "zod"
-import { pluralize } from "@/lib/pluralize"
-import { APIError, RecoverableError } from "../errors"
+import { APIError } from "../errors"
 import { useFileUpload } from "../file-upload/use-file-upload"
 
 const IMPORT_PATH = "/api/v1/financial-transactions/import"
@@ -13,8 +12,8 @@ const csvRowValidationErrorSchema = z.object({
 
 const csvValidationFailureSchema = z.object({
   success: z.literal(false),
-  message: z.string(),
-  errors: z.array(csvRowValidationErrorSchema),
+  error: z.string(),
+  details: z.array(csvRowValidationErrorSchema).nullable().optional(),
 })
 
 const importTransactionsCsvResultSchema = z.object({
@@ -22,8 +21,16 @@ const importTransactionsCsvResultSchema = z.object({
   message: z.string(),
 })
 
+const importTransactionsCsvEnvelopeSchema = z.object({
+  success: z.literal(true),
+  data: importTransactionsCsvResultSchema,
+})
+
 export type CsvRowValidationError = z.infer<typeof csvRowValidationErrorSchema>
-export type CsvValidationFailure = z.infer<typeof csvValidationFailureSchema>
+export type CsvValidationFailure = {
+  message: string
+  errors: CsvRowValidationError[]
+}
 export type ImportTransactionsCsvResult = z.infer<
   typeof importTransactionsCsvResultSchema
 >
@@ -38,21 +45,8 @@ export function useImportTransactionsCsv(
   return useFileUpload<ImportTransactionsCsvResult>({
     path: IMPORT_PATH,
     onSuccess: options.onSuccess,
-    parseResponse: (raw) => importTransactionsCsvResultSchema.parse(raw),
-    errorFormatter: (error) => {
-      const failure = parseValidationFailure(error.details)
-      if (error.code === "validation" && failure) {
-        return new RecoverableError({
-          message: failure.message,
-          title: "CSV validation failed",
-          presentation: {
-            detail: formatValidationDetail(failure),
-            hideCancel: true,
-          },
-        })
-      }
-      return RecoverableError.wrapping(error, { title: "Could not import CSV" })
-    },
+    silent: true,
+    parseResponse: (raw) => importTransactionsCsvEnvelopeSchema.parse(raw).data,
   })
 }
 
@@ -67,10 +61,9 @@ export function extractValidationFailure(
 
 function parseValidationFailure(value: unknown): CsvValidationFailure | null {
   const result = csvValidationFailureSchema.safeParse(value)
-  return result.success ? result.data : null
-}
-
-function formatValidationDetail(failure: CsvValidationFailure): string {
-  if (failure.errors.length === 0) return failure.message
-  return `${pluralize(failure.errors.length, "row")} could not be imported.`
+  if (!result.success) return null
+  return {
+    message: result.data.error,
+    errors: result.data.details ?? [],
+  }
 }

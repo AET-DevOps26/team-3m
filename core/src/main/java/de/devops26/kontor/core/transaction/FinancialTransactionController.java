@@ -1,7 +1,9 @@
 package de.devops26.kontor.core.transaction;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,9 +23,9 @@ public class FinancialTransactionController {
     }
 
     @PostMapping("/import")
-    public ResponseEntity<CsvImportResult> importCsv(@RequestParam("file") MultipartFile file) throws IOException {
+    public ResponseEntity<?> importCsv(@RequestParam("file") MultipartFile file) throws IOException {
         if (file.isEmpty()) {
-            return ResponseEntity.badRequest().body(new CsvImportResult(0, "Uploaded file is empty"));
+            return ResponseEntity.badRequest().body(errorBody("Uploaded file is empty"));
         }
         var result = service.importCsv(file.getInputStream());
         return ResponseEntity.ok(result);
@@ -33,5 +35,15 @@ public class FinancialTransactionController {
     public ResponseEntity<Map<String, Object>> handleCsvParsingException(CsvParsingException ex) {
         return ResponseEntity.badRequest()
                 .body(Map.of("success", false, "message", ex.getMessage(), "errors", ex.errors()));
+    }
+
+    @ExceptionHandler(IOException.class)
+    public ResponseEntity<Map<String, Object>> handleIoException(IOException ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(errorBody("Failed to read uploaded file: " + ex.getMessage()));
+    }
+
+    private static Map<String, Object> errorBody(String message) {
+        return Map.of("success", false, "message", message, "errors", List.of());
     }
 }

@@ -46,12 +46,12 @@ export function ImportTransactionsPage() {
   return (
     <div className="flex min-h-svh items-center justify-center bg-background p-4 sm:p-6">
       <div className="flex w-full max-w-xl flex-col items-start gap-4 sm:gap-6">
-        <Link to="/">
-          <Button variant="ghost" size="sm">
+        <Button asChild variant="ghost" size="sm">
+          <Link to="/">
             <ArrowLeft />
             Back
-          </Button>
-        </Link>
+          </Link>
+        </Button>
 
         <Card className="w-full">
           <CardHeader>

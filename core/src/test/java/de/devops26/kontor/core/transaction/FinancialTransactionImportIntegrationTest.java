@@ -95,6 +95,7 @@ class FinancialTransactionImportIntegrationTest {
 
         mockMvc.perform(multipart("/api/v1/financial-transactions/import").file(csvFile))
                 .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.details[0].field").value("transaction_id"));
 
         var count = dsl.fetchCount(FINANCIAL_TRANSACTION);

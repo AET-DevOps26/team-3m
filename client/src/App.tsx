@@ -1,14 +1,27 @@
+import { lazy, Suspense } from "react"
 import { BrowserRouter, Route, Routes } from "react-router-dom"
-import { StartPage } from "@/components/start-page"
-import { ImportTransactionsPage } from "@/pages/import-transactions"
+import { RouteFallback } from "@/components/route-fallback"
+
+const StartPage = lazy(() =>
+  import("@/pages/start").then((module) => ({
+    default: module.StartPage,
+  })),
+)
+const ImportTransactionsPage = lazy(() =>
+  import("@/pages/import-transactions").then((module) => ({
+    default: module.ImportTransactionsPage,
+  })),
+)
 
 export function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<StartPage />} />
-        <Route path="/import" element={<ImportTransactionsPage />} />
-      </Routes>
+      <Suspense fallback={<RouteFallback />}>
+        <Routes>
+          <Route path="/" element={<StartPage />} />
+          <Route path="/import" element={<ImportTransactionsPage />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   )
 }

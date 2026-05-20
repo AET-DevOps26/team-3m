@@ -11,6 +11,11 @@ public class CsvParsingException extends RuntimeException {
         this.errors = List.copyOf(errors);
     }
 
+    public CsvParsingException(String message, List<CsvRowValidationError> errors) {
+        super(message);
+        this.errors = List.copyOf(errors);
+    }
+
     public List<CsvRowValidationError> errors() {
         return errors;
     }

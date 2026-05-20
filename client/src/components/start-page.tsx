@@ -263,12 +263,12 @@ export function StartPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Link to="/import">
-              <Button variant="outline">
+            <Button asChild variant="outline">
+              <Link to="/import">
                 <FileSpreadsheet />
                 Import CSV
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       </div>

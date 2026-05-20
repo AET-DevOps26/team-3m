@@ -110,13 +110,13 @@ class FinancialTransactionServiceTest {
     }
 
     @Test
-    @DisplayName("importCsv returns zero count for empty CSV")
-    void importCsv_emptyCsv_returnsZero() throws IOException {
+    @DisplayName("importCsv throws CsvParsingException when CSV has no data rows")
+    void importCsv_emptyCsv_throws() {
         var csv = HEADER + "\n";
 
-        var result = service.importCsv(toStream(csv));
-
-        assertThat(result.importedCount()).isEqualTo(0);
+        assertThatThrownBy(() -> service.importCsv(toStream(csv)))
+                .isInstanceOf(CsvParsingException.class)
+                .hasMessageContaining("no data rows");
     }
 
     @Test

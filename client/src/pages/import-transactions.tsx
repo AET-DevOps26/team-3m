@@ -25,12 +25,12 @@ export function ImportTransactionsPage() {
   return (
     <div className="flex min-h-svh items-center justify-center bg-background p-6">
       <div className="flex w-full max-w-xl flex-col items-start gap-6">
-        <Link to="/">
-          <Button variant="ghost" size="sm">
+        <Button asChild variant="ghost" size="sm">
+          <Link to="/">
             <ArrowLeft />
             Back
-          </Button>
-        </Link>
+          </Link>
+        </Button>
 
         <Card className="w-full">
           <CardHeader>
@@ -73,7 +73,6 @@ export function ImportTransactionsPage() {
                     {state.data.importedCount} transaction
                     {state.data.importedCount !== 1 && "s"} imported from{" "}
                     {state.fileName}.
-                    {state.data.message && ` ${state.data.message}`}
                   </AlertDescription>
                 </Alert>
                 <Button variant="outline" onClick={reset}>

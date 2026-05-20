@@ -28,6 +28,23 @@ export type {
   ImportResult,
 }
 
+function toImportError(body: unknown, xhr: XMLHttpRequest): CsvImportError {
+  if (body && typeof body === "object") {
+    const candidate = body as Partial<CsvImportError>
+    const message =
+      typeof candidate.message === "string"
+        ? candidate.message
+        : `Upload failed (HTTP ${xhr.status})`
+    const errors = Array.isArray(candidate.errors) ? candidate.errors : []
+    return { success: false, message, errors }
+  }
+  return {
+    success: false,
+    message: `Upload failed (HTTP ${xhr.status})`,
+    errors: [],
+  }
+}
+
 export async function importTransactionsCsv(
   file: File,
   onProgress?: (percent: number) => void,
@@ -46,16 +63,19 @@ export async function importTransactionsCsv(
     })
 
     xhr.addEventListener("load", () => {
+      let body: unknown
       try {
-        const body = JSON.parse(xhr.responseText)
-        if (xhr.status >= 200 && xhr.status < 300) {
-          resolve({ ok: true, data: body as CsvImportResult })
-        } else {
-          resolve({ ok: false, error: body as CsvImportError })
-        }
+        body = xhr.responseText ? JSON.parse(xhr.responseText) : undefined
       } catch {
-        reject(new Error(`Unexpected response: ${xhr.statusText}`))
+        // Non-JSON body — fall through to the generic shape below.
       }
+
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve({ ok: true, data: body as CsvImportResult })
+        return
+      }
+
+      resolve({ ok: false, error: toImportError(body, xhr) })
     })
 
     xhr.addEventListener("error", () => {

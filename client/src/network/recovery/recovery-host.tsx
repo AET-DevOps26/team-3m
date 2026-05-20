@@ -113,13 +113,15 @@ function showToast(error: RecoverableError) {
       ? {
           label: first.label,
           onClick: () => {
-            void Promise.resolve(first.action()).catch((cause) => {
-              publishRecoverableError(
-                RecoverableError.wrapping(cause, {
-                  title: "Recovery action failed",
-                }),
-              )
-            })
+            void Promise.resolve()
+              .then(() => first.action())
+              .catch((cause) => {
+                publishRecoverableError(
+                  RecoverableError.wrapping(cause, {
+                    title: "Recovery action failed",
+                  }),
+                )
+              })
           },
         }
       : undefined,

@@ -5,7 +5,6 @@ description: (Team 3M) Address review comments on the GitHub pull request linked
 
 # Address PR Comments Skill
 
-This skill walks through the open pull request linked to the current branch, applies the requested changes for each unresolved review comment, and replies on the thread once the change is in place. It uses the `gh` CLI exclusively for GitHub interactions. The skill never marks a thread resolved on the user's behalf — reviewers do that themselves once they re-read the change.
 
 ## Preconditions
 

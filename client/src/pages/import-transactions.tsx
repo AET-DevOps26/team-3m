@@ -14,7 +14,6 @@ import {
   useState,
 } from "react"
 import { Link } from "react-router-dom"
-import { toast } from "sonner"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
@@ -37,13 +36,7 @@ const ACCEPTED_TYPE = "text/csv"
 const ACCEPTED_EXTENSION = ".csv"
 
 export function ImportTransactionsPage() {
-  const importCsv = useImportTransactionsCsv({
-    onSuccess: (result, file) => {
-      toast.success("Import successful", {
-        description: `${pluralize(result.importedCount, "transaction")} imported from ${file.name}.`,
-      })
-    },
-  })
+  const importCsv = useImportTransactionsCsv()
 
   const validationFailure = useMemo(
     () => extractValidationFailure(importCsv.error),

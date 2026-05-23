@@ -2,6 +2,7 @@ package de.devops26.kontor.core.transaction;
 
 import static de.devops26.kontor.core.generated.tables.FinancialTransaction.FINANCIAL_TRANSACTION;
 
+import java.util.Arrays;
 import java.util.List;
 import org.jooq.DSLContext;
 import org.jooq.Query;
@@ -22,8 +23,8 @@ public class FinancialTransactionRepository {
             return 0;
         }
         var queries = rows.stream().map(this::buildUpsert).toList();
-        dsl.batch(queries).execute();
-        return rows.size();
+        var results = dsl.batch(queries).execute();
+        return (int) Arrays.stream(results).filter(r -> r > 0).count();
     }
 
     private Query buildUpsert(TransactionCsvRow row) {

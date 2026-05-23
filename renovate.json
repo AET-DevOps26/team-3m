@@ -13,6 +13,10 @@
     "minimumReleaseAge": null,
     "semanticCommitType": "fix"
   },
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 8am on monday"]
+  },
   "packageRules": [
     {
       "description": "Group all non-major updates together",

@@ -11,7 +11,7 @@ description: (Team 3M) Address review comments on the GitHub pull request linked
 
 Find the PR attached to the current branch:
 
-bash```
+```bash
 gh pr view --json number,title,url,headRefName,state,isDraft,baseRefName
 ```
 
@@ -52,7 +52,7 @@ Resolve `{owner}/{repo}` from `gh repo view --json nameWithOwner -q .nameWithOwn
 Skip any comment that is not actionable:
 
 - Comments authored by the current user (`gh api user -q .login`) — replying to your own notes adds clutter.
-- Comments authored by bots whose `user.type` is `Bot` (Renovate, Dependabot, CodeRabbit summary posts, GitHub Actions). Only address bot comments if the user explicitly asks.
+- Comments authored by pure automation bots (`user.type` is `Bot`) that add no code-review value — Renovate, Dependabot, GitHub Actions, and similar CI/CD bots. **Do not** skip AI code-review bots such as CodeRabbit: their inline suggestions are actionable and should appear in the filtered list alongside human comments.
 - Comments that are replies in a thread already containing a reply from a natural user that indicates the issue is resolved, or does not need to be resolved
 - Threads marked `isResolved` in the GraphQL `reviewThreads` view. Fetch resolution state with:
 
@@ -96,11 +96,9 @@ Apply edits one concern at a time. For each:
    - Server (`core/`, other Spring services): `./gradlew spotlessApply` then `./gradlew test` for the affected service. Do not hand-fix formatting — the rule in `AGENTS.md` is to let the formatter handle it.
 4. If a test was requested or a behavior change requires one, add it before considering the comment done.
 
-Never batch unrelated edits into a single commit. Each logical concern from the review gets its own commit (see step 7).
-
 ## Step 6: Reply to Each Comment
 
-After the change for a thread is in place and verified, reply to that thread so the reviewer sees what was done. Reply on the **original (top-level) comment** of the thread, not on subsequent replies — replying mid-thread creates a parallel thread.
+After all changes from step 5 are applied, reply to each thread so the reviewer sees what was done. Reply on the **original (top-level) comment** of the thread, not on subsequent replies — replying mid-thread creates a parallel thread.
 
 For inline review comments, use the pulls/comments reply endpoint:
 
@@ -121,29 +119,20 @@ gh api --method POST \
 Reply guidelines:
 
 - Be concise. One or two sentences. State what was changed and, if non-obvious, why.
-- Reference the commit SHA that addresses the comment (`Addressed in <short-sha>.`). The reviewer can click through.
+- If changes are already committed and a SHA is available, reference it (`Addressed in <short-sha>.`). Otherwise omit it — do not block replies on a commit.
 - Do not mention Claude, AI assistance, or this skill. The reply should read as if written by the user.
 - If you chose not to do exactly what the reviewer asked (because the user instructed otherwise), explain the alternative briefly and invite the reviewer to push back.
-- Never claim something is fixed before the edit is actually committed and pushed.
+- Never claim something is fixed before the edit is actually in place.
 
-## Step 7: Commit and Push
+## Step 7: Hand Off to the User
 
-Use the `conventional-commit` skill to write each commit message. One commit per logical concern keeps the review history readable. If multiple comments collapsed into a single concern, that is still one commit.
-
-After all edits and commits are in place, push:
-
-```
-git push
-```
-
-If the branch has diverged (the reviewer pushed during the review), rebase onto the remote head before pushing — do not force-push without checking with the user first.
+Once all edits are applied and replies sent, stop. Do not commit or push — leave that to the user. They can use the `conventional-commit` skill for the commit message and push when satisfied.
 
 ## Step 8: Summarize
 
 End the turn with a short summary for the user:
 
 - How many threads were addressed and how many were skipped (with reasons for skips).
-- The commit SHAs created.
 - Any threads where you replied with a question or pushback instead of a code change, so the user knows to watch for the reviewer's response.
 
 Do not mark any threads as resolved. Do not request a re-review on the user's behalf unless they ask for it.

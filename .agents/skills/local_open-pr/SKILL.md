@@ -67,25 +67,13 @@ If a `!` breaking-change marker belongs in the title, include it (`feat!: drop /
 
 ## Step 4: Fill In the Template
 
-Read `.github/pull_request_template.md` from the repo. Treat it as the canonical structure — do not reformat or reorder its sections. Fill each section in place:
+Read `.github/pull_request_template.md` from the repo root. Fill each section based on the diff and commit history. Preserve the template's structure exactly — do not reorder, rename, or remove sections.
 
-**Summary**
+Two constraints:
+- If no issue was resolved in step 2, remove the `Closes #` line entirely rather than leaving `Closes #` with no number.
+- Leave the checklist boxes unchecked — the author ticks them in the GitHub UI.
 
-One short paragraph (1–3 sentences) describing what the PR does and why. Followed by `Closes #<N>` on its own line. If no issue was resolved in step 2, omit the `Closes` line entirely (do not leave `Closes #` with no number).
-
-**Changes**
-
-A bulleted list of user-facing changes. One bullet per logical change. Derive these from the commit subjects and the diff — not from internal refactor notes. A reader scanning the bullets should be able to predict what the diff touches.
-
-**How to Test**
-
-A numbered list of concrete steps. For backend changes: include the relevant `./gradlew` command and any API call (`curl` or HTTP method + path). For frontend changes: list the user flow ("Open /import-transactions, drag a CSV onto the dropzone, ..."). For docs/CI changes: list what to read or which workflow file to inspect. If the change is genuinely impossible to test on a feature branch (release scripts, repo-config changes), say so plainly — `gh` PR bodies from this repo show "Actually impossible, needs to be on main. But trust me." is acceptable when honest.
-
-**Checklist**
-
-Keep the template's four boxes unchecked. The PR author ticks them in the GitHub UI after testing — the skill should not pre-check them on the author's behalf.
-
-If the diff contains UI changes, leave a `<!-- attach screenshot -->` comment under the Changes section so the user remembers to add one. Do not fabricate a screenshot.
+If the diff contains UI changes, add a `<!-- attach screenshot -->` comment as a reminder.
 
 ## Step 5: Create the PR
 

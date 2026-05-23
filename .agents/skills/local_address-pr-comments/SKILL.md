@@ -11,7 +11,7 @@ description: (Team 3M) Address review comments on the GitHub pull request linked
 
 Find the PR attached to the current branch:
 
-```
+bash```
 gh pr view --json number,title,url,headRefName,state,isDraft,baseRefName
 ```
 

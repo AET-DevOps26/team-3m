@@ -53,7 +53,7 @@ Skip any comment that is not actionable:
 
 - Comments authored by the current user (`gh api user -q .login`) — replying to your own notes adds clutter.
 - Comments authored by bots whose `user.type` is `Bot` (Renovate, Dependabot, CodeRabbit summary posts, GitHub Actions). Only address bot comments if the user explicitly asks.
-- Comments that are replies in a thread already containing a reply from the current user — the thread has been touched already.
+- Comments that are replies in a thread already containing a reply from a natural user that indicates the issue is resolved, or does not need to be resolved
 - Threads marked `isResolved` in the GraphQL `reviewThreads` view. Fetch resolution state with:
 
   ```

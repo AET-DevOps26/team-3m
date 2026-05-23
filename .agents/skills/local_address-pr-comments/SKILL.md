@@ -6,13 +6,6 @@ description: (Team 3M) Address review comments on the GitHub pull request linked
 # Address PR Comments Skill
 
 
-## Preconditions
-
-Before starting, verify the environment:
-
-1. The working directory is a git repository and a branch other than `main` is checked out. If the branch is `main`, stop and ask which branch the user intended.
-2. The working tree is clean. If `git status --short` shows uncommitted changes, stop and ask the user whether to stash, commit, or abandon them — never silently mix unrelated work into the response to review feedback.
-3. `gh auth status` succeeds. If not, ask the user to run `gh auth login` themselves (suggest the `! gh auth login` shortcut).
 
 ## Step 1: Discover the Pull Request
 

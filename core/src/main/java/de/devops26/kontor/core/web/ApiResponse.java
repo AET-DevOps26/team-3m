@@ -13,6 +13,6 @@ public record ApiResponse<T>(boolean success, T data, String error, List<?> deta
     }
 
     public static <T> ApiResponse<T> error(String message, List<?> details) {
-        return new ApiResponse<>(false, null, message, List.copyOf(details));
+        return new ApiResponse<>(false, null, message, details == null ? null : List.copyOf(details));
     }
 }

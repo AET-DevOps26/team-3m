@@ -12,7 +12,8 @@
     "lint:fix-unsafe": "biome check . --fix --unsafe",
     "format": "biome format . --fix",
     "typecheck": "tsc -b --noEmit",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate:api": "openapi-typescript ../core/docs/openapi.yml -o src/network/api.ts && biome check --write --no-errors-on-unmatched src/network/api.ts"
   },
   "dependencies": {
     "@fontsource-variable/roboto": "^5.2.10",
@@ -38,6 +39,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.2.0",
+    "openapi-typescript": "^7.13.0",
     "typescript": "~5.9.3",
     "vite": "^7.3.1"
   }

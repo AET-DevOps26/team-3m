@@ -27,3 +27,15 @@ repos:
         language: system
         files: ^core/.*\.java$
         pass_filenames: false
+      - id: openapi-core-generate
+        name: Generate core OpenAPI spec
+        entry: bash -c 'cd core && ./gradlew generateOpenApiDocs && git add docs/openapi.yml'
+        language: system
+        files: ^core/src/main/java/.*\.java$
+        pass_filenames: false
+      - id: openapi-client-generate
+        name: Generate client API types
+        entry: bash -c 'cd client && npm run generate:api && git add src/network/api.ts'
+        language: system
+        files: ^core/(src/main/java/.*\.java|docs/openapi\.yml)$
+        pass_filenames: false

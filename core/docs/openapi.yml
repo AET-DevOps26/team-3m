@@ -1,0 +1,77 @@
+openapi: 3.1.0
+info:
+  title: OpenAPI definition
+  version: v0
+servers:
+- url: http://localhost
+  description: Generated server url
+paths:
+  /api/v1/financial-transactions/import:
+    post:
+      tags:
+      - financial-transaction-controller
+      operationId: importCsv
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required:
+              - file
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCsvImportResult"
+  /hello:
+    get:
+      tags:
+      - hello-controller
+      operationId: hello
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: string
+  /database:
+    get:
+      tags:
+      - database-controller
+      operationId: database
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: string
+components:
+  schemas:
+    ApiResponseCsvImportResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/CsvImportResult"
+        error:
+          type: string
+        details:
+          type: array
+          items: {}
+    CsvImportResult:
+      type: object
+      properties:
+        importedCount:
+          type: integer
+          format: int32
+        message:
+          type: string

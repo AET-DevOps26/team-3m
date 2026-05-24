@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query"
+import { apiClient } from "../api-client"
 import { type APIError, RecoverableError } from "../errors"
-import { httpRequest } from "../http"
 
 export type HealthEndpoint = "hello" | "database"
 
@@ -25,13 +25,11 @@ export function useHealthCheck(
   return useMutation<HealthCheckResult, APIError>({
     mutationFn: async () => {
       const start = performance.now()
-      const message = await httpRequest<string>({
-        method: "GET",
-        path: `/${endpoint}`,
-        parse: "text",
+      const { data } = await apiClient.GET(`/${endpoint}`, {
+        parseAs: "text",
       })
       return {
-        message,
+        message: data ?? "",
         latencyMs: Math.round(performance.now() - start),
       }
     },

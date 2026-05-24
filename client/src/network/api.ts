@@ -57,15 +57,15 @@ export type webhooks = Record<string, never>
 export interface components {
   schemas: {
     ApiResponseCsvImportResult: {
-      success?: boolean
+      success: boolean
       data?: components["schemas"]["CsvImportResult"]
       error?: string
       details?: unknown[]
     }
     CsvImportResult: {
       /** Format: int32 */
-      importedCount?: number
-      message?: string
+      importedCount: number
+      message: string
     }
   }
   responses: never
@@ -85,7 +85,7 @@ export interface operations {
     }
     requestBody?: {
       content: {
-        "application/json": {
+        "multipart/form-data": {
           /** Format: binary */
           file: string
         }

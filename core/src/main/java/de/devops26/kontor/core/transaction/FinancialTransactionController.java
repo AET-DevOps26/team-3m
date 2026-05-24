@@ -2,6 +2,7 @@ package de.devops26.kontor.core.transaction;
 
 import de.devops26.kontor.core.web.ApiResponse;
 import java.io.IOException;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,7 +20,7 @@ public class FinancialTransactionController {
         this.service = service;
     }
 
-    @PostMapping("/import")
+    @PostMapping(path = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<CsvImportResult>> importCsv(@RequestParam("file") MultipartFile file)
             throws IOException {
         if (file.isEmpty()) {

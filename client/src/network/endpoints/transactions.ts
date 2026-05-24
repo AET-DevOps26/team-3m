@@ -1,8 +1,16 @@
 import { z } from "zod"
+import type { components, paths } from "../api"
 import { APIError } from "../errors"
 import { useFileUpload } from "../file-upload/use-file-upload"
 
-const IMPORT_PATH = "/api/v1/financial-transactions/import"
+const IMPORT_PATH =
+  "/api/v1/financial-transactions/import" satisfies keyof paths
+
+export type ImportTransactionsCsvResult =
+  components["schemas"]["CsvImportResult"]
+
+type ImportTransactionsCsvEnvelope =
+  components["schemas"]["ApiResponseCsvImportResult"]
 
 const csvRowValidationErrorSchema = z.object({
   row: z.number().int(),
@@ -16,24 +24,11 @@ const csvValidationFailureSchema = z.object({
   details: z.array(csvRowValidationErrorSchema).nullable().optional(),
 })
 
-const importTransactionsCsvResultSchema = z.object({
-  importedCount: z.number().int().nonnegative(),
-  message: z.string(),
-})
-
-const importTransactionsCsvEnvelopeSchema = z.object({
-  success: z.literal(true),
-  data: importTransactionsCsvResultSchema,
-})
-
 export type CsvRowValidationError = z.infer<typeof csvRowValidationErrorSchema>
 export type CsvValidationFailure = {
   message: string
   errors: CsvRowValidationError[]
 }
-export type ImportTransactionsCsvResult = z.infer<
-  typeof importTransactionsCsvResultSchema
->
 
 export interface UseImportTransactionsCsvOptions {
   onSuccess?: (result: ImportTransactionsCsvResult, file: File) => void
@@ -46,8 +41,29 @@ export function useImportTransactionsCsv(
     path: IMPORT_PATH,
     onSuccess: options.onSuccess,
     silent: true,
-    parseResponse: (raw) => importTransactionsCsvEnvelopeSchema.parse(raw).data,
+    parseResponse: (raw) => unwrapImportEnvelope(raw),
   })
+}
+
+function unwrapImportEnvelope(raw: unknown): ImportTransactionsCsvResult {
+  if (!isImportEnvelope(raw) || !raw.success || !raw.data) {
+    throw new APIError({
+      code: "parse",
+      message: "Unexpected server response",
+      details: raw,
+    })
+  }
+  return raw.data
+}
+
+function isImportEnvelope(
+  value: unknown,
+): value is ImportTransactionsCsvEnvelope {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as { success?: unknown }).success === "boolean"
+  )
 }
 
 export function extractValidationFailure(

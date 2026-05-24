@@ -1,6 +1,13 @@
 {
   "version": 1,
   "skills": {
+    "api-design": {
+      "source": "affaan-m/everything-claude-code",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/api-design/SKILL.md",
+      "computedHash": "718b7be2b2c0798d4da7f79d860cc2af8ca114f55b5ff508e93c2feb468d20c2"
+    },
     "docker-patterns": {
       "source": "affaan-m/everything-claude-code",
       "ref": "main",

@@ -22,12 +22,20 @@ paths:
 - When adding Shadcn/UI components, always use the Shadcn CLI — never add them from memory
 - Avoid excessive use of the `Card` component
 - Use the **shadcn** skill or the shadcn MCP
+- Do not modify shadcn-managed components — only add new variants via `cva`. See [shadcn-components.md](./shadcn-components.md) for the full rules and the managed path
 
 ## React Components
 
 - Avoid hooks or functions named `renderSomething()` — create a proper React component instead
 - Follow existing layouts and design patterns in the codebase
 - Write custom hooks to abstract complex logic away from components
+- Avoid over-styling: keep variant counts small, do layout via the parent container (not the leaf), and give components a predictable API (`variant`, `size`, `className`, children) instead of a fan of one-off boolean props
+
+## Styling and Design Tokens
+
+- Consume design tokens (CSS variables defined in `client/src/index.css`) via Tailwind tokens — `bg-card`, `text-muted-foreground`, `ring-foreground/10`, `--radius`, etc.
+- Do not hardcode raw colors, radii, or font values (`#fff`, `rgb(...)`, `12px`) in components. Add a token in `index.css` and reference it everywhere
+- New tokens belong in `:root` / `.dark` in `index.css`; wire them into Tailwind via `@theme inline`
 
 ## Lazy Loading
 
@@ -37,6 +45,16 @@ paths:
 
 - Avoid unnecessary `useEffect`s — follow the advice from [You Might Not Need an Effect](https://react.dev/learn/you-might-not-need-an-effect)
 - Prefer `useMemo` or callbacks integrated into event handlers
+
+## Nullish Coalescing
+
+- Always prefer `??` over `||` for fallbacks — `||` swallows valid `0`, `""`, and `false`
+- Use `||` only when falsy-coalescing is intentional, and add a comment
+
+## Function Parameters
+
+- Prefer a single param object when the function takes 2+ parameters, when params share a primitive type, or when params are optional and may grow
+- Single-argument functions where the argument *is* the value (`formatDate(date)`) stay positional
 
 ## UI States
 

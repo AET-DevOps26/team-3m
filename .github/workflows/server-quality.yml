@@ -42,3 +42,6 @@ jobs:
 
       - name: Run Static Analysis (Error Prone)
         run: ./gradlew compileJava compileTestJava
+
+      - name: Run Tests (JUnit)
+        run: ./gradlew test

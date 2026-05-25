@@ -26,13 +26,13 @@ paths:
         "200":
           description: CSV imported successfully
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/CsvImportApiResponse"
         "400":
           description: "Empty upload, malformed CSV, or row-level validation failure"
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/ApiResponse"
   /hello:

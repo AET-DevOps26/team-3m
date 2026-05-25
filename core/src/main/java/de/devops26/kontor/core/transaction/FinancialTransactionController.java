@@ -23,16 +23,25 @@ public class FinancialTransactionController {
         this.service = service;
     }
 
-    @PostMapping(path = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(
+            path = "/import",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "200",
                 description = "CSV imported successfully",
-                content = @Content(schema = @Schema(implementation = CsvImportApiResponse.class))),
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = CsvImportApiResponse.class))),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "400",
                 description = "Empty upload, malformed CSV, or row-level validation failure",
-                content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ApiResponse.class)))
     })
     public ResponseEntity<CsvImportApiResponse> importCsv(@RequestParam("file") MultipartFile file) throws IOException {
         if (file.isEmpty()) {

@@ -104,7 +104,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          "*/*": components["schemas"]["CsvImportApiResponse"]
+          "application/json": components["schemas"]["CsvImportApiResponse"]
         }
       }
       /** @description Empty upload, malformed CSV, or row-level validation failure */
@@ -113,7 +113,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          "*/*": components["schemas"]["ApiResponse"]
+          "application/json": components["schemas"]["ApiResponse"]
         }
       }
     }

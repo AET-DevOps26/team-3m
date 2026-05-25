@@ -71,8 +71,10 @@ function isCsvImportResult(
 ): value is ImportTransactionsCsvResult {
   if (typeof value !== "object" || value === null) return false
   const candidate = value as Record<string, unknown>
+  const importedCount = candidate.importedCount
   return (
-    typeof candidate.importedCount === "number" &&
+    Number.isInteger(importedCount) &&
+    (importedCount as number) >= 0 &&
     typeof candidate.message === "string"
   )
 }

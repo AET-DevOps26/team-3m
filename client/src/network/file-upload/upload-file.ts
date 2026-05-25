@@ -1,3 +1,4 @@
+import { getAuthToken, triggerSigninRedirect } from "../auth-token"
 import { API_BASE_URL } from "../config"
 import { APIError } from "../errors"
 
@@ -23,6 +24,10 @@ export function uploadFile<T>(options: UploadFileOptions): Promise<T> {
 
     const xhr = new XMLHttpRequest()
     xhr.open("POST", `${API_BASE_URL}${path}`)
+    const token = getAuthToken()
+    if (token !== null) {
+      xhr.setRequestHeader("Authorization", `Bearer ${token}`)
+    }
 
     let settled = false
     function settle() {
@@ -48,6 +53,19 @@ export function uploadFile<T>(options: UploadFileOptions): Promise<T> {
 
       if (xhr.status >= 200 && xhr.status < 300) {
         resolve(data as T)
+        return
+      }
+
+      if (xhr.status === 401) {
+        triggerSigninRedirect()
+        reject(
+          new APIError({
+            code: "unauthenticated",
+            status: 401,
+            message: extractErrorMessage(data, xhr),
+            details: data,
+          }),
+        )
         return
       }
 

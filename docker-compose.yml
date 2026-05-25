@@ -16,11 +16,42 @@ services:
       retries: 5
       start_period: 10s
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: "${KEYCLOAK_ADMIN_USER:-admin}"
+      KC_BOOTSTRAP_ADMIN_PASSWORD: "${KEYCLOAK_ADMIN_PASSWORD:-admin}"
+      KC_HOSTNAME: "${KEYCLOAK_HOSTNAME:-localhost}"
+      KC_HOSTNAME_PORT: "${KEYCLOAK_PORT:-8081}"
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_BACKCHANNEL: "false"
+      KC_HTTP_ENABLED: "true"
+      KC_HEALTH_ENABLED: "true"
+    ports:
+      - "${KEYCLOAK_PORT:-8081}:8080"
+      - "${KEYCLOAK_MGMT_PORT:-9000}:9000"
+    volumes:
+      - ./infra/keycloak/realms:/opt/keycloak/data/import:ro
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - >-
+          exec 3<>/dev/tcp/127.0.0.1/9000
+          && printf 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3
+          && grep -q '"status": "UP"' <&3
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
   core:
     build:
       context: ./core
     depends_on:
       db:
+        condition: service_healthy
+      keycloak:
         condition: service_healthy
     environment:
       POSTGRES_HOST: db
@@ -28,6 +59,9 @@ services:
       POSTGRES_DB: "${POSTGRES_DB:-team3m}"
       POSTGRES_USER: "${POSTGRES_USER:-team3m}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-change-me-local}"
+      KEYCLOAK_ISSUER: "http://localhost:${KEYCLOAK_PORT:-8081}/realms/kontor"
+      KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/realms/kontor/protocol/openid-connect/certs"
+      KEYCLOAK_AUDIENCE: "${KEYCLOAK_AUDIENCE:-kontor-api}"
     ports:
       - "8080:8080"
     healthcheck:

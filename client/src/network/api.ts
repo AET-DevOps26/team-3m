@@ -56,7 +56,7 @@ export interface paths {
 export type webhooks = Record<string, never>
 export interface components {
   schemas: {
-    ApiResponseCsvImportResult: {
+    CsvImportApiResponse: {
       success: boolean
       data?: components["schemas"]["CsvImportResult"]
       error?: string
@@ -66,6 +66,12 @@ export interface components {
       /** Format: int32 */
       importedCount: number
       message: string
+    }
+    ApiResponse: {
+      success: boolean
+      data?: unknown
+      error?: string
+      details?: unknown[]
     }
   }
   responses: never
@@ -92,13 +98,22 @@ export interface operations {
       }
     }
     responses: {
-      /** @description OK */
+      /** @description CSV imported successfully */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          "*/*": components["schemas"]["ApiResponseCsvImportResult"]
+          "*/*": components["schemas"]["CsvImportApiResponse"]
+        }
+      }
+      /** @description Empty upload, malformed CSV, or row-level validation failure */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "*/*": components["schemas"]["ApiResponse"]
         }
       }
     }
@@ -132,8 +147,17 @@ export interface operations {
     }
     requestBody?: never
     responses: {
-      /** @description OK */
+      /** @description Database connection OK */
       200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "*/*": string
+        }
+      }
+      /** @description Database connection check failed */
+      503: {
         headers: {
           [name: string]: unknown
         }

@@ -24,11 +24,17 @@ paths:
               - file
       responses:
         "200":
-          description: OK
+          description: CSV imported successfully
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/ApiResponseCsvImportResult"
+                $ref: "#/components/schemas/CsvImportApiResponse"
+        "400":
+          description: "Empty upload, malformed CSV, or row-level validation failure"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
   /hello:
     get:
       tags:
@@ -48,14 +54,20 @@ paths:
       operationId: database
       responses:
         "200":
-          description: OK
+          description: Database connection OK
+          content:
+            '*/*':
+              schema:
+                type: string
+        "503":
+          description: Database connection check failed
           content:
             '*/*':
               schema:
                 type: string
 components:
   schemas:
-    ApiResponseCsvImportResult:
+    CsvImportApiResponse:
       type: object
       properties:
         success:
@@ -80,3 +92,16 @@ components:
       required:
       - importedCount
       - message
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data: {}
+        error:
+          type: string
+        details:
+          type: array
+          items: {}
+      required:
+      - success

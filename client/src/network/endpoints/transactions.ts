@@ -10,7 +10,7 @@ export type ImportTransactionsCsvResult =
   components["schemas"]["CsvImportResult"]
 
 type ImportTransactionsCsvEnvelope =
-  components["schemas"]["ApiResponseCsvImportResult"]
+  components["schemas"]["CsvImportApiResponse"]
 
 const csvRowValidationErrorSchema = z.object({
   row: z.number().int(),
@@ -46,7 +46,7 @@ export function useImportTransactionsCsv(
 }
 
 function unwrapImportEnvelope(raw: unknown): ImportTransactionsCsvResult {
-  if (!isImportEnvelope(raw) || !raw.success || !raw.data) {
+  if (!isImportEnvelope(raw) || !raw.success || !isCsvImportResult(raw.data)) {
     throw new APIError({
       code: "parse",
       message: "Unexpected server response",
@@ -63,6 +63,17 @@ function isImportEnvelope(
     typeof value === "object" &&
     value !== null &&
     typeof (value as { success?: unknown }).success === "boolean"
+  )
+}
+
+function isCsvImportResult(
+  value: unknown,
+): value is ImportTransactionsCsvResult {
+  if (typeof value !== "object" || value === null) return false
+  const candidate = value as Record<string, unknown>
+  return (
+    typeof candidate.importedCount === "number" &&
+    typeof candidate.message === "string"
   )
 }
 

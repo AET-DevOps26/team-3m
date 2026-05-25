@@ -7,8 +7,10 @@ const networkSafeFetch: typeof fetch = async (input, init) => {
   try {
     return await fetch(input, init)
   } catch (cause) {
-    const signal = init?.signal as AbortSignal | null | undefined
-    if (signal?.aborted) {
+    const requestSignal = input instanceof Request ? input.signal : undefined
+    const signal = init?.signal ?? requestSignal
+    const causeName = (cause as { name?: unknown } | null)?.name
+    if (signal?.aborted || causeName === "AbortError") {
       throw new APIError({
         code: "aborted",
         message: "Request cancelled",

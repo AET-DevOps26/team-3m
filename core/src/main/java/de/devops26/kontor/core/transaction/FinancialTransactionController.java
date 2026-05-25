@@ -1,6 +1,9 @@
 package de.devops26.kontor.core.transaction;
 
 import de.devops26.kontor.core.web.ApiResponse;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import java.io.IOException;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,12 +24,22 @@ public class FinancialTransactionController {
     }
 
     @PostMapping(path = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<CsvImportResult>> importCsv(@RequestParam("file") MultipartFile file)
-            throws IOException {
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "CSV imported successfully",
+                content = @Content(schema = @Schema(implementation = CsvImportApiResponse.class))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "400",
+                description = "Empty upload, malformed CSV, or row-level validation failure",
+                content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+    })
+    public ResponseEntity<CsvImportApiResponse> importCsv(@RequestParam("file") MultipartFile file) throws IOException {
         if (file.isEmpty()) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("Uploaded file is empty"));
+            return ResponseEntity.badRequest()
+                    .body(CsvImportApiResponse.from(ApiResponse.error("Uploaded file is empty")));
         }
         var result = service.importCsv(file.getInputStream());
-        return ResponseEntity.ok(ApiResponse.ok(result));
+        return ResponseEntity.ok(CsvImportApiResponse.from(ApiResponse.ok(result)));
     }
 }

@@ -20,7 +20,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 @ExtendWith(MockitoExtension.class)
 class CurrentUserServiceTest {
 
-    private static final UUID SUB = UUID.fromString("0e7c4ad7-1ae3-4f7c-95e6-30db5ad7b341");
+    private static final String SUB = "auth-provider|alice";
 
     @Mock
     private AppUserRepository repository;
@@ -35,7 +35,7 @@ class CurrentUserServiceTest {
     @Test
     @DisplayName("resolve upserts the local app_user from JWT claims")
     void resolve_validJwt_upsertsUser() {
-        var jwt = jwt(SUB.toString(), Map.of("email", "alice@example.com", "preferred_username", "alice"));
+        var jwt = jwt(SUB, Map.of("email", "alice@example.com", "preferred_username", "alice"));
         var expected = new AppUser(UUID.randomUUID(), SUB, "alice@example.com", "alice");
         when(repository.upsert(eq(SUB), eq("alice@example.com"), eq("alice"))).thenReturn(expected);
 
@@ -56,19 +56,19 @@ class CurrentUserServiceTest {
     }
 
     @Test
-    @DisplayName("resolve throws when sub claim is not a UUID")
-    void resolve_invalidSub_throws() {
-        var jwt = jwt("not-a-uuid", Map.of());
+    @DisplayName("resolve throws when sub claim is blank")
+    void resolve_blankSub_throws() {
+        var jwt = jwt(" ", Map.of());
 
         assertThatThrownBy(() -> service.resolve(jwt))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("UUID");
+                .hasMessageContaining("sub");
     }
 
     @Test
     @DisplayName("resolve passes null email when claim is absent")
     void resolve_missingEmail_passesNullToRepository() {
-        var jwt = jwt(SUB.toString(), Map.of("preferred_username", "alice"));
+        var jwt = jwt(SUB, Map.of("preferred_username", "alice"));
         var expected = new AppUser(UUID.randomUUID(), SUB, null, "alice");
         when(repository.upsert(eq(SUB), eq(null), eq("alice"))).thenReturn(expected);
 

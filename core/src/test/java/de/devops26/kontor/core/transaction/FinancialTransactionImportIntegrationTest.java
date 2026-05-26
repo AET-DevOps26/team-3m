@@ -9,7 +9,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.UUID;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -27,8 +26,8 @@ import org.springframework.test.web.servlet.MockMvc;
 @ActiveProfiles("test")
 class FinancialTransactionImportIntegrationTest {
 
-    private static final UUID USER_ALICE_SUB = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
-    private static final UUID USER_BOB_SUB = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+    private static final String USER_ALICE_SUB = "auth-provider|alice";
+    private static final String USER_BOB_SUB = "auth-provider|bob";
 
     @Autowired
     private MockMvc mockMvc;
@@ -183,8 +182,8 @@ class FinancialTransactionImportIntegrationTest {
 
     private static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
                     .JwtRequestPostProcessor
-            jwtFor(UUID sub, String preferredUsername) {
-        return jwt().jwt(builder -> builder.subject(sub.toString())
+            jwtFor(String sub, String preferredUsername) {
+        return jwt().jwt(builder -> builder.subject(sub)
                 .claim("preferred_username", preferredUsername)
                 .claim("email", preferredUsername + "@kontor.test"));
     }

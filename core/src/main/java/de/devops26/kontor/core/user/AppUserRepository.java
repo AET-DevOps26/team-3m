@@ -19,7 +19,7 @@ public class AppUserRepository {
         this.dsl = dsl;
     }
 
-    public Optional<AppUser> findByOidcSub(UUID oidcSub) {
+    public Optional<AppUser> findByOidcSub(String oidcSub) {
         return dsl.select(APP_USER.ID, APP_USER.OIDC_SUB, APP_USER.EMAIL, APP_USER.PREFERRED_USERNAME)
                 .from(APP_USER)
                 .where(APP_USER.OIDC_SUB.eq(oidcSub))
@@ -30,7 +30,7 @@ public class AppUserRepository {
                         record.get(APP_USER.PREFERRED_USERNAME)));
     }
 
-    public AppUser upsert(UUID oidcSub, String email, String preferredUsername) {
+    public AppUser upsert(String oidcSub, String email, String preferredUsername) {
         var now = OffsetDateTime.now(ZoneOffset.UTC);
         var record = dsl.insertInto(APP_USER)
                 .set(APP_USER.ID, UUID.randomUUID())
@@ -41,8 +41,10 @@ public class AppUserRepository {
                 .set(APP_USER.UPDATED_AT, now)
                 .onConflict(APP_USER.OIDC_SUB)
                 .doUpdate()
-                .set(APP_USER.EMAIL, DSL.excluded(APP_USER.EMAIL))
-                .set(APP_USER.PREFERRED_USERNAME, DSL.excluded(APP_USER.PREFERRED_USERNAME))
+                .set(APP_USER.EMAIL, DSL.coalesce(DSL.excluded(APP_USER.EMAIL), APP_USER.EMAIL))
+                .set(
+                        APP_USER.PREFERRED_USERNAME,
+                        DSL.coalesce(DSL.excluded(APP_USER.PREFERRED_USERNAME), APP_USER.PREFERRED_USERNAME))
                 .set(APP_USER.UPDATED_AT, DSL.excluded(APP_USER.UPDATED_AT))
                 .returning(APP_USER.ID, APP_USER.OIDC_SUB, APP_USER.EMAIL, APP_USER.PREFERRED_USERNAME)
                 .fetchOne();

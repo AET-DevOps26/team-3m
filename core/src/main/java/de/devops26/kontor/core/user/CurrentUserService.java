@@ -1,6 +1,5 @@
 package de.devops26.kontor.core.user;
 
-import java.util.UUID;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -27,21 +26,17 @@ public class CurrentUserService {
             throw new IllegalArgumentException("JWT must not be null");
         }
 
-        UUID oidcSub = parseSub(jwt.getSubject());
+        String oidcSub = requireSubject(jwt.getSubject());
         String email = jwt.getClaimAsString("email");
         String preferredUsername = jwt.getClaimAsString("preferred_username");
 
         return repository.upsert(oidcSub, email, preferredUsername);
     }
 
-    private static UUID parseSub(String subject) {
+    private static String requireSubject(String subject) {
         if (subject == null || subject.isBlank()) {
             throw new IllegalArgumentException("JWT 'sub' claim is missing");
         }
-        try {
-            return UUID.fromString(subject);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("JWT 'sub' claim is not a valid UUID: " + subject, e);
-        }
+        return subject;
     }
 }

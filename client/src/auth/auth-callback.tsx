@@ -1,6 +1,6 @@
 import { useEffect } from "react"
 import { useAuth } from "react-oidc-context"
-import { Navigate, useNavigate } from "react-router-dom"
+import { Navigate } from "react-router-dom"
 import { RouteFallback } from "@/components/route-fallback"
 
 /**
@@ -11,7 +11,6 @@ import { RouteFallback } from "@/components/route-fallback"
  */
 export function AuthCallback() {
   const auth = useAuth()
-  const navigate = useNavigate()
 
   useEffect(() => {
     if (auth.error) {
@@ -24,8 +23,7 @@ export function AuthCallback() {
   }
 
   if (auth.isAuthenticated) {
-    void navigate("/", { replace: true })
-    return <RouteFallback />
+    return <Navigate to="/" replace />
   }
 
   return <RouteFallback />

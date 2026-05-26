@@ -1,6 +1,6 @@
 CREATE TABLE app_user (
     id                  UUID            PRIMARY KEY,
-    oidc_sub            UUID            NOT NULL CONSTRAINT app_user_oidc_sub_key UNIQUE,
+    oidc_sub            VARCHAR(255)    NOT NULL CONSTRAINT app_user_oidc_sub_key UNIQUE,
     email               VARCHAR(255),
     preferred_username  VARCHAR(255),
     created_at          TIMESTAMPTZ     NOT NULL DEFAULT now(),

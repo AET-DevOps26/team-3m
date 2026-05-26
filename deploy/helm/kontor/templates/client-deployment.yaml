@@ -1,0 +1,88 @@
+{{- if .Values.client.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kontor.client.fullname" . }}
+  labels:
+    {{- include "kontor.labels" . | nindent 4 }}
+    app.kubernetes.io/component: client
+spec:
+  replicas: {{ .Values.client.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "kontor.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: client
+  template:
+    metadata:
+      labels:
+        {{- include "kontor.labels" . | nindent 8 }}
+        app.kubernetes.io/component: client
+    spec:
+      securityContext:
+        {{- toYaml .Values.client.podSecurityContext | nindent 8 }}
+      containers:
+        - name: client
+          image: {{ include "kontor.image" (dict "root" . "component" .Values.client) | quote }}
+          imagePullPolicy: {{ include "kontor.imagePullPolicy" (dict "root" . "component" .Values.client) }}
+          securityContext:
+            {{- toYaml .Values.client.containerSecurityContext | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          {{- with .Values.client }}
+          env:
+            - name: VITE_API_BASE_URL
+              value: {{ required "client.apiBaseUrl is required: set it to the public base URL of the deployment, e.g. https://kontor.example.com (no /api suffix — the client appends /api/v1/...)." .apiBaseUrl | quote }}
+            {{- with .oidc.authority }}
+            - name: VITE_OIDC_AUTHORITY
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .oidc.clientId }}
+            - name: VITE_OIDC_CLIENT_ID
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .oidc.redirectUri }}
+            - name: VITE_OIDC_REDIRECT_URI
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .oidc.postLogoutRedirectUri }}
+            - name: VITE_OIDC_POST_LOGOUT_REDIRECT_URI
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .oidc.audience }}
+            - name: VITE_OIDC_AUDIENCE
+              value: {{ . | quote }}
+            {{- end }}
+          {{- end }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.client.probes.readinessPath }}
+              port: http
+            initialDelaySeconds: {{ .Values.client.probes.initialDelaySeconds }}
+            periodSeconds: {{ .Values.client.probes.periodSeconds }}
+            timeoutSeconds: {{ .Values.client.probes.timeoutSeconds }}
+            failureThreshold: {{ .Values.client.probes.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.client.probes.livenessPath }}
+              port: http
+            initialDelaySeconds: {{ .Values.client.probes.initialDelaySeconds }}
+            periodSeconds: {{ .Values.client.probes.periodSeconds }}
+            timeoutSeconds: {{ .Values.client.probes.timeoutSeconds }}
+            failureThreshold: {{ .Values.client.probes.failureThreshold }}
+          resources:
+            {{- toYaml .Values.client.resources | nindent 12 }}
+      {{- with .Values.client.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.client.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.client.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

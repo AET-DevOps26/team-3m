@@ -1,0 +1,207 @@
+# -- Override the auto-generated release name fragment used in resource names.
+nameOverride: ""
+# -- Fully override the chart name used in resource names.
+fullnameOverride: ""
+
+# Common image pull configuration.
+image:
+  # -- Default container registry; overridden per service below if set.
+  registry: ghcr.io
+  # -- Default image pull policy.
+  pullPolicy: IfNotPresent
+
+# Spring Boot core service.
+core:
+  enabled: true
+  image:
+    repository: aet-devops26/team-3m/kontor-core
+    tag: ""              # defaults to .Chart.AppVersion
+    pullPolicy: ""       # falls back to image.pullPolicy
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8080
+  # -- Spring profiles to activate (SPRING_PROFILES_ACTIVE). Empty keeps the app default.
+  springProfilesActive: ""
+  # File upload limits, propagated to Spring's multipart config. Empty values
+  # keep the application defaults.
+  multipart:
+    # -- Max size of a single uploaded file (SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE).
+    maxFileSize: ""
+    # -- Max size of an entire multipart request (SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE).
+    maxRequestSize: ""
+  # CORS allowed origins, propagated as APP_CORS_ALLOWED_ORIGINS (comma-separated).
+  # Leave empty to let the application defaults apply.
+  corsAllowedOrigins: []
+  # Escape hatch for arbitrary extra non-secret env vars merged into the pod,
+  # for config not covered by the typed values above.
+  env: {}
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  probes:
+    # Spring Boot doesn't expose actuator yet; /hello is the smoke endpoint.
+    livenessPath: /hello
+    readinessPath: /hello
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 6
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop: ["ALL"]
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# React/nginx client.
+client:
+  enabled: true
+  image:
+    repository: aet-devops26/team-3m/kontor-client
+    tag: ""
+    pullPolicy: ""
+  replicaCount: 1
+  # Runtime configuration injected into the SPA at container startup by vite-envs.
+  # REQUIRED — the chart fails to render if apiBaseUrl is empty.
+  # -- Public base URL of the deployment, rendered as VITE_API_BASE_URL, e.g.
+  # https://kontor.example.com (no /api suffix — the client appends /api/v1/...).
+  apiBaseUrl: ""
+  # OIDC values are optional; empty keeps the image's built-in default.
+  oidc:
+    # -- OIDC issuer/authority URL (VITE_OIDC_AUTHORITY).
+    authority: ""
+    # -- OIDC client ID for the SPA (VITE_OIDC_CLIENT_ID).
+    clientId: ""
+    # -- OIDC redirect URI (VITE_OIDC_REDIRECT_URI).
+    redirectUri: ""
+    # -- OIDC post-logout redirect URI (VITE_OIDC_POST_LOGOUT_REDIRECT_URI).
+    postLogoutRedirectUri: ""
+    # -- OIDC audience for issued tokens (VITE_OIDC_AUDIENCE).
+    audience: ""
+  service:
+    type: ClusterIP
+    port: 8080
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+  probes:
+    livenessPath: /
+    readinessPath: /
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 101    # nginx-unprivileged user
+    runAsGroup: 101
+    fsGroup: 101
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false   # nginx writes pid + temp files
+    capabilities:
+      drop: ["ALL"]
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# Postgres (with pgvector) — single-instance StatefulSet.
+# For HA/PITR/backups consider switching to the CloudNativePG operator once available.
+postgres:
+  enabled: true
+  image:
+    repository: pgvector/pgvector
+    tag: pg18-trixie
+    pullPolicy: ""
+  service:
+    port: 5432
+  database: kontor
+  username: kontor
+  # REQUIRED — override via secrets.yaml or --set. Leave empty here; the chart
+  # `fail`s the render if no password is provided.
+  # Rotation: edit the Secret + ALTER ROLE in the live DB, then restart core.
+  # The StatefulSet's PGDATA is initialized only once, so changing this value
+  # alone does not rotate the live DB user's password.
+  password: ""
+  # When set, the chart will not create the postgres Secret and will instead
+  # mount the named existing Secret. Expected keys: POSTGRES_DB, POSTGRES_USER,
+  # POSTGRES_PASSWORD.
+  existingSecret: ""
+  persistence:
+    enabled: true
+    size: 8Gi
+    # csi-rbd-sc is the cluster default; left empty so it's picked up automatically.
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 999     # postgres user in the pgvector image
+    runAsGroup: 999
+    fsGroup: 999
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+    capabilities:
+      drop: ["ALL"]
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# Single nginx ingress fronting both services.
+# Client at "/" and core at "/api". TLS via cert-manager.
+ingress:
+  enabled: true
+  className: nginx
+  # -- Hostnames to advertise. Each entry renders one ingress rule and one
+  # TLS host, all backed by `tls.secretName`. Override per environment.
+  hosts: []
+  # -- Deprecated single-host form. Used as a fallback only when `hosts` is
+  # empty, so existing single-host consumers keep working.
+  host: kontor.example.com
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 10m
+  tls:
+    enabled: true
+    # -- ClusterIssuer to use. The shared cluster has `letsencrypt-prod` and
+    # `letsencrypt-staging`. Use staging while iterating to avoid rate limits.
+    clusterIssuer: letsencrypt-prod
+    # -- Secret holding the cert; cert-manager creates it on first issue.
+    secretName: kontor-tls
+
+# Defense-in-depth on a shared cluster: restrict who can talk to what.
+networkPolicy:
+  enabled: true
+  # -- When true, the only egress allowed from app pods is to in-cluster
+  # services + DNS + the configured Postgres pod. Set to false if your app
+  # needs to reach Yahoo Finance / OpenAI / etc. directly from the cluster.
+  restrictEgress: false

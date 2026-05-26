@@ -1,0 +1,103 @@
+{{- if .Values.core.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kontor.core.fullname" . }}
+  labels:
+    {{- include "kontor.labels" . | nindent 4 }}
+    app.kubernetes.io/component: core
+spec:
+  replicas: {{ .Values.core.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "kontor.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: core
+  template:
+    metadata:
+      labels:
+        {{- include "kontor.labels" . | nindent 8 }}
+        app.kubernetes.io/component: core
+      annotations:
+        # Roll the pods when the DB secret changes so new creds take effect.
+        checksum/secret: {{ include (print $.Template.BasePath "/postgres-secret.yaml") . | sha256sum }}
+    spec:
+      securityContext:
+        {{- toYaml .Values.core.podSecurityContext | nindent 8 }}
+      containers:
+        - name: core
+          image: {{ include "kontor.image" (dict "root" . "component" .Values.core) | quote }}
+          imagePullPolicy: {{ include "kontor.imagePullPolicy" (dict "root" . "component" .Values.core) }}
+          securityContext:
+            {{- toYaml .Values.core.containerSecurityContext | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: POSTGRES_HOST
+              value: {{ include "kontor.postgres.fullname" . | quote }}
+            - name: POSTGRES_PORT
+              value: {{ .Values.postgres.service.port | quote }}
+            {{- with .Values.core.springProfilesActive }}
+            - name: SPRING_PROFILES_ACTIVE
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.core.multipart.maxFileSize }}
+            - name: SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.core.multipart.maxRequestSize }}
+            - name: SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.core.corsAllowedOrigins }}
+            - name: APP_CORS_ALLOWED_ORIGINS
+              value: {{ join "," . | quote }}
+            {{- end }}
+            {{- range $key, $value := .Values.core.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            # /tmp lands on an emptyDir so readOnlyRootFilesystem stays on.
+            - name: JAVA_TOOL_OPTIONS
+              value: "-Djava.io.tmpdir=/tmp"
+          envFrom:
+            - secretRef:
+                name: {{ include "kontor.postgres.secretName" . }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.core.probes.readinessPath }}
+              port: http
+            initialDelaySeconds: {{ .Values.core.probes.initialDelaySeconds }}
+            periodSeconds: {{ .Values.core.probes.periodSeconds }}
+            timeoutSeconds: {{ .Values.core.probes.timeoutSeconds }}
+            failureThreshold: {{ .Values.core.probes.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.core.probes.livenessPath }}
+              port: http
+            initialDelaySeconds: {{ .Values.core.probes.initialDelaySeconds }}
+            periodSeconds: {{ .Values.core.probes.periodSeconds }}
+            timeoutSeconds: {{ .Values.core.probes.timeoutSeconds }}
+            failureThreshold: {{ .Values.core.probes.failureThreshold }}
+          resources:
+            {{- toYaml .Values.core.resources | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      {{- with .Values.core.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.core.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.core.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

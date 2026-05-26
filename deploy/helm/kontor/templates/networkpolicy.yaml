@@ -1,0 +1,102 @@
+{{- if .Values.networkPolicy.enabled }}
+---
+# Postgres: only accept traffic from the core deployment in this release.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "kontor.postgres.fullname" . }}
+  labels:
+    {{- include "kontor.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgres
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "kontor.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: postgres
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "kontor.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: core
+      ports:
+        - protocol: TCP
+          port: 5432
+---
+# Core: ingress from the ingress-nginx namespace + the client pod.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "kontor.core.fullname" . }}
+  labels:
+    {{- include "kontor.labels" . | nindent 4 }}
+    app.kubernetes.io/component: core
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "kontor.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: core
+  policyTypes:
+    - Ingress
+    {{- if .Values.networkPolicy.restrictEgress }}
+    - Egress
+    {{- end }}
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+        - podSelector:
+            matchLabels:
+              {{- include "kontor.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: client
+      ports:
+        - protocol: TCP
+          port: 8080
+  {{- if .Values.networkPolicy.restrictEgress }}
+  egress:
+    # DNS
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Postgres in this release
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "kontor.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+  {{- end }}
+---
+# Client: ingress from ingress-nginx only.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "kontor.client.fullname" . }}
+  labels:
+    {{- include "kontor.labels" . | nindent 4 }}
+    app.kubernetes.io/component: client
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "kontor.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: client
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8080
+{{- end }}

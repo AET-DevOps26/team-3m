@@ -1,0 +1,65 @@
+{
+  "realm": "kontor",
+  "users": [
+    {
+      "username": "dev",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Dev",
+      "lastName": "User",
+      "email": "dev@kontor.local",
+      "attributes": {
+        "persona": ["developer"],
+        "tenant": ["local"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${KEYCLOAK_DEV_USERS_PASSWORD}",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["kontor-user", "default-roles-kontor"]
+    },
+    {
+      "username": "analyst",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Local",
+      "lastName": "Analyst",
+      "email": "analyst@kontor.local",
+      "attributes": {
+        "persona": ["analyst"],
+        "tenant": ["local"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${KEYCLOAK_DEV_USERS_PASSWORD}",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["kontor-user", "default-roles-kontor"]
+    },
+    {
+      "username": "admin-user",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Local",
+      "lastName": "Admin",
+      "email": "admin-user@kontor.local",
+      "attributes": {
+        "persona": ["admin"],
+        "tenant": ["local"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${KEYCLOAK_DEV_USERS_PASSWORD}",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["kontor-user", "kontor-admin", "default-roles-kontor"]
+    }
+  ]
+}

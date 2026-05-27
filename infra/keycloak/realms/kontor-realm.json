@@ -16,27 +16,13 @@
       {
         "name": "kontor-user",
         "description": "Standard user able to manage their own financial data."
+      },
+      {
+        "name": "kontor-admin",
+        "description": "Local development admin role for testing elevated access."
       }
     ]
   },
-  "users": [
-    {
-      "username": "dev",
-      "enabled": true,
-      "emailVerified": true,
-      "firstName": "Dev",
-      "lastName": "User",
-      "email": "dev@kontor.local",
-      "credentials": [
-        {
-          "type": "password",
-          "value": "dev",
-          "temporary": false
-        }
-      ],
-      "realmRoles": ["kontor-user", "default-roles-kontor"]
-    }
-  ],
   "clients": [
     {
       "clientId": "kontor-spa",

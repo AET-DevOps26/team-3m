@@ -62,6 +62,23 @@ cd core
 
 ---
 
+## Deployment
+
+The Kontor stack ships as a single Helm chart in
+[`deploy/helm/kontor/`](deploy/helm/kontor/README.md) that bundles the client,
+core, Postgres (with `pgvector`), and an optional Keycloak. The chart README
+documents environment overlays (`values-prod.yaml`,
+`values-pr.example.yaml`), required secrets, and the install / upgrade flow.
+
+```sh
+helm upgrade --install kontor ./deploy/helm/kontor \
+  -n team-3m \
+  -f deploy/helm/kontor/values-prod.yaml \
+  -f deploy/helm/kontor/secrets.yaml
+```
+
+---
+
 ### Top Level Architecture
 
 ![Component Diagram](deliverables/models/COMPONENT_DIAGRAM.svg)

@@ -4,6 +4,7 @@ import static de.devops26.kontor.core.generated.tables.FinancialTransaction.FINA
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import org.jooq.DSLContext;
@@ -26,8 +27,8 @@ public class FinancialTransactionRepository {
         }
         var now = OffsetDateTime.now(ZoneOffset.UTC);
         var queries = rows.stream().map(row -> buildUpsert(row, userId, now)).toList();
-        dsl.batch(queries).execute();
-        return rows.size();
+        var results = dsl.batch(queries).execute();
+        return (int) Arrays.stream(results).filter(result -> result > 0).count();
     }
 
     private Query buildUpsert(TransactionCsvRow row, UUID userId, OffsetDateTime now) {

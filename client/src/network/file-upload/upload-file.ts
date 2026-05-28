@@ -119,8 +119,10 @@ function parseResponseBody(text: string): unknown {
 }
 
 function extractErrorMessage(data: unknown, xhr: XMLHttpRequest): string {
-  if (typeof data === "object" && data !== null && "message" in data) {
-    const message = (data as { message?: unknown }).message
+  if (typeof data === "object" && data !== null) {
+    const message =
+      (data as { error?: unknown }).error ??
+      (data as { message?: unknown }).message
     if (typeof message === "string" && message.length > 0) {
       return message
     }

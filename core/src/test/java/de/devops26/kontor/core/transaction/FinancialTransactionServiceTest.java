@@ -149,6 +149,62 @@ class FinancialTransactionServiceTest {
         assertThat(row.counterpartyIban()).isNull();
     }
 
+    @Test
+    @DisplayName("importCsv throws when CSV contains unknown headers")
+    void importCsv_unknownHeaders_throws() {
+        var csv = "datetime,date,account_type,category,type,amount,currency,transaction_id,unknown_column\n";
+
+        assertThatThrownBy(() -> service.importCsv(toStream(csv), USER_ID))
+                .isInstanceOf(CsvParsingException.class)
+                .hasMessageContaining("unknown header");
+    }
+
+    @Test
+    @DisplayName("importCsv throws when CSV is missing required headers")
+    void importCsv_missingRequiredHeaders_throws() {
+        var csv = "datetime,date,account_type,category,type,currency,transaction_id\n";
+
+        assertThatThrownBy(() -> service.importCsv(toStream(csv), USER_ID))
+                .isInstanceOf(CsvParsingException.class)
+                .hasMessageContaining("missing required header");
+    }
+
+    @Test
+    @DisplayName("importCsv stops collecting errors after MAX_ERRORS is reached")
+    void importCsv_tooManyErrors_throwsAtLimit() {
+        var sb = new StringBuilder(HEADER).append("\n");
+        for (int i = 0; i < 51; i++) {
+            sb.append("\"2026-04-01T09:30:00Z\",\"2026-04-01\",\"DEFAULT\",\"CASH\","
+                            + "\"BUY\",\"\",\"\",\"\",\"\",\"\","
+                            + "\"\",\"\",\"\",\"EUR\",\"\",\"\",\"\","
+                            + "\"\",\"00000000-0000-0000-0000-")
+                    .append(String.format("%012d", i))
+                    .append("\",\"\",\"\",\"\",\"\"\n");
+        }
+
+        assertThatThrownBy(() -> service.importCsv(toStream(sb.toString()), USER_ID))
+                .isInstanceOf(CsvParsingException.class)
+                .hasMessageContaining("Too many validation errors");
+    }
+
+    @Test
+    @DisplayName("importCsv throws when CSV exceeds MAX_ROWS")
+    void importCsv_exceedsMaxRows_throws() {
+        var sb = new StringBuilder(HEADER).append("\n");
+        for (int i = 0; i <= 50_000; i++) {
+            sb.append("\"2026-04-01T09:30:00Z\",\"2026-04-01\",\"DEFAULT\",\"CASH\","
+                            + "\"BUY\",\"\",\"\",\"\",\"\",\"\","
+                            + "\"1.00\",\"\",\"\",\"EUR\",\"\",\"\",\"\","
+                            + "\"\",\"00000000-0000-0000-0000-")
+                    .append(String.format("%012d", i))
+                    .append("\",\"\",\"\",\"\",\"\"\n");
+        }
+
+        assertThatThrownBy(() -> service.importCsv(toStream(sb.toString()), USER_ID))
+                .isInstanceOf(CsvParsingException.class)
+                .hasMessageContaining("maximum supported row count");
+    }
+
     private static final String HEADER = "\"datetime\",\"date\",\"account_type\",\"category\",\"type\","
             + "\"asset_class\",\"name\",\"symbol\",\"shares\",\"price\","
             + "\"amount\",\"fee\",\"tax\",\"currency\",\"original_amount\","

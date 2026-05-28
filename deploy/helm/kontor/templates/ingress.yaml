@@ -32,7 +32,6 @@ spec:
     - host: {{ . | quote }}
       http:
         paths:
-          {{- if $.Values.core.enabled }}
           - path: /api
             pathType: Prefix
             backend:
@@ -40,8 +39,6 @@ spec:
                 name: {{ include "kontor.core.fullname" $ }}
                 port:
                   number: {{ $.Values.core.service.port }}
-          {{- end }}
-          {{- if $.Values.client.enabled }}
           - path: /
             pathType: Prefix
             backend:
@@ -49,6 +46,5 @@ spec:
                 name: {{ include "kontor.client.fullname" $ }}
                 port:
                   number: {{ $.Values.client.service.port }}
-          {{- end }}
     {{- end }}
 {{- end }}

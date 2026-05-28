@@ -27,7 +27,6 @@ oidc:
 
 # Spring Boot core service.
 core:
-  enabled: true
   image:
     repository: aet-devops26/team-3m/kontor-core
     tag: ""              # defaults to .Chart.AppVersion
@@ -84,7 +83,6 @@ core:
 
 # React/nginx client.
 client:
-  enabled: true
   image:
     repository: aet-devops26/team-3m/kontor-client
     tag: ""

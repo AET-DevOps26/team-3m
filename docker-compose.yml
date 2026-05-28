@@ -6,7 +6,7 @@ services:
       POSTGRES_USER: "${POSTGRES_USER:-team3m}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-change-me-local}"
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
     healthcheck:
@@ -23,9 +23,11 @@ services:
       db:
         condition: service_healthy
     environment:
-      APP_DATABASE_URL: "${APP_DATABASE_URL:-jdbc:postgresql://db:5432/team3m}"
-      APP_DATABASE_USERNAME: "${APP_DATABASE_USERNAME:-team3m}"
-      APP_DATABASE_PASSWORD: "${APP_DATABASE_PASSWORD:-change-me-local}"
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: "${POSTGRES_DB:-team3m}"
+      POSTGRES_USER: "${POSTGRES_USER:-team3m}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-change-me-local}"
     ports:
       - "8080:8080"
     healthcheck:

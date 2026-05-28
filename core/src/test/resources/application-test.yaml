@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: jdbc:tc:postgresql:18-trixie:///team3m
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    username: team3m
+    password: team3m
+  flyway:
+    enabled: true
+    locations: classpath:db/migration

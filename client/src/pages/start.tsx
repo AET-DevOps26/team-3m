@@ -1,13 +1,15 @@
 import {
   Code,
   Database,
+  FileSpreadsheet,
   Layers,
   Loader2,
   Rocket,
   Server,
   Users,
 } from "lucide-react"
-import { useState } from "react"
+import { Link } from "react-router-dom"
+import { ConnectionStatusBanner } from "@/components/connection-status-banner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,12 +20,8 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-
-type ConnectionStatus =
-  | { state: "idle" }
-  | { state: "loading" }
-  | { state: "success"; message: string; statusCode: number; latencyMs: number }
-  | { state: "error"; error: string }
+import { API_BASE_URL } from "@/network"
+import { useHealthCheck } from "@/network/endpoints/health"
 
 const teamMembers = [
   { name: "Mathilde", role: "UI/UX Expert" },
@@ -48,87 +46,20 @@ const techStack = [
 ]
 
 export function StartPage() {
-  const [serverStatus, setServerStatus] = useState<ConnectionStatus>({
-    state: "idle",
-  })
-  const [databaseStatus, setDatabaseStatus] = useState<ConnectionStatus>({
-    state: "idle",
-  })
-
-  async function testConnection(
-    endpoint: string,
-    setConnectionStatus: (status: ConnectionStatus) => void,
-  ) {
-    setConnectionStatus({ state: "loading" })
-    const start = performance.now()
-
-    try {
-      const response = await fetch(endpoint)
-      const latencyMs = Math.round(performance.now() - start)
-
-      if (!response.ok) {
-        const errorMessage = await response.text()
-        setConnectionStatus({
-          state: "error",
-          error:
-            errorMessage || `HTTP ${response.status} ${response.statusText}`,
-        })
-        return
-      }
-
-      const message = await response.text()
-      setConnectionStatus({
-        state: "success",
-        message,
-        statusCode: response.status,
-        latencyMs,
-      })
-    } catch (error) {
-      setConnectionStatus({
-        state: "error",
-        error: error instanceof Error ? error.message : "Unknown error",
-      })
-    }
-  }
-
-  function renderConnectionStatus(label: string, status: ConnectionStatus) {
-    if (status.state === "success") {
-      return (
-        <div className="space-y-2 rounded-lg border border-chart-1/30 bg-chart-1/5 p-3 text-sm">
-          <div className="flex items-center gap-2">
-            <Badge className="bg-chart-1/20 text-chart-5">
-              {label} Connected
-            </Badge>
-            <span className="text-muted-foreground">
-              {status.statusCode} OK &middot; {status.latencyMs}ms
-            </span>
-          </div>
-          <p className="font-mono text-foreground">{status.message}</p>
-        </div>
-      )
-    }
-
-    if (status.state === "error") {
-      return (
-        <div className="space-y-1 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
-          <Badge variant="destructive">{label} Connection Failed</Badge>
-          <p className="font-mono text-destructive">{status.error}</p>
-        </div>
-      )
-    }
-
-    return null
-  }
+  const serverCheck = useHealthCheck("hello")
+  const databaseCheck = useHealthCheck("database")
 
   return (
-    <div className="flex min-h-svh items-center justify-center bg-background p-6">
-      <div className="flex w-full max-w-3xl flex-col items-center gap-8">
+    <div className="flex min-h-svh items-center justify-center bg-background p-4 sm:p-6">
+      <div className="flex w-full max-w-3xl flex-col items-center gap-6 sm:gap-8">
         <div className="flex flex-col items-center gap-3 text-center">
           <div className="flex items-center gap-3">
             <Rocket className="size-8 text-primary" />
-            <h1 className="text-4xl font-bold tracking-tight">Kontor</h1>
+            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              Kontor
+            </h1>
           </div>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-base text-muted-foreground sm:text-lg">
             Team 3M &mdash; DevOps Project
           </p>
         </div>
@@ -204,51 +135,88 @@ export function StartPage() {
               Server Connection
             </CardTitle>
             <CardDescription>
-              Test the backend API and database at localhost:8080
+              Test the backend API and database at {API_BASE_URL}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-wrap gap-2">
               <Button
                 variant="outline"
-                onClick={() =>
-                  testConnection("http://localhost:8080/hello", setServerStatus)
-                }
-                disabled={serverStatus.state === "loading"}
+                onClick={() => serverCheck.mutate()}
+                disabled={serverCheck.isPending}
               >
-                {serverStatus.state === "loading" ? (
+                {serverCheck.isPending ? (
                   <Loader2 className="animate-spin" />
                 ) : (
                   <Server />
                 )}
-                {serverStatus.state === "loading"
-                  ? "Connecting..."
-                  : "Test Server"}
+                {serverCheck.isPending ? "Connecting..." : "Test Server"}
               </Button>
 
               <Button
                 variant="outline"
-                onClick={() =>
-                  testConnection(
-                    "http://localhost:8080/database",
-                    setDatabaseStatus,
-                  )
-                }
-                disabled={databaseStatus.state === "loading"}
+                onClick={() => databaseCheck.mutate()}
+                disabled={databaseCheck.isPending}
               >
-                {databaseStatus.state === "loading" ? (
+                {databaseCheck.isPending ? (
                   <Loader2 className="animate-spin" />
                 ) : (
                   <Database />
                 )}
-                {databaseStatus.state === "loading"
-                  ? "Connecting..."
-                  : "Test Database"}
+                {databaseCheck.isPending ? "Connecting..." : "Test Database"}
               </Button>
             </div>
 
-            {renderConnectionStatus("Server", serverStatus)}
-            {renderConnectionStatus("Database", databaseStatus)}
+            {serverCheck.isSuccess && (
+              <ConnectionStatusBanner
+                variant="success"
+                label="Server"
+                message={serverCheck.data.message}
+                caption={`200 OK · ${serverCheck.data.latencyMs}ms`}
+              />
+            )}
+            {serverCheck.isError && (
+              <ConnectionStatusBanner
+                variant="error"
+                label="Server"
+                message={serverCheck.error.message}
+              />
+            )}
+            {databaseCheck.isSuccess && (
+              <ConnectionStatusBanner
+                variant="success"
+                label="Database"
+                message={databaseCheck.data.message}
+                caption={`200 OK · ${databaseCheck.data.latencyMs}ms`}
+              />
+            )}
+            {databaseCheck.isError && (
+              <ConnectionStatusBanner
+                variant="error"
+                label="Database"
+                message={databaseCheck.error.message}
+              />
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileSpreadsheet className="size-4" />
+              Data Import
+            </CardTitle>
+            <CardDescription>
+              Import financial transactions from CSV files
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="outline">
+              <Link to="/import">
+                <FileSpreadsheet />
+                Import CSV
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       </div>

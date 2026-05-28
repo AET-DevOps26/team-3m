@@ -4,12 +4,19 @@ server:
 spring:
   application:
     name: core
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:team3m}
+    username: ${POSTGRES_USER:team3m}
+    password: ${POSTGRES_PASSWORD:change-me-local}
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
 
 app:
-  database:
-    url: ${APP_DATABASE_URL:jdbc:postgresql://localhost:5432/team3m}
-    username: ${APP_DATABASE_USERNAME:team3m}
-    password: ${APP_DATABASE_PASSWORD:change-me-local}
   cors:
     allowed-origins:
       - http://localhost:5173

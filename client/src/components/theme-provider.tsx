@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import * as React from "react"
 
 type Theme = "dark" | "light" | "system"
@@ -17,6 +16,7 @@ type ThemeProviderState = {
 }
 
 const COLOR_SCHEME_QUERY = "(prefers-color-scheme: dark)"
+const THEME_TOGGLE_KEY = "d"
 const THEME_VALUES: Theme[] = ["dark", "light", "system"]
 
 const ThemeProviderContext = React.createContext<
@@ -37,6 +37,12 @@ function getSystemTheme(): ResolvedTheme {
   }
 
   return "light"
+}
+
+function getNextTheme(current: Theme): Theme {
+  if (current === "dark") return "light"
+  if (current === "light") return "dark"
+  return getSystemTheme() === "dark" ? "light" : "dark"
 }
 
 function disableTransitionsTemporarily() {
@@ -82,7 +88,6 @@ export function ThemeProvider({
   defaultTheme = "system",
   storageKey = "theme",
   disableTransitionOnChange = true,
-  ...props
 }: ThemeProviderProps) {
   const [theme, setThemeState] = React.useState<Theme>(() => {
     const storedTheme = localStorage.getItem(storageKey)
@@ -153,20 +158,12 @@ export function ThemeProvider({
         return
       }
 
-      if (event.key.toLowerCase() !== "d") {
+      if (event.key.toLowerCase() !== THEME_TOGGLE_KEY) {
         return
       }
 
       setThemeState((currentTheme) => {
-        const nextTheme =
-          currentTheme === "dark"
-            ? "light"
-            : currentTheme === "light"
-              ? "dark"
-              : getSystemTheme() === "dark"
-                ? "light"
-                : "dark"
-
+        const nextTheme = getNextTheme(currentTheme)
         localStorage.setItem(storageKey, nextTheme)
         return nextTheme
       })
@@ -213,7 +210,7 @@ export function ThemeProvider({
   )
 
   return (
-    <ThemeProviderContext.Provider {...props} value={value}>
+    <ThemeProviderContext.Provider value={value}>
       {children}
     </ThemeProviderContext.Provider>
   )

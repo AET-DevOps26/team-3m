@@ -13,10 +13,6 @@ export function AuthTokenBridge() {
   useEffect(() => {
     setAuthTokenProvider(() => auth.user?.access_token ?? null)
     setSigninRedirect(() => auth.signinRedirect())
-    return () => {
-      setAuthTokenProvider(() => null)
-      setSigninRedirect(() => {})
-    }
   }, [auth.user, auth.signinRedirect])
 
   return null

@@ -10,11 +10,11 @@ CREATE TABLE app_user (
 -- Placeholder owner for any pre-auth rows already in financial_transaction.
 -- Keeps the NOT NULL + FK additions safe across dev databases.
 INSERT INTO app_user (id, oidc_sub, preferred_username)
-VALUES (
+SELECT
     '00000000-0000-0000-0000-000000000000',
     '00000000-0000-0000-0000-000000000000',
     'legacy-pre-auth'
-);
+WHERE EXISTS (SELECT 1 FROM financial_transaction);
 
 ALTER TABLE financial_transaction
     ADD COLUMN user_id UUID;

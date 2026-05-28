@@ -30,7 +30,21 @@ public class CurrentUserService {
         String email = jwt.getClaimAsString("email");
         String preferredUsername = jwt.getClaimAsString("preferred_username");
 
+        var existing = repository.findByOidcSub(oidcSub);
+        if (existing.isPresent() && !hasClaimUpdates(existing.get(), email, preferredUsername)) {
+            return existing.get();
+        }
+
         return repository.upsert(oidcSub, email, preferredUsername);
+    }
+
+    private static boolean hasClaimUpdates(AppUser existing, String email, String preferredUsername) {
+        return hasIncomingChange(existing.email(), email)
+                || hasIncomingChange(existing.preferredUsername(), preferredUsername);
+    }
+
+    private static boolean hasIncomingChange(String current, String incoming) {
+        return incoming != null && !incoming.equals(current);
     }
 
     private static String requireSubject(String subject) {

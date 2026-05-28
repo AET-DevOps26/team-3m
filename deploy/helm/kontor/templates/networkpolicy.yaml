@@ -74,6 +74,16 @@ spec:
       ports:
         - protocol: TCP
           port: 5432
+    {{- if .Values.keycloak.deploy }}
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "kontor.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: keycloak
+      ports:
+        - protocol: TCP
+          port: 8080
+    {{- end }}
   {{- end }}
 ---
 # Client: ingress from ingress-nginx only.
@@ -99,4 +109,63 @@ spec:
       ports:
         - protocol: TCP
           port: 8080
+{{- if .Values.keycloak.deploy }}
+{{- if eq .Values.keycloak.database "postgres" }}
+---
+# Keycloak DB: only accept traffic from the Keycloak deployment in this release.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "kontor.keycloak.postgres.fullname" . }}
+  labels:
+    {{- include "kontor.labels" . | nindent 4 }}
+    app.kubernetes.io/component: keycloak-db
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "kontor.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: keycloak-db
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "kontor.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: keycloak
+      ports:
+        - protocol: TCP
+          port: 5432
+{{- end }}
+---
+# Keycloak: HTTP (8080) ingress from ingress-nginx and the core pod. The management
+# port (9000, health/metrics) is intentionally not allowed from any pod here, so it
+# stays cluster-internal. Kubelet probes bypass NetworkPolicy.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "kontor.keycloak.fullname" . }}
+  labels:
+    {{- include "kontor.labels" . | nindent 4 }}
+    app.kubernetes.io/component: keycloak
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "kontor.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: keycloak
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+        - podSelector:
+            matchLabels:
+              {{- include "kontor.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: core
+      ports:
+        - protocol: TCP
+          port: 8080
+{{- end }}
 {{- end }}

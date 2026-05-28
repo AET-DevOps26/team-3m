@@ -1,0 +1,34 @@
+# Production environment.
+# Exposed on both the real domain (kontor.live) and the TUM cluster wildcard.
+# Keycloak runs its own instance here with strict hostname checks and no seeded user.
+# Secrets (postgres.password, keycloak.admin.password, keycloak.db.password) come
+# from -f secrets.yaml.
+
+client:
+  apiBaseUrl: https://kontor.live
+
+oidc:
+  issuerUrl: https://auth.kontor.live/realms/kontor
+  redirectUri: https://kontor.live/
+  postLogoutRedirectUri: https://kontor.live/
+
+keycloak:
+  deploy: true
+  database: postgres
+  hostnames:
+    - auth.kontor.live
+    - auth.team-3m.stud.k8s.aet.cit.tum.de
+  hostnameStrict: true
+  realm:
+    seedDevUser: false
+    redirectUris:
+      - https://kontor.live/*
+      - https://team-3m.stud.k8s.aet.cit.tum.de/*
+    webOrigins:
+      - https://kontor.live
+      - https://team-3m.stud.k8s.aet.cit.tum.de
+
+ingress:
+  hosts:
+    - kontor.live
+    - team-3m.stud.k8s.aet.cit.tum.de

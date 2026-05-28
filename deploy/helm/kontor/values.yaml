@@ -10,6 +10,21 @@ image:
   # -- Default image pull policy.
   pullPolicy: IfNotPresent
 
+# OIDC / authentication config consumed by the app.
+oidc:
+  # -- Issuer / authority URL.
+  issuerUrl: ""
+  # -- Realm name. Used to build the default issuerUrl and names the realm import.
+  realm: kontor
+  # -- Public OIDC client ID for the SPA
+  clientId: kontor-spa
+  # -- Audience expected in issued access tokens.
+  audience: kontor-api
+  # -- Redirect URI.
+  redirectUri: ""
+  # -- Post-logout redirect URI.
+  postLogoutRedirectUri: ""
+
 # Spring Boot core service.
 core:
   enabled: true
@@ -80,18 +95,6 @@ client:
   # -- Public base URL of the deployment, rendered as VITE_API_BASE_URL, e.g.
   # https://kontor.example.com (no /api suffix — the client appends /api/v1/...).
   apiBaseUrl: ""
-  # OIDC values are optional; empty keeps the image's built-in default.
-  oidc:
-    # -- OIDC issuer/authority URL (VITE_OIDC_AUTHORITY).
-    authority: ""
-    # -- OIDC client ID for the SPA (VITE_OIDC_CLIENT_ID).
-    clientId: ""
-    # -- OIDC redirect URI (VITE_OIDC_REDIRECT_URI).
-    redirectUri: ""
-    # -- OIDC post-logout redirect URI (VITE_OIDC_POST_LOGOUT_REDIRECT_URI).
-    postLogoutRedirectUri: ""
-    # -- OIDC audience for issued tokens (VITE_OIDC_AUDIENCE).
-    audience: ""
   service:
     type: ClusterIP
     port: 8080
@@ -126,7 +129,6 @@ client:
   affinity: {}
 
 # Postgres (with pgvector) — single-instance StatefulSet.
-# For HA/PITR/backups consider switching to the CloudNativePG operator once available.
 postgres:
   enabled: true
   image:
@@ -137,11 +139,7 @@ postgres:
     port: 5432
   database: kontor
   username: kontor
-  # REQUIRED — override via secrets.yaml or --set. Leave empty here; the chart
-  # `fail`s the render if no password is provided.
-  # Rotation: edit the Secret + ALTER ROLE in the live DB, then restart core.
-  # The StatefulSet's PGDATA is initialized only once, so changing this value
-  # alone does not rotate the live DB user's password.
+  # Override via secrets.yaml
   password: ""
   # When set, the chart will not create the postgres Secret and will instead
   # mount the named existing Secret. Expected keys: POSTGRES_DB, POSTGRES_USER,
@@ -151,7 +149,7 @@ postgres:
     enabled: true
     size: 8Gi
     # csi-rbd-sc is the cluster default; left empty so it's picked up automatically.
-    storageClass: ""
+    storageClass: "rbg-rbd"
     accessModes:
       - ReadWriteOnce
   resources:
@@ -161,16 +159,132 @@ postgres:
     limits:
       cpu: "1"
       memory: 1Gi
+  # The image's USER 999 (postgres) is inherited; fsGroup is required so the
+  # PVC mount is writable by that user.
   podSecurityContext:
     runAsNonRoot: true
-    runAsUser: 999     # postgres user in the pgvector image
-    runAsGroup: 999
     fsGroup: 999
     seccompProfile:
       type: RuntimeDefault
   containerSecurityContext:
     allowPrivilegeEscalation: false
-    readOnlyRootFilesystem: false
+    capabilities:
+      drop: ["ALL"]
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# Keycloak identity provider.
+# `deploy` controls whether THIS release stands up a Keycloak server.
+keycloak:
+  deploy: false
+  # Database backing Keycloak:
+  #   postgres  — dedicated Postgres StatefulSet, persistent (use for prod).
+  #   dev-mem   — in-memory H2, ephemeral, no Postgres/PVC (use for short-lived
+  #               PR preview environments that get their own throwaway Keycloak).
+  database: postgres
+  image:
+    repository: quay.io/keycloak/keycloak
+    tag: "26.6"
+    pullPolicy: ""
+  replicaCount: 1
+  # First-boot bootstrap admin. Create a real admin and disable this account after
+  # the first deploy (see deploy notes); rotate via the Secret.
+  admin:
+    username: admin
+    # REQUIRED when deploy=true and existingSecret is empty — the render fails
+    # otherwise. Supply via secrets.yaml or --set.
+    password: ""
+    # When set, the chart mounts this existing Secret instead of creating one.
+    # Expected keys: KC_BOOTSTRAP_ADMIN_USERNAME, KC_BOOTSTRAP_ADMIN_PASSWORD.
+    existingSecret: ""
+  # -- Public hostnames Keycloak is served on. The FIRST entry is the canonical
+  # KC_HOSTNAME / issuer base; every entry gets an ingress rule + TLS host.
+  hostnames: []
+  # -- KC_HOSTNAME_STRICT. Keep true for public deployments; relax only in dev.
+  hostnameStrict: true
+  # Keycloak's own ingress. Independent of the app `ingress.enabled` toggle so a
+  # Keycloak-only release (the shared auth server) can disable the app ingress
+  # while still exposing Keycloak. Reuses `ingress.className` / `ingress.tls.*`.
+  ingress:
+    enabled: true
+  service:
+    type: ClusterIP
+    # Public HTTP port (behind the TLS-terminating ingress).
+    httpPort: 8080
+    # Management port for health/metrics — kept ClusterIP-only, never in ingress.
+    managementPort: 9000
+  # Dedicated Postgres for Keycloak (only used when database=postgres) — separate
+  # failure/backup domain from the app DB.
+  db:
+    image:
+      repository: pgvector/pgvector
+      tag: pg18-trixie
+      pullPolicy: ""
+    database: keycloak
+    username: keycloak
+    # REQUIRED when deploy=true and existingSecret is empty.
+    password: ""
+    # Existing Secret with keys: POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD.
+    existingSecret: ""
+    persistence:
+      enabled: true
+      size: 8Gi
+      storageClass: "rbg-rbd"
+      accessModes:
+        - ReadWriteOnce
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    # Same pattern as the app Postgres: inherit USER 999 from the image, set
+    # fsGroup so the PVC is writable by the postgres user.
+    podSecurityContext:
+      runAsNonRoot: true
+      fsGroup: 999
+      seccompProfile:
+        type: RuntimeDefault
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+  # Templated realm import (the "dynamic realm import file"). Rendered into a
+  # ConfigMap and imported with `--import-realm`. With database=postgres the realm
+  # is imported only if absent (persists); with dev-mem it is re-imported fresh on
+  # every start (fine for throwaway PR envs).
+  realm:
+    # -- Valid redirect URIs for the SPA client (this env's hosts).
+    redirectUris: []
+    # -- Web origins (CORS) for the SPA client.
+    webOrigins: []
+    # -- sslRequired: external for public deployments — never "none".
+    sslRequired: external
+    # -- Seed a dev/dev test user. Dev / PR instances only; false in prod.
+    seedDevUser: false
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  probes:
+    # Health endpoints live on the management port (9000) in Keycloak 26+.
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 30
+  # Only the flags the restricted Pod Security policy actually requires; the
+  # image's own USER 1000 / GID 0 are relied on, not overridden.
+  podSecurityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
     capabilities:
       drop: ["ALL"]
   nodeSelector: {}

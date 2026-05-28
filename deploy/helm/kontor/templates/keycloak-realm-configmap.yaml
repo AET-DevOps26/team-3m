@@ -1,0 +1,98 @@
+{{- if .Values.keycloak.deploy }}
+{{- $realm := .Values.oidc.realm }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "kontor.keycloak.fullname" . }}-realm
+  labels:
+    {{- include "kontor.labels" . | nindent 4 }}
+    app.kubernetes.io/component: keycloak
+data:
+  {{ $realm }}-realm.json: |-
+    {
+      "realm": {{ $realm | quote }},
+      "enabled": true,
+      "sslRequired": {{ .Values.keycloak.realm.sslRequired | quote }},
+      "registrationAllowed": false,
+      "loginWithEmailAllowed": true,
+      "duplicateEmailsAllowed": false,
+      "resetPasswordAllowed": false,
+      "editUsernameAllowed": false,
+      "bruteForceProtected": true,
+      "accessTokenLifespan": 300,
+      "ssoSessionIdleTimeout": 1800,
+      "ssoSessionMaxLifespan": 36000,
+      "roles": {
+        "realm": [
+          {
+            "name": "kontor-user",
+            "description": "Standard user able to manage their own financial data."
+          }
+        ]
+      },
+      {{- if .Values.keycloak.realm.seedDevUser }}
+      "users": [
+        {
+          "username": "dev",
+          "enabled": true,
+          "emailVerified": true,
+          "firstName": "Dev",
+          "lastName": "User",
+          "email": "dev@kontor.local",
+          "credentials": [
+            { "type": "password", "value": "dev", "temporary": false }
+          ],
+          "realmRoles": ["kontor-user", {{ printf "default-roles-%s" $realm | quote }}]
+        }
+      ],
+      {{- end }}
+      "clients": [
+        {
+          "clientId": {{ .Values.oidc.clientId | quote }},
+          "name": "Kontor SPA (browser client)",
+          "enabled": true,
+          "publicClient": true,
+          "standardFlowEnabled": true,
+          "implicitFlowEnabled": false,
+          "directAccessGrantsEnabled": false,
+          "serviceAccountsEnabled": false,
+          "frontchannelLogout": true,
+          "protocol": "openid-connect",
+          "redirectUris": {{ .Values.keycloak.realm.redirectUris | toJson }},
+          "webOrigins": {{ .Values.keycloak.realm.webOrigins | toJson }},
+          "attributes": {
+            "pkce.code.challenge.method": "S256",
+            "post.logout.redirect.uris": "+"
+          },
+          "defaultClientScopes": [
+            "web-origins",
+            "acr",
+            "profile",
+            "roles",
+            "basic",
+            "email"
+          ],
+          "optionalClientScopes": [
+            "address",
+            "phone",
+            "offline_access",
+            "microprofile-jwt"
+          ],
+          "protocolMappers": [
+            {
+              "name": "kontor-api-audience",
+              "protocol": "openid-connect",
+              "protocolMapper": "oidc-audience-mapper",
+              "consentRequired": false,
+              "config": {
+                "included.custom.audience": {{ .Values.oidc.audience | quote }},
+                "id.token.claim": "false",
+                "access.token.claim": "true",
+                "introspection.token.claim": "true"
+              }
+            }
+          ]
+        }
+      ]
+    }
+{{- end }}

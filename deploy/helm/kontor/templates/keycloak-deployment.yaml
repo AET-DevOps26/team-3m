@@ -1,0 +1,120 @@
+{{- if .Values.keycloak.deploy }}
+{{- if not .Values.keycloak.hostnames }}
+{{- fail "keycloak.hostnames must list at least one public hostname when keycloak.deploy is true (the first entry becomes KC_HOSTNAME / the issuer base)." -}}
+{{- end -}}
+{{- $host := first .Values.keycloak.hostnames }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kontor.keycloak.fullname" . }}
+  labels:
+    {{- include "kontor.labels" . | nindent 4 }}
+    app.kubernetes.io/component: keycloak
+spec:
+  replicas: {{ .Values.keycloak.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "kontor.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: keycloak
+  template:
+    metadata:
+      labels:
+        {{- include "kontor.labels" . | nindent 8 }}
+        app.kubernetes.io/component: keycloak
+      annotations:
+        # Roll the pods when the admin secret or realm import changes.
+        checksum/secret: {{ include (print $.Template.BasePath "/keycloak-secret.yaml") . | sha256sum }}
+        checksum/realm: {{ include (print $.Template.BasePath "/keycloak-realm-configmap.yaml") . | sha256sum }}
+    spec:
+      securityContext:
+        {{- toYaml .Values.keycloak.podSecurityContext | nindent 8 }}
+      containers:
+        - name: keycloak
+          image: {{ include "kontor.keycloak.image" . | quote }}
+          imagePullPolicy: {{ include "kontor.imagePullPolicy" (dict "root" . "component" .Values.keycloak) }}
+          securityContext:
+            {{- toYaml .Values.keycloak.containerSecurityContext | nindent 12 }}
+          args:
+            - start
+            - --import-realm
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: management
+              containerPort: 9000
+              protocol: TCP
+          env:
+            {{- if eq .Values.keycloak.database "postgres" }}
+            - name: KC_DB
+              value: postgres
+            - name: KC_DB_URL
+              value: {{ printf "jdbc:postgresql://%s:5432/%s" (include "kontor.keycloak.postgres.fullname" .) .Values.keycloak.db.database | quote }}
+            - name: KC_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kontor.keycloak.postgres.secretName" . }}
+                  key: POSTGRES_USER
+            - name: KC_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kontor.keycloak.postgres.secretName" . }}
+                  key: POSTGRES_PASSWORD
+            {{- else }}
+            # Ephemeral in-memory store for short-lived PR environments — no
+            # external DB, state is lost on restart (realm re-imported each boot).
+            - name: KC_DB
+              value: {{ .Values.keycloak.database | quote }}
+            {{- end }}
+            - name: KC_HOSTNAME
+              value: {{ printf "https://%s" $host | quote }}
+            - name: KC_HOSTNAME_STRICT
+              value: {{ .Values.keycloak.hostnameStrict | quote }}
+            - name: KC_PROXY_HEADERS
+              value: xforwarded
+            - name: KC_HTTP_ENABLED
+              value: "true"
+            - name: KC_HEALTH_ENABLED
+              value: "true"
+          envFrom:
+            - secretRef:
+                name: {{ include "kontor.keycloak.secretName" . }}
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: management
+            initialDelaySeconds: {{ .Values.keycloak.probes.initialDelaySeconds }}
+            periodSeconds: {{ .Values.keycloak.probes.periodSeconds }}
+            timeoutSeconds: {{ .Values.keycloak.probes.timeoutSeconds }}
+            failureThreshold: {{ .Values.keycloak.probes.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: management
+            initialDelaySeconds: {{ .Values.keycloak.probes.initialDelaySeconds }}
+            periodSeconds: {{ .Values.keycloak.probes.periodSeconds }}
+            timeoutSeconds: {{ .Values.keycloak.probes.timeoutSeconds }}
+            failureThreshold: {{ .Values.keycloak.probes.failureThreshold }}
+          resources:
+            {{- toYaml .Values.keycloak.resources | nindent 12 }}
+          volumeMounts:
+            - name: realm-import
+              mountPath: /opt/keycloak/data/import
+              readOnly: true
+      volumes:
+        - name: realm-import
+          configMap:
+            name: {{ include "kontor.keycloak.fullname" . }}-realm
+      {{- with .Values.keycloak.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.keycloak.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.keycloak.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

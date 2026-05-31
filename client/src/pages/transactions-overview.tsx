@@ -493,12 +493,12 @@ export function TransactionsBlock() {
       <Alert variant="destructive">
         <AlertCircle />
         <AlertTitle>Failed to load transactions</AlertTitle>
-        <AlertDescription>{error.message}</AlertDescription>
+        <AlertDescription>{error?.message}</AlertDescription>
       </Alert>
     )
   }
 
-  if (transactions.length === 0) {
+  if ((transactions ?? []).length === 0) {
     return (
       <div className="flex flex-col items-center gap-2 py-8 text-center text-muted-foreground">
         <List className="size-8" />

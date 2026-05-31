@@ -6,6 +6,7 @@ import de.devops26.kontor.core.web.ApiResponse;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,15 +27,24 @@ public class FinancialTransactionController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<TransactionPage>> listTransactions(
+    public ResponseEntity<ApiResponse<?>> listTransactions(
             @AuthenticatedUser AppUser user,
             @RequestParam(defaultValue = "200") int pageSize,
             @RequestParam(required = false) String afterDatetime,
             @RequestParam(required = false) UUID afterId) {
+        if ((afterDatetime == null) != (afterId == null)) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("afterDatetime and afterId must be provided together"));
+        }
         TransactionCursor cursor = null;
-        if (afterDatetime != null && afterId != null) {
-            cursor = new TransactionCursor(
-                    OffsetDateTime.parse(afterDatetime, DateTimeFormatter.ISO_OFFSET_DATE_TIME), afterId);
+        if (afterDatetime != null) {
+            try {
+                cursor = new TransactionCursor(
+                        OffsetDateTime.parse(afterDatetime, DateTimeFormatter.ISO_OFFSET_DATE_TIME), afterId);
+            } catch (DateTimeParseException e) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("Invalid afterDatetime format; expected ISO-8601 with offset"));
+            }
         }
         var page = service.listTransactions(user.id(), pageSize, cursor);
         return ResponseEntity.ok(ApiResponse.ok(page));

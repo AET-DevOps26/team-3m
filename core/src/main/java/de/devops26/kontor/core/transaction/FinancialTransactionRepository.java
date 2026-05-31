@@ -31,10 +31,11 @@ public class FinancialTransactionRepository {
                     .lessThan(cursor.afterDatetime())
                     .or(table.DATETIME.eq(cursor.afterDatetime()).and(table.ID.lessThan(cursor.afterId()))));
         }
-        var items = dsl.selectFrom(table)
+        // Fetch one extra row to detect whether a next page exists without a COUNT query.
+        var probe = dsl.selectFrom(table)
                 .where(condition)
                 .orderBy(table.DATETIME.desc(), table.ID.desc())
-                .limit(pageSize)
+                .limit(pageSize + 1)
                 .fetch(r -> new FinancialTransactionResponse(
                         r.get(table.ID),
                         r.get(table.DATETIME),
@@ -60,11 +61,13 @@ public class FinancialTransactionRepository {
                         r.get(table.COUNTERPARTY_IBAN),
                         r.get(table.PAYMENT_REFERENCE),
                         r.get(table.MCC_CODE)));
-        var nextCursor = items.size() < pageSize
-                ? null
-                : new TransactionCursor(
+        var hasMore = probe.size() > pageSize;
+        var items = hasMore ? probe.subList(0, pageSize) : probe;
+        var nextCursor = hasMore
+                ? new TransactionCursor(
                         items.get(items.size() - 1).datetime(),
-                        items.get(items.size() - 1).id());
+                        items.get(items.size() - 1).id())
+                : null;
         return new TransactionPage(items, nextCursor);
     }
 

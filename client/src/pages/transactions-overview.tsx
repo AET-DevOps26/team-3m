@@ -421,11 +421,12 @@ export function TransactionsBlock() {
     () =>
       [
         ...new Set(
-          (transactions ?? [])
+          transactions
             .filter(
               (t) => filters.category === "" || t.category === filters.category,
             )
-            .map((t) => normalizeType(t.type)),
+            .map((t) => normalizeType(t.type))
+            .filter((t) => t !== ""),
         ),
       ].sort(),
     [transactions, filters.category],
@@ -498,7 +499,7 @@ export function TransactionsBlock() {
     )
   }
 
-  if ((transactions ?? []).length === 0) {
+  if (transactions.length === 0) {
     return (
       <div className="flex flex-col items-center gap-2 py-8 text-center text-muted-foreground">
         <List className="size-8" />

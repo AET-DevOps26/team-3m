@@ -93,7 +93,7 @@ export function useTransactions() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
   const transactions = useMemo(
-    () => data?.pages.flatMap((p) => p.items),
+    () => data?.pages.flatMap((p) => p.items) ?? [],
     [data],
   )
 

@@ -6,6 +6,7 @@ export type APIErrorCode =
   | "validation"
   | "parse"
   | "aborted"
+  | "unauthenticated"
   | "unknown"
 
 export interface APIErrorOptions {
@@ -124,6 +125,8 @@ function defaultTitleForAPIError(error: APIError): string {
       return "Request cancelled"
     case "parse":
       return "Unexpected server response"
+    case "unauthenticated":
+      return "Session expired"
     default:
       return "Something went wrong"
   }

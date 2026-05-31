@@ -1,6 +1,9 @@
 package de.devops26.kontor.core.transaction;
 
+import de.devops26.kontor.core.security.AuthenticatedUser;
+import de.devops26.kontor.core.user.AppUser;
 import de.devops26.kontor.core.web.ApiResponse;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -43,12 +46,14 @@ public class FinancialTransactionController {
                                 mediaType = MediaType.APPLICATION_JSON_VALUE,
                                 schema = @Schema(implementation = ApiResponse.class)))
     })
-    public ResponseEntity<CsvImportApiResponse> importCsv(@RequestParam("file") MultipartFile file) throws IOException {
+    public ResponseEntity<CsvImportApiResponse> importCsv(
+            @RequestParam("file") MultipartFile file, @Parameter(hidden = true) @AuthenticatedUser AppUser user)
+            throws IOException {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest()
                     .body(CsvImportApiResponse.from(ApiResponse.error("Uploaded file is empty")));
         }
-        var result = service.importCsv(file.getInputStream());
+        var result = service.importCsv(file.getInputStream(), user.id());
         return ResponseEntity.ok(CsvImportApiResponse.from(ApiResponse.ok(result)));
     }
 }

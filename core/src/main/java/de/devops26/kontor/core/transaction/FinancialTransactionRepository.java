@@ -2,8 +2,11 @@ package de.devops26.kontor.core.transaction;
 
 import static de.devops26.kontor.core.generated.tables.FinancialTransaction.FINANCIAL_TRANSACTION;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import org.jooq.DSLContext;
 import org.jooq.Query;
 import org.jooq.impl.DSL;
@@ -18,18 +21,22 @@ public class FinancialTransactionRepository {
         this.dsl = dsl;
     }
 
-    public int upsertAll(List<TransactionCsvRow> rows) {
+    public int upsertAll(List<TransactionCsvRow> rows, UUID userId) {
         if (rows.isEmpty()) {
             return 0;
         }
-        var queries = rows.stream().map(this::buildUpsert).toList();
+        var now = OffsetDateTime.now(ZoneOffset.UTC);
+        var queries = rows.stream().map(row -> buildUpsert(row, userId, now)).toList();
         var results = dsl.batch(queries).execute();
-        return (int) Arrays.stream(results).filter(r -> r > 0).count();
+        return (int) Arrays.stream(results).filter(result -> result > 0).count();
     }
 
-    private Query buildUpsert(TransactionCsvRow row) {
+    private Query buildUpsert(TransactionCsvRow row, UUID userId, OffsetDateTime now) {
         var table = FINANCIAL_TRANSACTION;
         return dsl.insertInto(table)
+                .set(table.ID, UUID.randomUUID())
+                .set(table.USER_ID, userId)
+                .set(table.UPDATED_AT, now)
                 .set(table.DATETIME, row.datetime())
                 .set(table.DATE, row.date())
                 .set(table.ACCOUNT_TYPE, row.accountType())
@@ -48,13 +55,14 @@ public class FinancialTransactionRepository {
                 .set(table.ORIGINAL_CURRENCY, row.originalCurrency())
                 .set(table.FX_RATE, row.fxRate())
                 .set(table.DESCRIPTION, row.description())
-                .set(table.TRANSACTION_ID, row.transactionId())
+                .set(table.EXTERNAL_TRANSACTION_ID, row.transactionId())
                 .set(table.COUNTERPARTY_NAME, row.counterpartyName())
                 .set(table.COUNTERPARTY_IBAN, row.counterpartyIban())
                 .set(table.PAYMENT_REFERENCE, row.paymentReference())
                 .set(table.MCC_CODE, row.mccCode())
-                .onConflict(table.TRANSACTION_ID)
+                .onConflict(table.USER_ID, table.EXTERNAL_TRANSACTION_ID)
                 .doUpdate()
+                .set(table.UPDATED_AT, DSL.excluded(table.UPDATED_AT))
                 .set(table.DATETIME, DSL.excluded(table.DATETIME))
                 .set(table.DATE, DSL.excluded(table.DATE))
                 .set(table.ACCOUNT_TYPE, DSL.excluded(table.ACCOUNT_TYPE))

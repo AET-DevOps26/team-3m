@@ -15,8 +15,18 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8081/realms/kontor/protocol/openid-connect/certs}
 
 app:
   cors:
     allowed-origins:
       - http://localhost:5173
+
+kontor:
+  security:
+    issuer: ${KEYCLOAK_ISSUER:http://localhost:8081/realms/kontor}
+    audience: ${KEYCLOAK_AUDIENCE:kontor-api}

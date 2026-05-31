@@ -3,6 +3,7 @@ import {
   Database,
   FileSpreadsheet,
   Layers,
+  List,
   Loader2,
   Rocket,
   Server,
@@ -22,6 +23,7 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { API_BASE_URL } from "@/network"
 import { useHealthCheck } from "@/network/endpoints/health"
+import { TransactionsBlock } from "@/pages/transactions-overview"
 
 const teamMembers = [
   { name: "Mathilde", role: "UI/UX Expert" },
@@ -217,6 +219,19 @@ export function StartPage() {
                 Import CSV
               </Link>
             </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <List className="size-4" />
+              Transactions
+            </CardTitle>
+            <CardDescription>All your financial transactions</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <TransactionsBlock />
           </CardContent>
         </Card>
       </div>

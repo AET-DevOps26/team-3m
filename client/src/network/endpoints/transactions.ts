@@ -1,8 +1,104 @@
+import { useInfiniteQuery } from "@tanstack/react-query"
+import { useEffect, useMemo } from "react"
 import { z } from "zod"
 import { APIError } from "../errors"
 import { useFileUpload } from "../file-upload/use-file-upload"
+import { httpRequest } from "../http"
 
-const IMPORT_PATH = "/api/v1/financial-transactions/import"
+const BASE_PATH = "/api/v1/financial-transactions"
+const IMPORT_PATH = `${BASE_PATH}/import`
+const PAGE_SIZE = 200
+
+const transactionSchema = z.object({
+  id: z.string().uuid(),
+  datetime: z.string(),
+  date: z.string(),
+  accountType: z.string(),
+  category: z.string(),
+  type: z.string(),
+  assetClass: z.string().nullable(),
+  name: z.string().nullable(),
+  symbol: z.string().nullable(),
+  shares: z.number().nullable(),
+  price: z.number().nullable(),
+  amount: z.number(),
+  fee: z.number().nullable(),
+  tax: z.number().nullable(),
+  currency: z.string(),
+  originalAmount: z.number().nullable(),
+  originalCurrency: z.string().nullable(),
+  fxRate: z.number().nullable(),
+  description: z.string().nullable(),
+  externalTransactionId: z.string().uuid().nullable(),
+  counterpartyName: z.string().nullable(),
+  counterpartyIban: z.string().nullable(),
+  paymentReference: z.string().nullable(),
+  mccCode: z.string().nullable(),
+})
+
+const transactionCursorSchema = z.object({
+  afterDatetime: z.string(),
+  afterId: z.string().uuid(),
+})
+
+const transactionPageEnvelopeSchema = z.object({
+  success: z.literal(true),
+  data: z.object({
+    items: z.array(transactionSchema),
+    nextCursor: transactionCursorSchema.nullable(),
+  }),
+})
+
+type TransactionCursorParams = z.infer<typeof transactionCursorSchema>
+
+export type Transaction = z.infer<typeof transactionSchema>
+
+/**
+ * Fetches all transactions via keyset-paginated pages and returns the full flat
+ * list. Client-side filters in the UI are applied over the accumulated result.
+ */
+export function useTransactions() {
+  const {
+    data,
+    isPending,
+    isError,
+    error,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["transactions"],
+    queryFn: async ({
+      pageParam,
+    }: {
+      pageParam: TransactionCursorParams | null
+    }) => {
+      const params = new URLSearchParams({ pageSize: String(PAGE_SIZE) })
+      if (pageParam) {
+        params.set("afterDatetime", pageParam.afterDatetime)
+        params.set("afterId", pageParam.afterId)
+      }
+      const raw = await httpRequest<unknown>({ path: `${BASE_PATH}?${params}` })
+      return transactionPageEnvelopeSchema.parse(raw).data
+    },
+    initialPageParam: null as TransactionCursorParams | null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+  })
+
+  // Auto-fetch remaining pages so all client-side filters work on complete data
+  useEffect(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      void fetchNextPage()
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
+
+  const transactions = useMemo(
+    () => data?.pages.flatMap((p) => p.items) ?? [],
+    [data],
+  )
+
+  return { data: transactions, isPending, isError, error }
+}
 
 const csvRowValidationErrorSchema = z.object({
   row: z.number().int(),

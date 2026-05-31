@@ -76,6 +76,12 @@ public class FinancialTransactionService {
         this.repository = repository;
     }
 
+    @Transactional(readOnly = true)
+    public TransactionPage listTransactions(UUID userId, int pageSize, TransactionCursor cursor) {
+        var clampedPageSize = Math.min(Math.max(pageSize, 1), 500);
+        return repository.findPage(userId, clampedPageSize, cursor);
+    }
+
     @Transactional
     public CsvImportResult importCsv(InputStream input, UUID userId) throws IOException {
         var format = CSVFormat.DEFAULT
@@ -282,7 +288,7 @@ public class FinancialTransactionService {
     }
 
     private BigDecimal parseAmount(String value, int maxPrecision, int maxScale) {
-        var amount = new BigDecimal(value);
+        var amount = new BigDecimal(value).stripTrailingZeros();
         if (amount.scale() > maxScale) {
             throw new IllegalArgumentException("more than " + maxScale + " fractional digits");
         }

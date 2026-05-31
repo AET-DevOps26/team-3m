@@ -18,6 +18,9 @@ jobs:
     with:
       working-directory: core
 
+  openapi-sync:
+    uses: ./.github/workflows/openapi-sync.yml
+
   client-docker:
     needs: client-quality
     uses: ./.github/workflows/docker-build-push.yml

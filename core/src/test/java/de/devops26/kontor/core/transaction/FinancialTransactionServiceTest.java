@@ -2,7 +2,9 @@ package de.devops26.kontor.core.transaction;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -33,6 +35,8 @@ class FinancialTransactionServiceTest {
 
     private FinancialTransactionService service;
 
+    private static final UUID USER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
+
     @BeforeEach
     void setUp() {
         service = new FinancialTransactionService(repository);
@@ -41,7 +45,7 @@ class FinancialTransactionServiceTest {
     @Test
     @DisplayName("importCsv parses valid CSV and delegates to repository")
     void importCsv_validCsv_parsesAndDelegates() throws IOException {
-        when(repository.upsertAll(anyList())).thenReturn(1);
+        when(repository.upsertAll(anyList(), any(UUID.class))).thenReturn(1);
 
         var csv = csvWithRow("\"2026-04-01T09:30:00.000000Z\",\"2026-04-01\",\"DEFAULT\",\"CASH\","
                 + "\"CUSTOMER_INBOUND\",\"\",\"Jane Doe\",\"\",\"\",\"\","
@@ -49,10 +53,10 @@ class FinancialTransactionServiceTest {
                 + "\"Monthly salary\",\"a1b2c3d4-e5f6-7890-abcd-ef1234567890\","
                 + "\"Jane Doe\",\"DE89370400440532013000\",\"\",\"\"");
 
-        var result = service.importCsv(toStream(csv));
+        var result = service.importCsv(toStream(csv), USER_ID);
 
         assertThat(result.importedCount()).isEqualTo(1);
-        verify(repository).upsertAll(rowsCaptor.capture());
+        verify(repository).upsertAll(rowsCaptor.capture(), eq(USER_ID));
         var rows = rowsCaptor.getValue();
         assertThat(rows).hasSize(1);
 
@@ -81,7 +85,7 @@ class FinancialTransactionServiceTest {
                 + "\"Missing amount\",\"a1b2c3d4-e5f6-7890-abcd-ef1234567890\","
                 + "\"Jane Doe\",\"DE89370400440532013000\",\"\",\"\"");
 
-        assertThatThrownBy(() -> service.importCsv(toStream(csv)))
+        assertThatThrownBy(() -> service.importCsv(toStream(csv), USER_ID))
                 .isInstanceOf(CsvParsingException.class)
                 .satisfies(ex -> {
                     var errors = ((CsvParsingException) ex).errors();
@@ -100,7 +104,7 @@ class FinancialTransactionServiceTest {
                 + "\"Bad UUID\",\"not-a-valid-uuid\","
                 + "\"Jane Doe\",\"DE89370400440532013000\",\"\",\"\"");
 
-        assertThatThrownBy(() -> service.importCsv(toStream(csv)))
+        assertThatThrownBy(() -> service.importCsv(toStream(csv), USER_ID))
                 .isInstanceOf(CsvParsingException.class)
                 .satisfies(ex -> {
                     var errors = ((CsvParsingException) ex).errors();
@@ -114,7 +118,7 @@ class FinancialTransactionServiceTest {
     void importCsv_emptyCsv_throws() {
         var csv = HEADER + "\n";
 
-        assertThatThrownBy(() -> service.importCsv(toStream(csv)))
+        assertThatThrownBy(() -> service.importCsv(toStream(csv), USER_ID))
                 .isInstanceOf(CsvParsingException.class)
                 .hasMessageContaining("no data rows");
     }
@@ -122,7 +126,7 @@ class FinancialTransactionServiceTest {
     @Test
     @DisplayName("importCsv maps optional fields to null when blank")
     void importCsv_blankOptionalFields_mappedToNull() throws IOException {
-        when(repository.upsertAll(anyList())).thenReturn(1);
+        when(repository.upsertAll(anyList(), any(UUID.class))).thenReturn(1);
 
         var csv = csvWithRow("\"2026-04-03T14:22:33.412Z\",\"2026-04-03\",\"DEFAULT\",\"TRADING\","
                 + "\"BUY\",\"STOCK\",\"Apple\",\"US0378331005\","
@@ -130,9 +134,9 @@ class FinancialTransactionServiceTest {
                 + "\"EUR\",\"\",\"\",\"\",\"\","
                 + "\"b2c3d4e5-f6a7-8901-bcde-f12345678901\",\"\",\"\",\"\",\"\"");
 
-        service.importCsv(toStream(csv));
+        service.importCsv(toStream(csv), USER_ID);
 
-        verify(repository).upsertAll(rowsCaptor.capture());
+        verify(repository).upsertAll(rowsCaptor.capture(), eq(USER_ID));
         var row = rowsCaptor.getValue().getFirst();
         assertThat(row.shares()).isEqualByComparingTo(new BigDecimal("5.0000000000"));
         assertThat(row.price()).isEqualByComparingTo(new BigDecimal("192.340000"));
@@ -150,7 +154,7 @@ class FinancialTransactionServiceTest {
     void importCsv_unknownHeaders_throws() {
         var csv = "datetime,date,account_type,category,type,amount,currency,transaction_id,unknown_column\n";
 
-        assertThatThrownBy(() -> service.importCsv(toStream(csv)))
+        assertThatThrownBy(() -> service.importCsv(toStream(csv), USER_ID))
                 .isInstanceOf(CsvParsingException.class)
                 .hasMessageContaining("unknown header");
     }
@@ -160,7 +164,7 @@ class FinancialTransactionServiceTest {
     void importCsv_missingRequiredHeaders_throws() {
         var csv = "datetime,date,account_type,category,type,currency,transaction_id\n";
 
-        assertThatThrownBy(() -> service.importCsv(toStream(csv)))
+        assertThatThrownBy(() -> service.importCsv(toStream(csv), USER_ID))
                 .isInstanceOf(CsvParsingException.class)
                 .hasMessageContaining("missing required header");
     }
@@ -178,7 +182,7 @@ class FinancialTransactionServiceTest {
                     .append("\",\"\",\"\",\"\",\"\"\n");
         }
 
-        assertThatThrownBy(() -> service.importCsv(toStream(sb.toString())))
+        assertThatThrownBy(() -> service.importCsv(toStream(sb.toString()), USER_ID))
                 .isInstanceOf(CsvParsingException.class)
                 .hasMessageContaining("Too many validation errors");
     }
@@ -196,7 +200,7 @@ class FinancialTransactionServiceTest {
                     .append("\",\"\",\"\",\"\",\"\"\n");
         }
 
-        assertThatThrownBy(() -> service.importCsv(toStream(sb.toString())))
+        assertThatThrownBy(() -> service.importCsv(toStream(sb.toString()), USER_ID))
                 .isInstanceOf(CsvParsingException.class)
                 .hasMessageContaining("maximum supported row count");
     }

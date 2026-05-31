@@ -1,5 +1,5 @@
 CREATE TABLE financial_transaction (
-    id                BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id                UUID            PRIMARY KEY,
     datetime          TIMESTAMPTZ     NOT NULL,
     date              DATE            NOT NULL,
     account_type      VARCHAR(50)     NOT NULL,
@@ -18,14 +18,11 @@ CREATE TABLE financial_transaction (
     original_currency VARCHAR(3),
     fx_rate           NUMERIC(18, 6),
     description       TEXT,
-    transaction_id    UUID            NOT NULL UNIQUE,
+    transaction_id    UUID            NOT NULL CONSTRAINT financial_transaction_transaction_id_key UNIQUE,
     counterparty_name VARCHAR(255),
     counterparty_iban VARCHAR(34),
     payment_reference VARCHAR(255),
     mcc_code          VARCHAR(4),
-    created_at        TIMESTAMPTZ     NOT NULL DEFAULT now()
+    created_at        TIMESTAMPTZ     NOT NULL DEFAULT now(),
+    updated_at        TIMESTAMPTZ     NOT NULL DEFAULT now()
 );
-
-CREATE INDEX idx_financial_transaction_date ON financial_transaction (date);
-CREATE INDEX idx_financial_transaction_category ON financial_transaction (category);
-CREATE INDEX idx_financial_transaction_type ON financial_transaction (type);

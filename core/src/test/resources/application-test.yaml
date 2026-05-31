@@ -7,3 +7,15 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Tests use SecurityMockMvcRequestPostProcessors.jwt() to inject mock
+          # authentication; this URL is never contacted.
+          jwk-set-uri: http://localhost:0/realms/test/protocol/openid-connect/certs
+
+kontor:
+  security:
+    issuer: http://localhost:0/realms/test
+    audience: kontor-api-test

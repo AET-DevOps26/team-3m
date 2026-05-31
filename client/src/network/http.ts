@@ -1,3 +1,4 @@
+import { getAuthToken, triggerSigninRedirect } from "./auth-token"
 import { API_BASE_URL } from "./config"
 import { APIError } from "./errors"
 
@@ -28,15 +29,23 @@ export async function httpRequest<T>(options: HttpRequestOptions): Promise<T> {
     !(body instanceof Blob) &&
     !(body instanceof ArrayBuffer)
 
+  const mergedHeaders = new Headers(headers)
+  if (isJsonBody && !mergedHeaders.has("Content-Type")) {
+    mergedHeaders.set("Content-Type", "application/json")
+  }
+  if (!mergedHeaders.has("Authorization")) {
+    const token = getAuthToken()
+    if (token !== null) {
+      mergedHeaders.set("Authorization", `Bearer ${token}`)
+    }
+  }
+
   let response: Response
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
       method,
       signal,
-      headers: {
-        ...(isJsonBody ? { "Content-Type": "application/json" } : {}),
-        ...headers,
-      },
+      headers: mergedHeaders,
       body: isJsonBody
         ? JSON.stringify(body)
         : (body as BodyInit | null | undefined),
@@ -60,6 +69,15 @@ export async function httpRequest<T>(options: HttpRequestOptions): Promise<T> {
   const data = parsePayload(rawText, parse)
 
   if (!response.ok) {
+    if (response.status === 401) {
+      triggerSigninRedirect()
+      throw new APIError({
+        code: "unauthenticated",
+        status: 401,
+        message: extractErrorMessage(data, response),
+        details: data,
+      })
+    }
     throw new APIError({
       code: response.status === 400 ? "validation" : "http",
       status: response.status,

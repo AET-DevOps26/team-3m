@@ -77,7 +77,7 @@ public class FinancialTransactionService {
     }
 
     @Transactional
-    public CsvImportResult importCsv(InputStream input) throws IOException {
+    public CsvImportResult importCsv(InputStream input, UUID userId) throws IOException {
         var format = CSVFormat.DEFAULT
                 .builder()
                 .setHeader()
@@ -120,7 +120,7 @@ public class FinancialTransactionService {
             throw new CsvParsingException("CSV file contained no data rows", List.of());
         }
 
-        int count = repository.upsertAll(rows);
+        int count = repository.upsertAll(rows, userId);
         return new CsvImportResult(count, "Successfully imported " + count + " transaction(s)");
     }
 

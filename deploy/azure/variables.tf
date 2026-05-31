@@ -42,12 +42,20 @@ variable "vm_size" {
 
 variable "allowed_ssh_source_address_prefix" {
   type        = string
-  description = "Source address prefix allowed to SSH into the VM. Use your public IP with /32 for a safer setup."
-  default     = "*"
+  description = "Source address prefix allowed to SSH into the VM. Must be a valid CIDR (e.g. your public IP as x.x.x.x/32). Never use '*'."
+
+  validation {
+    condition     = var.allowed_ssh_source_address_prefix != "*" && can(cidrhost(var.allowed_ssh_source_address_prefix, 0))
+    error_message = "allowed_ssh_source_address_prefix must be a valid CIDR block (e.g. '1.2.3.4/32'). Open access via '*' is not permitted."
+  }
 }
 
 variable "allowed_app_source_address_prefix" {
   type        = string
-  description = "Source address prefix allowed to reach the app ports."
-  default     = "*"
+  description = "Source address prefix allowed to reach the app ports. Must be a valid CIDR. Never use '*'."
+
+  validation {
+    condition     = var.allowed_app_source_address_prefix != "*" && can(cidrhost(var.allowed_app_source_address_prefix, 0))
+    error_message = "allowed_app_source_address_prefix must be a valid CIDR block (e.g. '1.2.3.4/32'). Open access via '*' is not permitted."
+  }
 }

@@ -5,7 +5,7 @@ plugins {
 	id 'io.spring.dependency-management' version '1.1.7'
 	id 'com.diffplug.spotless' version '8.5.1'
 	id 'net.ltgt.errorprone' version '5.1.0'
-	id 'org.jooq.jooq-codegen-gradle' version '3.19.32'
+	id 'org.jooq.jooq-codegen-gradle' version '3.21.4'
 }
 
 group = 'de.devops26.kontor'
@@ -30,7 +30,7 @@ dependencies {
 	implementation 'org.flywaydb:flyway-database-postgresql'
 	implementation 'org.apache.commons:commons-csv:1.14.1'
 	runtimeOnly 'org.postgresql:postgresql'
-	jooqCodegen 'org.jooq:jooq-meta-extensions:3.19.32'
+	jooqCodegen 'org.jooq:jooq-meta-extensions:3.21.4'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 	testImplementation 'org.springframework.boot:spring-boot-testcontainers'

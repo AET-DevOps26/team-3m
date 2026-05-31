@@ -287,7 +287,7 @@ public class FinancialTransactionService {
     }
 
     private BigDecimal parseAmount(String value, int maxPrecision, int maxScale) {
-        var amount = new BigDecimal(value);
+        var amount = new BigDecimal(value).stripTrailingZeros();
         if (amount.scale() > maxScale) {
             throw new IllegalArgumentException("more than " + maxScale + " fractional digits");
         }

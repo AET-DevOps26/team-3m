@@ -39,6 +39,35 @@ const httpErrorMiddleware: Middleware = {
   },
 }
 
+const successfulJsonParseMiddleware: Middleware = {
+  async onResponse({ options, request, response }) {
+    if (!response.ok || options.parseAs !== "json") return
+    if (response.status === 204 || request.method === "HEAD") return
+
+    const contentLength = response.headers.get("Content-Length")
+    if (
+      contentLength === "0" &&
+      !response.headers.get("Transfer-Encoding")?.includes("chunked")
+    ) {
+      return
+    }
+
+    const text = await response.clone().text()
+    if (text === "") return
+
+    try {
+      JSON.parse(text)
+    } catch (cause) {
+      throw new APIError({
+        code: "parse",
+        message: "Server returned an unparsable response",
+        cause,
+        details: text,
+      })
+    }
+  },
+}
+
 function safeParse(text: string): unknown {
   if (text === "") return null
   try {
@@ -68,4 +97,5 @@ export const apiClient = createClient<paths>({
   fetch: networkSafeFetch,
 })
 
+apiClient.use(successfulJsonParseMiddleware)
 apiClient.use(httpErrorMiddleware)

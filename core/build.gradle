@@ -107,6 +107,14 @@ tasks.register('generateOpenApiDocs', Test) {
 	filter {
 		includeTestsMatching 'de.devops26.kontor.core.OpenApiDocumentationTest'
 	}
+	inputs.files(fileTree('src/main/java').matching {
+			include '**/*Controller.java'
+			include '**/*ApiResponse.java'
+			include '**/*Result.java'
+		})
+		.withPropertyName('apiSources')
+		.withPathSensitivity(PathSensitivity.RELATIVE)
+	systemProperty 'openapi.write', 'true'
 	outputs.file('docs/openapi.yml')
 }
 

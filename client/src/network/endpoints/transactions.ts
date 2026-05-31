@@ -1,16 +1,16 @@
 import { z } from "zod"
-import type { components, paths } from "../api"
+import type { components } from "../api"
 import { APIError } from "../errors"
 import { useFileUpload } from "../file-upload/use-file-upload"
+import {
+  csvImportApiResponseSchema,
+  csvImportResultSchema,
+} from "../generated/zod.gen"
 
-const IMPORT_PATH =
-  "/api/v1/financial-transactions/import" satisfies keyof paths
+const IMPORT_PATH = "/api/v1/financial-transactions/import"
 
 export type ImportTransactionsCsvResult =
   components["schemas"]["CsvImportResult"]
-
-type ImportTransactionsCsvEnvelope =
-  components["schemas"]["CsvImportApiResponse"]
 
 const csvRowValidationErrorSchema = z.object({
   row: z.number().int(),
@@ -22,6 +22,11 @@ const csvValidationFailureSchema = z.object({
   success: z.literal(false),
   error: z.string(),
   details: z.array(csvRowValidationErrorSchema).nullable().optional(),
+})
+
+const importTransactionsCsvEnvelopeSchema = csvImportApiResponseSchema.extend({
+  success: z.literal(true),
+  data: csvImportResultSchema,
 })
 
 export type CsvRowValidationError = z.infer<typeof csvRowValidationErrorSchema>
@@ -46,37 +51,15 @@ export function useImportTransactionsCsv(
 }
 
 function unwrapImportEnvelope(raw: unknown): ImportTransactionsCsvResult {
-  if (!isImportEnvelope(raw) || !raw.success || !isCsvImportResult(raw.data)) {
+  const result = importTransactionsCsvEnvelopeSchema.safeParse(raw)
+  if (!result.success) {
     throw new APIError({
       code: "parse",
       message: "Unexpected server response",
       details: raw,
     })
   }
-  return raw.data
-}
-
-function isImportEnvelope(
-  value: unknown,
-): value is ImportTransactionsCsvEnvelope {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    typeof (value as { success?: unknown }).success === "boolean"
-  )
-}
-
-function isCsvImportResult(
-  value: unknown,
-): value is ImportTransactionsCsvResult {
-  if (typeof value !== "object" || value === null) return false
-  const candidate = value as Record<string, unknown>
-  const importedCount = candidate.importedCount
-  return (
-    Number.isInteger(importedCount) &&
-    (importedCount as number) >= 0 &&
-    typeof candidate.message === "string"
-  )
+  return result.data.data
 }
 
 export function extractValidationFailure(

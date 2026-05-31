@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query"
 import { apiClient } from "../api-client"
-import { type APIError, RecoverableError } from "../errors"
+import { APIError, RecoverableError } from "../errors"
 
 export type HealthEndpoint = "hello" | "database"
 
@@ -28,8 +28,14 @@ export function useHealthCheck(
       const { data } = await apiClient.GET(`/${endpoint}`, {
         parseAs: "text",
       })
+      if (data === undefined) {
+        throw new APIError({
+          code: "parse",
+          message: "Server returned an empty health response",
+        })
+      }
       return {
-        message: data ?? "",
+        message: data,
         latencyMs: Math.round(performance.now() - start),
       }
     },

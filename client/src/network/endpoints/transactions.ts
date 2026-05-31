@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery } from "@tanstack/react-query"
+import { useEffect, useMemo } from "react"
 import { z } from "zod"
 import { APIError } from "../errors"
 import { useFileUpload } from "../file-upload/use-file-upload"
@@ -6,6 +7,7 @@ import { httpRequest } from "../http"
 
 const BASE_PATH = "/api/v1/financial-transactions"
 const IMPORT_PATH = `${BASE_PATH}/import`
+const PAGE_SIZE = 200
 
 const transactionSchema = z.object({
   id: z.string().uuid(),
@@ -34,21 +36,68 @@ const transactionSchema = z.object({
   mccCode: z.string().nullable(),
 })
 
-const transactionListEnvelopeSchema = z.object({
-  success: z.literal(true),
-  data: z.array(transactionSchema),
+const transactionCursorSchema = z.object({
+  afterDatetime: z.string(),
+  afterId: z.string().uuid(),
 })
+
+const transactionPageEnvelopeSchema = z.object({
+  success: z.literal(true),
+  data: z.object({
+    items: z.array(transactionSchema),
+    nextCursor: transactionCursorSchema.nullable(),
+  }),
+})
+
+type TransactionCursorParams = z.infer<typeof transactionCursorSchema>
 
 export type Transaction = z.infer<typeof transactionSchema>
 
+/**
+ * Fetches all transactions via keyset-paginated pages and returns the full flat
+ * list. Client-side filters in the UI are applied over the accumulated result.
+ */
 export function useTransactions() {
-  return useQuery({
+  const {
+    data,
+    isPending,
+    isError,
+    error,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useInfiniteQuery({
     queryKey: ["transactions"],
-    queryFn: async () => {
-      const raw = await httpRequest<unknown>({ path: BASE_PATH })
-      return transactionListEnvelopeSchema.parse(raw).data
+    queryFn: async ({
+      pageParam,
+    }: {
+      pageParam: TransactionCursorParams | null
+    }) => {
+      const params = new URLSearchParams({ pageSize: String(PAGE_SIZE) })
+      if (pageParam) {
+        params.set("afterDatetime", pageParam.afterDatetime)
+        params.set("afterId", pageParam.afterId)
+      }
+      const raw = await httpRequest<unknown>({ path: `${BASE_PATH}?${params}` })
+      return transactionPageEnvelopeSchema.parse(raw).data
     },
+    initialPageParam: null as TransactionCursorParams | null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
   })
+
+  // Auto-fetch remaining pages so all client-side filters work on complete data
+  useEffect(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      void fetchNextPage()
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
+
+  const transactions = useMemo(
+    () => data?.pages.flatMap((p) => p.items),
+    [data],
+  )
+
+  return { data: transactions, isPending, isError, error }
 }
 
 const csvRowValidationErrorSchema = z.object({

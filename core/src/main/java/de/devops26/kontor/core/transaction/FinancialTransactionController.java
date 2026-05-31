@@ -4,7 +4,9 @@ import de.devops26.kontor.core.security.AuthenticatedUser;
 import de.devops26.kontor.core.user.AppUser;
 import de.devops26.kontor.core.web.ApiResponse;
 import java.io.IOException;
-import java.util.List;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,10 +26,18 @@ public class FinancialTransactionController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<FinancialTransactionResponse>>> listTransactions(
-            @AuthenticatedUser AppUser user) {
-        var transactions = service.listTransactions(user.id());
-        return ResponseEntity.ok(ApiResponse.ok(transactions));
+    public ResponseEntity<ApiResponse<TransactionPage>> listTransactions(
+            @AuthenticatedUser AppUser user,
+            @RequestParam(defaultValue = "200") int pageSize,
+            @RequestParam(required = false) String afterDatetime,
+            @RequestParam(required = false) UUID afterId) {
+        TransactionCursor cursor = null;
+        if (afterDatetime != null && afterId != null) {
+            cursor = new TransactionCursor(
+                    OffsetDateTime.parse(afterDatetime, DateTimeFormatter.ISO_OFFSET_DATE_TIME), afterId);
+        }
+        var page = service.listTransactions(user.id(), pageSize, cursor);
+        return ResponseEntity.ok(ApiResponse.ok(page));
     }
 
     @PostMapping("/import")

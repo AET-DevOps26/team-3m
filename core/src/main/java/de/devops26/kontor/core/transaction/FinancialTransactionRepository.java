@@ -23,11 +23,18 @@ public class FinancialTransactionRepository {
     }
 
     @Transactional(readOnly = true)
-    public List<FinancialTransactionResponse> findAll(UUID userId) {
+    public TransactionPage findPage(UUID userId, int pageSize, TransactionCursor cursor) {
         var table = FINANCIAL_TRANSACTION;
-        return dsl.selectFrom(table)
-                .where(table.USER_ID.eq(userId))
-                .orderBy(table.DATETIME.desc())
+        var condition = table.USER_ID.eq(userId);
+        if (cursor != null) {
+            condition = condition.and(table.DATETIME
+                    .lessThan(cursor.afterDatetime())
+                    .or(table.DATETIME.eq(cursor.afterDatetime()).and(table.ID.lessThan(cursor.afterId()))));
+        }
+        var items = dsl.selectFrom(table)
+                .where(condition)
+                .orderBy(table.DATETIME.desc(), table.ID.desc())
+                .limit(pageSize)
                 .fetch(r -> new FinancialTransactionResponse(
                         r.get(table.ID),
                         r.get(table.DATETIME),
@@ -53,6 +60,12 @@ public class FinancialTransactionRepository {
                         r.get(table.COUNTERPARTY_IBAN),
                         r.get(table.PAYMENT_REFERENCE),
                         r.get(table.MCC_CODE)));
+        var nextCursor = items.size() < pageSize
+                ? null
+                : new TransactionCursor(
+                        items.get(items.size() - 1).datetime(),
+                        items.get(items.size() - 1).id());
+        return new TransactionPage(items, nextCursor);
     }
 
     public int upsertAll(List<TransactionCsvRow> rows, UUID userId) {

@@ -2,8 +2,6 @@ import {
   AlertCircle,
   ArrowDownLeft,
   ArrowUpRight,
-  ChevronDown,
-  ChevronUp,
   List,
   Search,
   X,
@@ -101,7 +99,7 @@ function applyFilters(
       if (!haystack.includes(searchLower)) return false
     }
     if (category && tx.category !== category) return false
-    if (type && tx.type !== type) return false
+    if (type && normalizeType(tx.type) !== type) return false
     if (fromDate && tx.date < fromDate) return false
     if (toDate && tx.date > toDate) return false
     return true
@@ -121,6 +119,34 @@ function hasActiveFilters(filters: Filters): boolean {
 // Formatters
 // ---------------------------------------------------------------------------
 
+const UUID_PATTERN =
+  /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
+
+// IBANs: 2-letter country code + 2 check digits + 4–30 alphanumeric chars.
+// Strip spaces first so both "DE89..." and "DE89 3704 ..." are caught.
+const IBAN_PATTERN = /^[A-Z]{2}[0-9]{2}[A-Z0-9]{4,30}$/i
+
+// Boilerplate transfer prefixes produced by brokers/banks before the actual counterparty name
+const TRANSFER_PREFIX =
+  /^(?:(?:outgoing|incoming)\s+transfer\s+(?:for|from|to)|sepa\s+(?:direct\s+debit\s+)?transfer\s+(?:for|from|to))\s+/i
+
+/** Returns true if the value is blank, contains a UUID, or is a bare IBAN (with or without spaces). */
+function isUnreadable(value: string): boolean {
+  const trimmed = value.trim()
+  if (trimmed === "" || UUID_PATTERN.test(trimmed)) return true
+  // Remove spaces before testing IBAN so "DE89 3704 0044 0532 0130 00" is also caught
+  const noSpaces = trimmed.replace(/\s+/g, "")
+  return IBAN_PATTERN.test(noSpaces)
+}
+
+// Matches an IBAN (with or without spaces) optionally wrapped in parentheses or brackets
+const INLINE_IBAN = /\s*[([]?[A-Z]{2}[0-9]{2}(?:\s?[A-Z0-9]){4,30}[)\]]?\s*/gi
+
+/** Strips boilerplate transfer prefixes and any embedded IBANs from a display value. */
+function cleanTitle(value: string): string {
+  return value.replace(TRANSFER_PREFIX, "").replace(INLINE_IBAN, " ").trim()
+}
+
 function formatAmount(amount: number, currency: string): string {
   return new Intl.NumberFormat(undefined, {
     style: "currency",
@@ -130,9 +156,59 @@ function formatAmount(amount: number, currency: string): string {
   }).format(amount)
 }
 
-function formatNumber(n: number): string {
-  return new Intl.NumberFormat(undefined, { maximumFractionDigits: 10 }).format(
-    n,
+// Known overrides for type values that don't format well generically.
+// Keys must match the *normalized* form (lowercase, underscores replaced with spaces, qualifiers stripped).
+const TYPE_LABELS: Record<string, string> = {
+  buy: "Buy",
+  sell: "Sell",
+  dividend: "Dividend",
+  saveback: "Save Back",
+  interest: "Interest",
+  deposit: "Deposit",
+  withdrawal: "Withdrawal",
+  "card transaction": "Card Payment",
+  tax: "Tax",
+  fee: "Fee",
+  transfer: "Transfer",
+  exchange: "Exchange",
+  roundup: "Round Up",
+  refund: "Refund",
+}
+
+const TYPE_QUALIFIERS = new Set([
+  "instant",
+  "inbound",
+  "outbound",
+  "international",
+])
+
+/**
+ * Strips execution/direction qualifiers so variants collapse to one type.
+ * Works with both space- and underscore-separated values.
+ * e.g. "transfer_instant_inbound" → "transfer", "buy instant" → "buy",
+ *      "card_transaction_international" → "card transaction"
+ */
+function normalizeType(type: string): string {
+  const base = type
+    .toLowerCase()
+    .trim()
+    .replace(/_/g, " ")
+    .split(" ")
+    .filter((word) => word.length > 0 && !TYPE_QUALIFIERS.has(word))
+    .join(" ")
+
+  // Collapse all transfer variants (transfer direct debit, transfer inbound, etc.) into one type
+  if (base.startsWith("transfer")) return "transfer"
+
+  return base
+}
+
+function formatType(type: string): string {
+  return (
+    TYPE_LABELS[normalizeType(type)] ??
+    normalizeType(type)
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase())
   )
 }
 
@@ -142,133 +218,50 @@ function formatNumber(n: number): string {
 
 interface TransactionRowProps {
   tx: Transaction
-  isExpanded: boolean
-  onToggle: () => void
 }
 
-function TransactionRow({ tx, isExpanded, onToggle }: TransactionRowProps) {
+function TransactionRow({ tx }: TransactionRowProps) {
   const isPositive = tx.amount >= 0
 
-  const hasExpandableDetails =
-    tx.fee != null ||
-    tx.tax != null ||
-    tx.counterpartyIban != null ||
-    tx.paymentReference != null ||
-    (tx.shares != null && tx.price != null) ||
-    tx.originalAmount != null
-
   return (
-    <div>
-      <button
-        type="button"
-        onClick={hasExpandableDetails ? onToggle : undefined}
-        className={`flex w-full items-center gap-3 py-2 text-left transition-colors ${
-          hasExpandableDetails
-            ? "-mx-1 cursor-pointer rounded-md px-1 hover:bg-muted/40"
-            : "cursor-default"
+    <div className="flex items-center gap-3 py-2">
+      <div
+        className={`flex size-8 shrink-0 items-center justify-center rounded-full ${
+          isPositive
+            ? "bg-success/15 text-success"
+            : "bg-destructive/15 text-destructive"
         }`}
       >
-        <div
-          className={`flex size-8 shrink-0 items-center justify-center rounded-full ${
-            isPositive
-              ? "bg-success/15 text-success"
-              : "bg-destructive/15 text-destructive"
+        {isPositive ? (
+          <ArrowDownLeft className="size-4" />
+        ) : (
+          <ArrowUpRight className="size-4" />
+        )}
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium">
+          {[tx.name, tx.counterpartyName, tx.description]
+            .filter((v): v is string => v != null && !isUnreadable(v))
+            .map(cleanTitle)
+            .find((v) => v !== "") ?? formatType(tx.type)}
+        </p>
+        <p className="text-xs text-muted-foreground">{tx.date}</p>
+      </div>
+
+      <div className="text-right">
+        <p
+          className={`text-sm font-medium tabular-nums ${
+            isPositive ? "text-success" : "text-destructive"
           }`}
         >
-          {isPositive ? (
-            <ArrowDownLeft className="size-4" />
-          ) : (
-            <ArrowUpRight className="size-4" />
-          )}
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium">
-            {tx.name ?? tx.counterpartyName ?? tx.description ?? tx.category}
-          </p>
-          <p className="text-xs text-muted-foreground">{tx.date}</p>
-        </div>
-
-        <div className="flex shrink-0 items-center gap-2">
-          <div className="text-right">
-            <p
-              className={`text-sm font-medium tabular-nums ${
-                isPositive ? "text-success" : "text-destructive"
-              }`}
-            >
-              {isPositive ? "+" : ""}
-              {formatAmount(tx.amount, tx.currency)}
-            </p>
-            <Badge variant="outline" className="text-xs">
-              {tx.category}
-            </Badge>
-          </div>
-          {hasExpandableDetails && (
-            <span className="text-muted-foreground">
-              {isExpanded ? (
-                <ChevronUp className="size-4" />
-              ) : (
-                <ChevronDown className="size-4" />
-              )}
-            </span>
-          )}
-        </div>
-      </button>
-
-      {isExpanded && hasExpandableDetails && (
-        <div className="mb-2 ml-11 grid grid-cols-2 gap-x-4 gap-y-1 rounded-md bg-muted/30 p-3 text-xs">
-          {tx.shares != null && tx.price != null && (
-            <>
-              <span className="text-muted-foreground">Shares × Price</span>
-              <span className="tabular-nums">
-                {formatNumber(tx.shares)} ×{" "}
-                {formatAmount(tx.price, tx.currency)}
-              </span>
-            </>
-          )}
-          {tx.fee != null && (
-            <>
-              <span className="text-muted-foreground">Fee</span>
-              <span className="tabular-nums text-destructive">
-                {formatAmount(tx.fee, tx.currency)}
-              </span>
-            </>
-          )}
-          {tx.tax != null && (
-            <>
-              <span className="text-muted-foreground">Tax</span>
-              <span className="tabular-nums text-destructive">
-                {formatAmount(tx.tax, tx.currency)}
-              </span>
-            </>
-          )}
-          {tx.originalAmount != null && tx.originalCurrency != null && (
-            <>
-              <span className="text-muted-foreground">Original amount</span>
-              <span className="tabular-nums">
-                {formatAmount(tx.originalAmount, tx.originalCurrency)}
-                {tx.fxRate != null && (
-                  <span className="ml-1 text-muted-foreground">
-                    @ {formatNumber(tx.fxRate)}
-                  </span>
-                )}
-              </span>
-            </>
-          )}
-          {tx.counterpartyIban != null && (
-            <>
-              <span className="text-muted-foreground">IBAN</span>
-              <span className="font-mono">{tx.counterpartyIban}</span>
-            </>
-          )}
-          {tx.paymentReference != null && (
-            <>
-              <span className="text-muted-foreground">Reference</span>
-              <span>{tx.paymentReference}</span>
-            </>
-          )}
-        </div>
-      )}
+          {isPositive ? "+" : ""}
+          {formatAmount(tx.amount, tx.currency)}
+        </p>
+        <Badge variant="outline" className="text-xs">
+          {tx.category}
+        </Badge>
+      </div>
     </div>
   )
 }
@@ -357,7 +350,7 @@ function FiltersBar({
             <SelectItem value={ALL_VALUE}>All types</SelectItem>
             {types.map((t) => (
               <SelectItem key={t} value={t}>
-                {t}
+                {formatType(t)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -416,7 +409,6 @@ function FiltersBar({
 export function TransactionsBlock() {
   const { data: transactions, isPending, isError, error } = useTransactions()
   const [filters, setFilters] = useState<Filters>(INITIAL_FILTERS)
-  const [expandedId, setExpandedId] = useState<string | null>(null)
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const sentinelRef = useRef<HTMLDivElement>(null)
 
@@ -426,8 +418,17 @@ export function TransactionsBlock() {
   )
 
   const types = useMemo(
-    () => [...new Set((transactions ?? []).map((t) => t.type))].sort(),
-    [transactions],
+    () =>
+      [
+        ...new Set(
+          (transactions ?? [])
+            .filter(
+              (t) => filters.category === "" || t.category === filters.category,
+            )
+            .map((t) => normalizeType(t.type)),
+        ),
+      ].sort(),
+    [transactions, filters.category],
   )
 
   const filtered = useMemo(
@@ -460,19 +461,20 @@ export function TransactionsBlock() {
   }, [hasMore, filtered.length])
 
   function patchFilters(patch: Partial<Filters>) {
-    setFilters((prev) => ({ ...prev, ...patch }))
-    setExpandedId(null)
+    setFilters((prev) => {
+      const next = { ...prev, ...patch }
+      // Reset type when category changes — the current type may not exist in the new category
+      if (patch.category !== undefined && patch.category !== prev.category) {
+        next.type = ""
+      }
+      return next
+    })
     setVisibleCount(PAGE_SIZE)
   }
 
   function resetFilters() {
     setFilters(INITIAL_FILTERS)
-    setExpandedId(null)
     setVisibleCount(PAGE_SIZE)
-  }
-
-  function toggleExpanded(id: string) {
-    setExpandedId((prev) => (prev === id ? null : id))
   }
 
   if (isPending) {
@@ -526,12 +528,7 @@ export function TransactionsBlock() {
         <>
           <div className="divide-y">
             {visible.map((tx) => (
-              <TransactionRow
-                key={tx.id}
-                tx={tx}
-                isExpanded={expandedId === tx.id}
-                onToggle={() => toggleExpanded(tx.id)}
-              />
+              <TransactionRow key={tx.id} tx={tx} />
             ))}
           </div>
 

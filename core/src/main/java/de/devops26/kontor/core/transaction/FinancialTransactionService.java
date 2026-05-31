@@ -77,8 +77,9 @@ public class FinancialTransactionService {
     }
 
     @Transactional(readOnly = true)
-    public List<FinancialTransactionResponse> listTransactions(UUID userId) {
-        return repository.findAll(userId);
+    public TransactionPage listTransactions(UUID userId, int pageSize, TransactionCursor cursor) {
+        var clampedPageSize = Math.min(Math.max(pageSize, 1), 500);
+        return repository.findPage(userId, clampedPageSize, cursor);
     }
 
     @Transactional

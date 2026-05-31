@@ -11,6 +11,7 @@ import org.jooq.DSLContext;
 import org.jooq.Query;
 import org.jooq.impl.DSL;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public class FinancialTransactionRepository {
@@ -19,6 +20,39 @@ public class FinancialTransactionRepository {
 
     public FinancialTransactionRepository(DSLContext dsl) {
         this.dsl = dsl;
+    }
+
+    @Transactional(readOnly = true)
+    public List<FinancialTransactionResponse> findAll(UUID userId) {
+        var table = FINANCIAL_TRANSACTION;
+        return dsl.selectFrom(table)
+                .where(table.USER_ID.eq(userId))
+                .orderBy(table.DATETIME.desc())
+                .fetch(r -> new FinancialTransactionResponse(
+                        r.get(table.ID),
+                        r.get(table.DATETIME),
+                        r.get(table.DATE),
+                        r.get(table.ACCOUNT_TYPE),
+                        r.get(table.CATEGORY),
+                        r.get(table.TYPE),
+                        r.get(table.ASSET_CLASS),
+                        r.get(table.NAME),
+                        r.get(table.SYMBOL),
+                        r.get(table.SHARES),
+                        r.get(table.PRICE),
+                        r.get(table.AMOUNT),
+                        r.get(table.FEE),
+                        r.get(table.TAX),
+                        r.get(table.CURRENCY),
+                        r.get(table.ORIGINAL_AMOUNT),
+                        r.get(table.ORIGINAL_CURRENCY),
+                        r.get(table.FX_RATE),
+                        r.get(table.DESCRIPTION),
+                        r.get(table.EXTERNAL_TRANSACTION_ID),
+                        r.get(table.COUNTERPARTY_NAME),
+                        r.get(table.COUNTERPARTY_IBAN),
+                        r.get(table.PAYMENT_REFERENCE),
+                        r.get(table.MCC_CODE)));
     }
 
     public int upsertAll(List<TransactionCsvRow> rows, UUID userId) {

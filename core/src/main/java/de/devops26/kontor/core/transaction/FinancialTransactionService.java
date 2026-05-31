@@ -76,6 +76,11 @@ public class FinancialTransactionService {
         this.repository = repository;
     }
 
+    @Transactional(readOnly = true)
+    public List<FinancialTransactionResponse> listTransactions(UUID userId) {
+        return repository.findAll(userId);
+    }
+
     @Transactional
     public CsvImportResult importCsv(InputStream input, UUID userId) throws IOException {
         var format = CSVFormat.DEFAULT

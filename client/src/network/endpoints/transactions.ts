@@ -1,8 +1,55 @@
+import { useQuery } from "@tanstack/react-query"
 import { z } from "zod"
 import { APIError } from "../errors"
 import { useFileUpload } from "../file-upload/use-file-upload"
+import { httpRequest } from "../http"
 
-const IMPORT_PATH = "/api/v1/financial-transactions/import"
+const BASE_PATH = "/api/v1/financial-transactions"
+const IMPORT_PATH = `${BASE_PATH}/import`
+
+const transactionSchema = z.object({
+  id: z.string().uuid(),
+  datetime: z.string(),
+  date: z.string(),
+  accountType: z.string(),
+  category: z.string(),
+  type: z.string(),
+  assetClass: z.string().nullable(),
+  name: z.string().nullable(),
+  symbol: z.string().nullable(),
+  shares: z.number().nullable(),
+  price: z.number().nullable(),
+  amount: z.number(),
+  fee: z.number().nullable(),
+  tax: z.number().nullable(),
+  currency: z.string(),
+  originalAmount: z.number().nullable(),
+  originalCurrency: z.string().nullable(),
+  fxRate: z.number().nullable(),
+  description: z.string().nullable(),
+  externalTransactionId: z.string().uuid().nullable(),
+  counterpartyName: z.string().nullable(),
+  counterpartyIban: z.string().nullable(),
+  paymentReference: z.string().nullable(),
+  mccCode: z.string().nullable(),
+})
+
+const transactionListEnvelopeSchema = z.object({
+  success: z.literal(true),
+  data: z.array(transactionSchema),
+})
+
+export type Transaction = z.infer<typeof transactionSchema>
+
+export function useTransactions() {
+  return useQuery({
+    queryKey: ["transactions"],
+    queryFn: async () => {
+      const raw = await httpRequest<unknown>({ path: BASE_PATH })
+      return transactionListEnvelopeSchema.parse(raw).data
+    },
+  })
+}
 
 const csvRowValidationErrorSchema = z.object({
   row: z.number().int(),

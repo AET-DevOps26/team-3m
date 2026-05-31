@@ -3,12 +3,14 @@ import {
   Database,
   FileSpreadsheet,
   Layers,
+  List,
   Loader2,
   Rocket,
   Server,
   Users,
 } from "lucide-react"
 import { Link } from "react-router-dom"
+import { TransactionsBlock } from "@/components/blocks/transactions-block"
 import { ConnectionStatusBanner } from "@/components/connection-status-banner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -217,6 +219,19 @@ export function StartPage() {
                 Import CSV
               </Link>
             </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <List className="size-4" />
+              Transactions
+            </CardTitle>
+            <CardDescription>All your financial transactions</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <TransactionsBlock />
           </CardContent>
         </Card>
       </div>

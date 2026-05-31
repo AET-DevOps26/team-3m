@@ -1,7 +1,25 @@
 import createClient, { type Middleware } from "openapi-fetch"
-import type { paths } from "./api"
 import { API_BASE_URL } from "./config"
 import { APIError } from "./errors"
+
+interface TextResponseOperation {
+  responses: {
+    200: {
+      content: {
+        "*/*": string
+      }
+    }
+  }
+}
+
+interface ApiPaths {
+  "/database": {
+    get: TextResponseOperation
+  }
+  "/hello": {
+    get: TextResponseOperation
+  }
+}
 
 const networkSafeFetch: typeof fetch = async (input, init) => {
   try {
@@ -92,7 +110,7 @@ function extractErrorMessage(data: unknown, response: Response): string {
   return `HTTP ${response.status} ${response.statusText}`
 }
 
-export const apiClient = createClient<paths>({
+export const apiClient = createClient<ApiPaths>({
   baseUrl: API_BASE_URL,
   fetch: networkSafeFetch,
 })

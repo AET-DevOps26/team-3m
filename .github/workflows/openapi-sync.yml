@@ -46,7 +46,7 @@ jobs:
 
       - name: Check for uncommitted diff
         run: |
-          git diff --exit-code core/docs/openapi.yml client/src/network/api.ts || {
+          git diff --exit-code core/docs/openapi.yml client/src/network/generated || {
             echo "Generated files are out of sync. Run ./gradlew generateOpenApiDocs in core/ and npm run generate:api in client/, then commit the results."
             exit 1
           }

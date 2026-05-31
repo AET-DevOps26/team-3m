@@ -1,7 +1,7 @@
 import { z } from "zod"
-import type { components } from "../api"
 import { APIError } from "../errors"
 import { useFileUpload } from "../file-upload/use-file-upload"
+import type { CsvImportResult } from "../generated"
 import {
   csvImportApiResponseSchema,
   csvImportResultSchema,
@@ -9,8 +9,7 @@ import {
 
 const IMPORT_PATH = "/api/v1/financial-transactions/import"
 
-export type ImportTransactionsCsvResult =
-  components["schemas"]["CsvImportResult"]
+export type ImportTransactionsCsvResult = CsvImportResult
 
 const csvRowValidationErrorSchema = z.object({
   row: z.number().int(),

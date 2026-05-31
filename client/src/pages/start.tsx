@@ -10,7 +10,6 @@ import {
   Users,
 } from "lucide-react"
 import { Link } from "react-router-dom"
-import { TransactionsBlock } from "@/components/blocks/transactions-block"
 import { ConnectionStatusBanner } from "@/components/connection-status-banner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -24,6 +23,7 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { API_BASE_URL } from "@/network"
 import { useHealthCheck } from "@/network/endpoints/health"
+import { TransactionsBlock } from "@/pages/transactions-overview"
 
 const teamMembers = [
   { name: "Mathilde", role: "UI/UX Expert" },

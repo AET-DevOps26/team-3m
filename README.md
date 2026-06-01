@@ -16,7 +16,11 @@
 
 ## Setup
 
-The repository includes a root `.env.example` and a local `.env` with the default compose values. Update `.env` if you want to change the Postgres credentials or database name.
+The repository includes a root `.env.example` and a local `.env` with the default compose values. Update `.env` if you want to change the Postgres credentials, Keycloak database credentials, or shared local Keycloak dev-user password.
+
+The Compose Keycloak service is for local development only. It runs `start-dev`, imports `infra/keycloak/realms/kontor-realm.json`, and stores Keycloak state in the `keycloak_postgres_data` Docker volume. The realm import is skipped once the realm already exists, so delete that volume if you need to re-apply the import from scratch.
+
+Local Keycloak users live in `infra/keycloak/realms/kontor-users-0.json`. Add another object to the `users` array to create more local accounts with their own `realmRoles` and `attributes`. The sample users share the `KEYCLOAK_DEV_USERS_PASSWORD` environment placeholder so adding users does not require more Compose variables.
 
 ```sh
 docker compose up --build

@@ -42,26 +42,26 @@ resource "azurerm_network_security_group" "main" {
   }
 
   security_rule {
-    name                       = "Client"
+    name                       = "HTTP"
     priority                   = 1010
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = "5173"
-    source_address_prefix      = var.allowed_app_source_address_prefix
+    destination_port_range     = "80"
+    source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
 
   security_rule {
-    name                       = "Core"
+    name                       = "HTTPS"
     priority                   = 1020
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = "8080"
-    source_address_prefix      = var.allowed_app_source_address_prefix
+    destination_port_range     = "443"
+    source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
 }

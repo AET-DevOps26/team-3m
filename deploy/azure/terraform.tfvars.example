@@ -13,6 +13,3 @@ vm_size = "Standard_D2s_v3"
 
 # Replace with your public IP as x.x.x.x/32 before applying. Do not use "*" in production.
 allowed_ssh_source_address_prefix = "<YOUR_IP>/32"
-
-# Replace with your IP or a trusted CIDR before applying. Do not use "*" in production.
-allowed_app_source_address_prefix = "<YOUR_IP>/32"

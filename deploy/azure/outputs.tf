@@ -18,12 +18,7 @@ output "ssh_command" {
   value       = "ssh -i ${trimsuffix(var.admin_ssh_public_key_path, ".pub")} ${var.admin_username}@${azurerm_public_ip.main.ip_address}"
 }
 
-output "client_url" {
-  description = "Public URL for the frontend container after docker compose is running."
-  value       = "http://${azurerm_public_ip.main.ip_address}:5173"
-}
-
-output "core_health_url" {
-  description = "Public URL for the backend health check after docker compose is running."
-  value       = "http://${azurerm_public_ip.main.ip_address}:8080/hello"
+output "traefik_ip" {
+  description = "Public IP for Traefik. Create a DNS A record pointing your domain to this address, then access the app at https://<DOMAIN>."
+  value       = azurerm_public_ip.main.ip_address
 }

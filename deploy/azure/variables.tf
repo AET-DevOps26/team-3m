@@ -49,13 +49,3 @@ variable "allowed_ssh_source_address_prefix" {
     error_message = "allowed_ssh_source_address_prefix must be a valid CIDR block (e.g. '1.2.3.4/32'). Open access via '*' is not permitted."
   }
 }
-
-variable "allowed_app_source_address_prefix" {
-  type        = string
-  description = "Source address prefix allowed to reach the app ports. Must be a valid CIDR. Never use '*'."
-
-  validation {
-    condition     = var.allowed_app_source_address_prefix != "*" && can(cidrhost(var.allowed_app_source_address_prefix, 0))
-    error_message = "allowed_app_source_address_prefix must be a valid CIDR block (e.g. '1.2.3.4/32'). Open access via '*' is not permitted."
-  }
-}

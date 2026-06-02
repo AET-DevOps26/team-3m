@@ -30,12 +30,17 @@ jobs:
       deploy: ${{ steps.filter.outputs.deploy }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: |
             deploy:
               - 'deploy/**'
+              - '.github/workflows/helm-quality.yml'
+              - '.github/workflows/ci-cd.yml'
+              - '.trivyignore.yaml'
 
   helm-quality:
     needs: changes
@@ -44,7 +49,11 @@ jobs:
 
   release:
     name: Semantic Release
-    needs: [client-quality, server-quality]
+    needs: [client-quality, server-quality, changes, helm-quality]
+    if: ${{ always()
+      && needs.client-quality.result == 'success'
+      && needs.server-quality.result == 'success'
+      && (needs.changes.outputs.deploy != 'true' || needs.helm-quality.result == 'success') }}
     runs-on: ubuntu-latest
     outputs:
       released: ${{ steps.semantic.outputs.new_release_published }}

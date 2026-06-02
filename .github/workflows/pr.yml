@@ -45,15 +45,18 @@ jobs:
     if: ${{ needs.changes.outputs.deploy == 'true' }}
     uses: ./.github/workflows/helm-quality.yml
 
+  openapi-sync:
+    uses: ./.github/workflows/openapi-sync.yml
+
   client-docker:
-    needs: client-quality
+    needs: [client-quality, openapi-sync]
     uses: ./.github/workflows/docker-build-push.yml
     with:
       context: client
       image-name: kontor-client
 
   server-docker:
-    needs: server-quality
+    needs: [server-quality, openapi-sync]
     uses: ./.github/workflows/docker-build-push.yml
     with:
       context: core

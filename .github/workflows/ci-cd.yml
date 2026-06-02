@@ -47,12 +47,16 @@ jobs:
     if: ${{ needs.changes.outputs.deploy == 'true' }}
     uses: ./.github/workflows/helm-quality.yml
 
+  openapi-sync:
+    uses: ./.github/workflows/openapi-sync.yml
+
   release:
     name: Semantic Release
-    needs: [client-quality, server-quality, changes, helm-quality]
+    needs: [client-quality, server-quality, changes, helm-quality, openapi-sync]
     if: ${{ always()
       && needs.client-quality.result == 'success'
       && needs.server-quality.result == 'success'
+      && needs.helm-quality.result == 'success'
       && (needs.changes.outputs.deploy != 'true' || needs.helm-quality.result == 'success') }}
     runs-on: ubuntu-latest
     outputs:

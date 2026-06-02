@@ -1,6 +1,7 @@
 package de.devops26.kontor.core.portfolio;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -92,6 +93,36 @@ class PortfolioServiceTest {
         var overview = service.getOverview(USER_ID);
 
         assertThat(overview.totalValue()).isEqualByComparingTo("2000");
+    }
+
+    @Test
+    @DisplayName("getOverview throws when a holding currency differs from primary currency")
+    void getOverview_mixedCurrencies_throws() {
+        var eurHolding = new PortfolioHolding(
+                "US0378331005",
+                "Apple",
+                "STOCK",
+                "EUR",
+                new BigDecimal("3"),
+                new BigDecimal("200"),
+                new BigDecimal("600"));
+        var usdHolding = new PortfolioHolding(
+                "US5949181045",
+                "Microsoft",
+                "STOCK",
+                "USD",
+                new BigDecimal("2"),
+                new BigDecimal("300"),
+                new BigDecimal("600"));
+        when(repository.findHoldings(USER_ID)).thenReturn(List.of(eurHolding, usdHolding));
+        when(repository.findCashBalance(USER_ID)).thenReturn(BigDecimal.ZERO);
+        when(repository.findPrimaryCurrency(USER_ID)).thenReturn("EUR");
+
+        assertThatThrownBy(() -> service.getOverview(USER_ID))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("EUR")
+                .hasMessageContaining("USD")
+                .hasMessageContaining("US5949181045");
     }
 
     @Test

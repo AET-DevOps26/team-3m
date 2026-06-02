@@ -30,6 +30,7 @@ public class PortfolioRepository {
                 .from(ft2)
                 .where(ft2.SYMBOL.eq(ft.SYMBOL))
                 .and(ft2.USER_ID.eq(userId))
+                .and(ft2.CURRENCY.eq(ft.CURRENCY))
                 .and(ft2.PRICE.isNotNull())
                 .orderBy(ft2.DATETIME.desc())
                 .limit(1));

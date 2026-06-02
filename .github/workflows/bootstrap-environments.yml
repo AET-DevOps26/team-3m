@@ -1,0 +1,19 @@
+name: Bootstrap Kubernetes Environments
+
+on:
+  pull_request:
+
+permissions: {}
+
+jobs:
+  k8s-prod:
+    runs-on: ubuntu-latest
+    environment: k8s-prod
+    steps:
+      - run: echo "ensured k8s-prod environment"
+
+  k8s-preview:
+    runs-on: ubuntu-latest
+    environment: k8s-preview
+    steps:
+      - run: echo "ensured k8s-preview environment"

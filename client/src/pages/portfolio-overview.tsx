@@ -1,7 +1,7 @@
 import { ArrowLeft, Banknote, Briefcase, TrendingUp } from "lucide-react"
 import { Suspense, useState } from "react"
 import { Link } from "react-router-dom"
-import { Area, AreaChart, XAxis } from "recharts"
+import { Area, AreaChart, Label, XAxis } from "recharts"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -49,7 +49,14 @@ function formatShares(value: number): string {
 }
 
 function formatAxisDate(dateStr: string, range: TimeRange): string {
-  const showDay = range === "1D" || range === "1W" || range === "1M"
+  if (range === "1D") {
+    return new Intl.DateTimeFormat("en", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }).format(new Date(dateStr))
+  }
+  const showDay = range === "1W" || range === "1M"
   return new Intl.DateTimeFormat("en", {
     month: "short",
     ...(showDay ? { day: "numeric" } : { year: "numeric" }),
@@ -171,15 +178,32 @@ function PerformanceChart({
             />
           </linearGradient>
         </defs>
-        <XAxis
-          dataKey="date"
-          tickLine={false}
-          axisLine={false}
-          tickMargin={8}
-          tickFormatter={(d) => formatAxisDate(d, range)}
-          tick={{ fontSize: 11 }}
-          minTickGap={60}
-        />
+        {range === "1D" ? (
+          <XAxis tick={false} tickLine={false} axisLine={false} height={28}>
+            <Label
+              value={
+                data.length > 0
+                  ? formatAxisDate(
+                      data[Math.floor(data.length / 2)].date,
+                      range,
+                    )
+                  : ""
+              }
+              position="center"
+              style={{ fontSize: "11px", fill: "currentColor", opacity: 0.6 }}
+            />
+          </XAxis>
+        ) : (
+          <XAxis
+            dataKey="date"
+            tickLine={false}
+            axisLine={false}
+            tickMargin={8}
+            tickFormatter={(d) => formatAxisDate(d, range)}
+            tick={{ fontSize: 11 }}
+            minTickGap={60}
+          />
+        )}
         <Area
           type="monotone"
           dataKey="value"

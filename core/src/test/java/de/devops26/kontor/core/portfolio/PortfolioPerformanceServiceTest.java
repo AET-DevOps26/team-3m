@@ -23,113 +23,119 @@ class PortfolioPerformanceServiceTest {
 
     private PortfolioPerformanceService service;
 
+    // Fixed "today" used across all tests so results are deterministic.
+    private static final LocalDate TODAY = LocalDate.of(2026, 4, 10);
+
     @BeforeEach
     void setUp() {
         service = new PortfolioPerformanceService(repository);
     }
 
     @Test
-    @DisplayName("getPerformance with no transactions returns empty snapshots")
-    void getPerformance_noTransactions_returnsEmpty() {
-        when(repository.findTransactionsForPerformance(any())).thenReturn(List.of());
-        when(repository.findPrimaryCurrency(any())).thenReturn("EUR");
+    @DisplayName("no transactions returns empty snapshots")
+    void buildDailySnapshots_empty_returnsEmpty() {
+        var result = service.buildDailySnapshots(List.of(), TODAY);
 
-        var result = service.getPerformance(UUID.randomUUID());
-
-        assertThat(result.snapshots()).isEmpty();
-        assertThat(result.currency()).isEqualTo("EUR");
+        assertThat(result).isEmpty();
     }
 
     @Test
-    @DisplayName("getPerformance cash deposit creates a snapshot with that value")
-    void getPerformance_cashDeposit_recordsValue() {
-        var tx = cashTx("2026-04-01", "3200");
-        when(repository.findTransactionsForPerformance(any())).thenReturn(List.of(tx));
-        when(repository.findPrimaryCurrency(any())).thenReturn("EUR");
+    @DisplayName("cash deposit fills every day forward to today with the same value")
+    void buildDailySnapshots_singleDeposit_fillsToToday() {
+        // Deposit on Apr 1, today is Apr 3 → 3 snapshots
+        var result = service.buildDailySnapshots(List.of(cashTx("2026-04-01", "3200")), LocalDate.of(2026, 4, 3));
 
-        var result = service.getPerformance(UUID.randomUUID());
-
-        assertThat(result.snapshots()).hasSize(1);
-        assertThat(result.snapshots().getFirst().value()).isEqualByComparingTo("3200");
+        assertThat(result).hasSize(3);
+        assertThat(result.getFirst().date()).isEqualTo(LocalDate.of(2026, 4, 1));
+        assertThat(result.getFirst().value()).isEqualByComparingTo("3200");
+        assertThat(result.getLast().date()).isEqualTo(LocalDate.of(2026, 4, 3));
+        assertThat(result.getLast().value()).isEqualByComparingTo("3200");
     }
 
     @Test
-    @DisplayName("getPerformance buy keeps total value flat (cash out = holdings in)")
-    void getPerformance_buyTransaction_totalUnchanged() {
+    @DisplayName("buy keeps total flat; fill days between deposit and buy carry the deposit value")
+    void buildDailySnapshots_buy_keepsTotalFlat() {
+        // Deposit Apr 1, BUY Apr 3, today Apr 3 → 3 snapshots
         var deposit = cashTx("2026-04-01", "3200");
         var buy = tradeTx("2026-04-03", "BUY", "AAPL", "5", "192.34", "-961.70");
-        when(repository.findTransactionsForPerformance(any())).thenReturn(List.of(deposit, buy));
-        when(repository.findPrimaryCurrency(any())).thenReturn("EUR");
+        var result = service.buildDailySnapshots(List.of(deposit, buy), LocalDate.of(2026, 4, 3));
 
-        var result = service.getPerformance(UUID.randomUUID());
-
-        assertThat(result.snapshots()).hasSize(2);
-        assertThat(result.snapshots().get(0).value()).isEqualByComparingTo("3200");
-        // cash=2238.30, AAPL=5×192.34=961.70, total=3200
-        assertThat(result.snapshots().get(1).value()).isEqualByComparingTo("3200");
+        assertThat(result).hasSize(3);
+        assertThat(result.get(0).value()).isEqualByComparingTo("3200"); // after deposit
+        assertThat(result.get(1).value()).isEqualByComparingTo("3200"); // filled Apr 2
+        assertThat(result.get(2).value()).isEqualByComparingTo("3200"); // after BUY (cash out = holdings in)
     }
 
     @Test
-    @DisplayName("getPerformance cash outflow reduces total value")
-    void getPerformance_cashOutflow_reducesTotal() {
+    @DisplayName("cash outflow reduces value; remaining days carry the reduced value forward")
+    void buildDailySnapshots_outflow_reducesAndFills() {
         var deposit = cashTx("2026-04-01", "3200");
-        var outflow = cashTx("2026-04-08", "-500");
-        when(repository.findTransactionsForPerformance(any())).thenReturn(List.of(deposit, outflow));
-        when(repository.findPrimaryCurrency(any())).thenReturn("EUR");
+        var outflow = cashTx("2026-04-03", "-500");
+        var result = service.buildDailySnapshots(List.of(deposit, outflow), LocalDate.of(2026, 4, 5));
 
-        var result = service.getPerformance(UUID.randomUUID());
-
-        assertThat(result.snapshots()).hasSize(2);
-        assertThat(result.snapshots().get(1).value()).isEqualByComparingTo("2700");
+        // Apr 1(3200), Apr 2(3200 filled), Apr 3(2700), Apr 4(2700 filled), Apr 5(2700 filled)
+        assertThat(result).hasSize(5);
+        assertThat(result.get(0).value()).isEqualByComparingTo("3200");
+        assertThat(result.get(1).value()).isEqualByComparingTo("3200");
+        assertThat(result.get(2).value()).isEqualByComparingTo("2700");
+        assertThat(result.get(3).value()).isEqualByComparingTo("2700");
+        assertThat(result.get(4).value()).isEqualByComparingTo("2700");
     }
 
     @Test
-    @DisplayName("getPerformance multiple transactions same day produce single snapshot")
-    void getPerformance_sameDay_singleSnapshot() {
+    @DisplayName("multiple transactions on the same date produce a single snapshot for that day")
+    void buildDailySnapshots_sameDay_singleSnapshot() {
         var tx1 = cashTx("2026-04-01", "1000");
         var tx2 = cashTx("2026-04-01", "500");
-        when(repository.findTransactionsForPerformance(any())).thenReturn(List.of(tx1, tx2));
-        when(repository.findPrimaryCurrency(any())).thenReturn("EUR");
+        var result = service.buildDailySnapshots(List.of(tx1, tx2), LocalDate.of(2026, 4, 1));
 
-        var result = service.getPerformance(UUID.randomUUID());
-
-        assertThat(result.snapshots()).hasSize(1);
-        assertThat(result.snapshots().getFirst().value()).isEqualByComparingTo("1500");
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst().value()).isEqualByComparingTo("1500");
     }
 
     @Test
-    @DisplayName("getPerformance sell at higher price increases total value")
-    void getPerformance_sellAtGain_increasesTotal() {
+    @DisplayName("sell at gain increases total; filled days after the sell carry the new value")
+    void buildDailySnapshots_sellAtGain_increasesAndFills() {
         var deposit = cashTx("2026-04-01", "1000");
         var buy = tradeTx("2026-04-02", "BUY", "AAPL", "5", "100", "-500");
         var sell = tradeTx("2026-04-03", "SELL", "AAPL", "5", "120", "600");
-        when(repository.findTransactionsForPerformance(any())).thenReturn(List.of(deposit, buy, sell));
-        when(repository.findPrimaryCurrency(any())).thenReturn("EUR");
+        var result = service.buildDailySnapshots(List.of(deposit, buy, sell), LocalDate.of(2026, 4, 5));
 
-        var result = service.getPerformance(UUID.randomUUID());
-
-        assertThat(result.snapshots()).hasSize(3);
-        assertThat(result.snapshots().get(0).value()).isEqualByComparingTo("1000");
-        assertThat(result.snapshots().get(1).value()).isEqualByComparingTo("1000");
-        // cash=1100, AAPL=0 shares → total=1100
-        assertThat(result.snapshots().get(2).value()).isEqualByComparingTo("1100");
+        // Apr 1(1000), Apr 2(1000 buy flat), Apr 3(1100 gain), Apr 4(1100 filled), Apr 5(1100 filled)
+        assertThat(result).hasSize(5);
+        assertThat(result.get(0).value()).isEqualByComparingTo("1000");
+        assertThat(result.get(1).value()).isEqualByComparingTo("1000");
+        assertThat(result.get(2).value()).isEqualByComparingTo("1100");
+        assertThat(result.get(3).value()).isEqualByComparingTo("1100");
+        assertThat(result.get(4).value()).isEqualByComparingTo("1100");
     }
 
     @Test
-    @DisplayName("getPerformance snapshots are returned in chronological order")
-    void getPerformance_returnsChronologicalOrder() {
+    @DisplayName("snapshots are in chronological order with no gaps")
+    void buildDailySnapshots_chronologicalAndContiguous() {
         var tx1 = cashTx("2026-04-01", "1000");
         var tx2 = cashTx("2026-04-05", "200");
-        var tx3 = cashTx("2026-04-10", "-100");
-        when(repository.findTransactionsForPerformance(any())).thenReturn(List.of(tx1, tx2, tx3));
+        var result = service.buildDailySnapshots(List.of(tx1, tx2), LocalDate.of(2026, 4, 7));
+
+        // Apr 1 through Apr 7 = 7 consecutive days
+        assertThat(result).hasSize(7);
+        for (int i = 0; i < result.size() - 1; i++) {
+            assertThat(result.get(i).date().plusDays(1))
+                    .isEqualTo(result.get(i + 1).date());
+        }
+    }
+
+    @Test
+    @DisplayName("getPerformance returns currency and non-empty snapshots after a deposit")
+    void getPerformance_delegatesToRepository() {
+        when(repository.findTransactionsForPerformance(any())).thenReturn(List.of(cashTx("2026-04-01", "3200")));
         when(repository.findPrimaryCurrency(any())).thenReturn("EUR");
 
         var result = service.getPerformance(UUID.randomUUID());
 
-        assertThat(result.snapshots()).hasSize(3);
-        assertThat(result.snapshots().get(0).date()).isEqualTo(LocalDate.of(2026, 4, 1));
-        assertThat(result.snapshots().get(1).date()).isEqualTo(LocalDate.of(2026, 4, 5));
-        assertThat(result.snapshots().get(2).date()).isEqualTo(LocalDate.of(2026, 4, 10));
+        assertThat(result.currency()).isEqualTo("EUR");
+        assertThat(result.snapshots()).isNotEmpty();
+        assertThat(result.snapshots().getFirst().value()).isEqualByComparingTo("3200");
     }
 
     // --- helpers ---

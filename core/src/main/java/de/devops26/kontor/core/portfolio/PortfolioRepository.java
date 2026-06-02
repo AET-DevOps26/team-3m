@@ -72,6 +72,21 @@ public class PortfolioRepository {
         return result != null ? result : BigDecimal.ZERO;
     }
 
+    public List<TransactionRow> findTransactionsForPerformance(UUID userId) {
+        var ft = FINANCIAL_TRANSACTION;
+        return dsl.select(ft.DATE, ft.TYPE, ft.SYMBOL, ft.SHARES, ft.PRICE, ft.AMOUNT)
+                .from(ft)
+                .where(ft.USER_ID.eq(userId))
+                .orderBy(ft.DATETIME.asc())
+                .fetch(record -> new TransactionRow(
+                        record.get(ft.DATE),
+                        record.get(ft.TYPE),
+                        record.get(ft.SYMBOL),
+                        record.get(ft.SHARES),
+                        record.get(ft.PRICE),
+                        record.get(ft.AMOUNT)));
+    }
+
     public String findPrimaryCurrency(UUID userId) {
         var ft = FINANCIAL_TRANSACTION;
         var result = dsl.select(ft.CURRENCY)

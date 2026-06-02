@@ -31,6 +31,17 @@
       "semicolons": "asNeeded"
     }
   },
+  "overrides": [
+    {
+      "includes": ["src/components/ui/**"],
+      "linter": {
+        "rules": {
+          "security": { "noDangerouslySetInnerHtml": "off" },
+          "suspicious": { "noArrayIndexKey": "off" }
+        }
+      }
+    }
+  ],
   "assist": {
     "enabled": true,
     "actions": {

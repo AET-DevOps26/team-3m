@@ -13,14 +13,22 @@ import org.springframework.web.bind.annotation.RestController;
 public class PortfolioController {
 
     private final PortfolioService service;
+    private final PortfolioPerformanceService performanceService;
 
-    public PortfolioController(PortfolioService service) {
+    public PortfolioController(PortfolioService service, PortfolioPerformanceService performanceService) {
         this.service = service;
+        this.performanceService = performanceService;
     }
 
     @GetMapping("/overview")
     public ResponseEntity<ApiResponse<PortfolioOverview>> getOverview(@AuthenticatedUser AppUser user) {
         var overview = service.getOverview(user.id());
         return ResponseEntity.ok(ApiResponse.ok(overview));
+    }
+
+    @GetMapping("/performance")
+    public ResponseEntity<ApiResponse<PortfolioPerformance>> getPerformance(@AuthenticatedUser AppUser user) {
+        var performance = performanceService.getPerformance(user.id());
+        return ResponseEntity.ok(ApiResponse.ok(performance));
     }
 }

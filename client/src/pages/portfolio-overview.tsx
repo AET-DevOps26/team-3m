@@ -1,6 +1,7 @@
 import { ArrowLeft, Banknote, Briefcase, TrendingUp } from "lucide-react"
-import { Suspense } from "react"
+import { Suspense, useState } from "react"
 import { Link } from "react-router-dom"
+import { Area, AreaChart, XAxis } from "recharts"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -9,6 +10,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import {
+  type ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart"
 import { Separator } from "@/components/ui/separator"
 import {
   Table,
@@ -20,7 +27,9 @@ import {
 } from "@/components/ui/table"
 import {
   type PortfolioHolding,
+  type PortfolioSnapshot,
   usePortfolioOverview,
+  usePortfolioPerformance,
 } from "@/network/endpoints/portfolio"
 
 function formatCurrency(value: number, currency: string): string {
@@ -38,6 +47,216 @@ function formatShares(value: number): string {
     maximumFractionDigits: 6,
   }).format(value)
 }
+
+function formatAxisDate(dateStr: string, range: TimeRange): string {
+  const showDay = range === "1D" || range === "1W" || range === "1M"
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    ...(showDay ? { day: "numeric" } : { year: "numeric" }),
+  }).format(new Date(dateStr))
+}
+
+function formatTooltipDate(dateStr: string): string {
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(dateStr))
+}
+
+// --- Time range ---
+
+type TimeRange = "1D" | "1W" | "1M" | "1Y" | "MAX"
+
+const TIME_RANGES: { label: TimeRange; days: number | null }[] = [
+  { label: "1D", days: 1 },
+  { label: "1W", days: 7 },
+  { label: "1M", days: 30 },
+  { label: "1Y", days: 365 },
+  { label: "MAX", days: null },
+]
+
+function cutoffDateFor(days: number | null): string | null {
+  if (days === null) return null
+  const d = new Date()
+  d.setDate(d.getDate() - days)
+  return d.toISOString().split("T")[0]
+}
+
+function filterByRange(
+  snapshots: PortfolioSnapshot[],
+  range: TimeRange,
+): PortfolioSnapshot[] {
+  const cutoff = cutoffDateFor(
+    TIME_RANGES.find((r) => r.label === range)?.days ?? null,
+  )
+  return cutoff === null ? snapshots : snapshots.filter((s) => s.date >= cutoff)
+}
+
+interface RangeSelectorProps {
+  selected: TimeRange
+  onSelect: (r: TimeRange) => void
+}
+
+function RangeSelector({ selected, onSelect }: RangeSelectorProps) {
+  return (
+    <div className="flex gap-1">
+      {TIME_RANGES.map(({ label }) => (
+        <button
+          key={label}
+          type="button"
+          onClick={() => onSelect(label)}
+          className={[
+            "rounded px-2.5 py-1 text-xs font-medium transition-colors",
+            selected === label
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground",
+          ].join(" ")}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// --- Performance chart ---
+
+const chartConfig = {
+  value: { label: "" },
+} satisfies ChartConfig
+
+interface PerformanceChartProps {
+  snapshots: PortfolioSnapshot[]
+  currency: string
+  range: TimeRange
+}
+
+function PerformanceChart({
+  snapshots,
+  currency,
+  range,
+}: PerformanceChartProps) {
+  if (snapshots.length < 2) {
+    return (
+      <p className="py-8 text-center text-sm text-muted-foreground">
+        Import more transactions to see performance over time.
+      </p>
+    )
+  }
+
+  const data = snapshots.map((s) => ({ date: s.date, value: s.value }))
+  const first = snapshots[0].value
+  const last = snapshots[snapshots.length - 1].value
+  const isPositive = last >= first
+
+  return (
+    <ChartContainer config={chartConfig} className="h-40 w-full">
+      <AreaChart data={data} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
+        <defs>
+          <linearGradient id="perfGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop
+              offset="5%"
+              stopColor={
+                isPositive ? "var(--color-primary)" : "var(--color-destructive)"
+              }
+              stopOpacity={0.25}
+            />
+            <stop
+              offset="95%"
+              stopColor={
+                isPositive ? "var(--color-primary)" : "var(--color-destructive)"
+              }
+              stopOpacity={0}
+            />
+          </linearGradient>
+        </defs>
+        <XAxis
+          dataKey="date"
+          tickLine={false}
+          axisLine={false}
+          tickMargin={8}
+          tickFormatter={(d) => formatAxisDate(d, range)}
+          tick={{ fontSize: 11 }}
+          minTickGap={60}
+        />
+        <Area
+          type="monotone"
+          dataKey="value"
+          stroke={
+            isPositive ? "var(--color-primary)" : "var(--color-destructive)"
+          }
+          strokeWidth={2}
+          fill="url(#perfGradient)"
+          dot={false}
+          activeDot={{ r: 4, strokeWidth: 0 }}
+        />
+        <ChartTooltip
+          content={
+            <ChartTooltipContent
+              labelFormatter={(_label, payload) =>
+                payload?.[0]?.payload?.date
+                  ? formatTooltipDate(payload[0].payload.date as string)
+                  : ""
+              }
+              formatter={(value) => [
+                formatCurrency(Number(value), currency),
+                "",
+              ]}
+            />
+          }
+        />
+      </AreaChart>
+    </ChartContainer>
+  )
+}
+
+interface PerformanceChartContentProps {
+  currency: string
+  range: TimeRange
+}
+
+function PerformanceChartContent({
+  currency,
+  range,
+}: PerformanceChartContentProps) {
+  const { data: performance } = usePortfolioPerformance()
+  const filtered = filterByRange(performance.snapshots, range)
+  return (
+    <PerformanceChart snapshots={filtered} currency={currency} range={range} />
+  )
+}
+
+interface PerformanceCardProps {
+  currency: string
+}
+
+function PerformanceCard({ currency }: PerformanceCardProps) {
+  const [range, setRange] = useState<TimeRange>("MAX")
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-start justify-between pb-2">
+        <div className="flex flex-col gap-1">
+          <CardTitle>Performance</CardTitle>
+          <CardDescription>Portfolio value over time</CardDescription>
+        </div>
+        <RangeSelector selected={range} onSelect={setRange} />
+      </CardHeader>
+      <CardContent className="pb-4">
+        <Suspense
+          fallback={
+            <div className="h-40 w-full animate-pulse rounded bg-muted" />
+          }
+        >
+          <PerformanceChartContent currency={currency} range={range} />
+        </Suspense>
+      </CardContent>
+    </Card>
+  )
+}
+
+// --- Holdings table ---
 
 interface HoldingTableProps {
   holdings: PortfolioHolding[]
@@ -92,6 +311,8 @@ function HoldingsTable({ holdings }: HoldingTableProps) {
   )
 }
 
+// --- Asset class grouping ---
+
 function groupByAssetClass(holdings: PortfolioHolding[]): Map<string, number> {
   const groups = new Map<string, number>()
   for (const h of holdings) {
@@ -100,6 +321,8 @@ function groupByAssetClass(holdings: PortfolioHolding[]): Map<string, number> {
   }
   return groups
 }
+
+// --- Main content ---
 
 function PortfolioContent() {
   const { data: overview } = usePortfolioOverview()
@@ -164,6 +387,8 @@ function PortfolioContent() {
         </Card>
       </div>
 
+      <PerformanceCard currency={overview.currency} />
+
       <Card>
         <CardHeader>
           <CardTitle>Holdings</CardTitle>
@@ -178,6 +403,8 @@ function PortfolioContent() {
     </div>
   )
 }
+
+// --- Skeleton ---
 
 function PortfolioSkeleton() {
   return (
@@ -195,6 +422,15 @@ function PortfolioSkeleton() {
       <Card>
         <CardHeader>
           <div className="h-5 w-24 rounded bg-muted" />
+          <div className="h-4 w-48 rounded bg-muted" />
+        </CardHeader>
+        <CardContent>
+          <div className="h-40 w-full rounded bg-muted" />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <div className="h-5 w-24 rounded bg-muted" />
           <div className="h-4 w-64 rounded bg-muted" />
         </CardHeader>
         <CardContent>
@@ -208,6 +444,8 @@ function PortfolioSkeleton() {
     </div>
   )
 }
+
+// --- Page ---
 
 export function PortfolioOverviewPage() {
   return (

@@ -1,0 +1,130 @@
+name: Deploy
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: "GH Environment + values overlay (k8s-prod | k8s-preview)"
+        required: true
+        type: string
+      release-name:
+        description: "Helm release name"
+        required: true
+        type: string
+      namespace:
+        description: "Target namespace (created in the Rancher project if missing)"
+        required: true
+        type: string
+      image-tag:
+        description: "Tag pinned for core+client (semver for prod, sha-<short> for preview)"
+        required: false
+        type: string
+        default: ""
+      pr-number:
+        description: "PR number, used to template preview hostnames"
+        required: false
+        type: string
+        default: ""
+      action:
+        description: "deploy | teardown"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ inputs.namespace }}
+  cancel-in-progress: false
+
+env:
+  CHART: deploy/helm/kontor
+  NS_TEMPLATE: deploy/rbac/namespace.tpl
+
+jobs:
+  deploy:
+    name: ${{ inputs.action }} (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout (deploy/ only)
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          sparse-checkout: deploy
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Configure kubeconfig
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.kube"
+          echo "${{ secrets.KUBECONFIG_B64 }}" | base64 -d > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+          kubectl auth whoami
+
+      - name: Ensure namespace (in Rancher project)
+        if: inputs.action == 'deploy'
+        env:
+          NAMESPACE: ${{ inputs.namespace }}
+          RANCHER_PROJECT_ID: ${{ vars.RANCHER_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          export RANCHER_PROJECT_LABEL="${RANCHER_PROJECT_ID#*:}"
+          envsubst < "$NS_TEMPLATE" | kubectl apply -f -
+
+      - name: Ensure CI RoleBinding
+        if: inputs.action == 'deploy'
+        run: |
+          set -euo pipefail
+          kubectl create rolebinding kontor-ci \
+            --clusterrole=kontor-ci-app \
+            --serviceaccount=team-3m:kontor-ci \
+            -n '${{ inputs.namespace }}' \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Helm deploy (prod)
+        if: inputs.action == 'deploy' && inputs.environment == 'k8s-prod'
+        env:
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
+          KEYCLOAK_DB_PASSWORD: ${{ secrets.KEYCLOAK_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          helm upgrade --install '${{ inputs.release-name }}' "$CHART" \
+            -n '${{ inputs.namespace }}' \
+            -f "$CHART/values-prod.yaml" \
+            --set-string core.image.tag='${{ inputs.image-tag }}' \
+            --set-string client.image.tag='${{ inputs.image-tag }}' \
+            --set-string postgres.password="$POSTGRES_PASSWORD" \
+            --set-string keycloak.admin.password="$KEYCLOAK_ADMIN_PASSWORD" \
+            --set-string keycloak.db.password="$KEYCLOAK_DB_PASSWORD" \
+            --atomic --wait --timeout 10m
+
+      - name: Helm deploy (preview)
+        if: inputs.action == 'deploy' && inputs.environment == 'k8s-preview'
+        env:
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          PR='${{ inputs.pr-number }}'
+          sed "s/pr-123/pr-${PR}/g" "$CHART/values-pr.example.yaml" > /tmp/values-pr.yaml
+          helm upgrade --install '${{ inputs.release-name }}' "$CHART" \
+            -n '${{ inputs.namespace }}' \
+            -f /tmp/values-pr.yaml \
+            --set-string core.image.tag='${{ inputs.image-tag }}' \
+            --set-string client.image.tag='${{ inputs.image-tag }}' \
+            --set-string postgres.password="$POSTGRES_PASSWORD" \
+            --set-string keycloak.admin.password="$KEYCLOAK_ADMIN_PASSWORD" \
+            --atomic --wait --timeout 10m
+
+      - name: Helm teardown
+        if: inputs.action == 'teardown'
+        run: |
+          set -euo pipefail
+          helm uninstall '${{ inputs.release-name }}' -n '${{ inputs.namespace }}' --wait || true
+          kubectl delete namespace '${{ inputs.namespace }}' --ignore-not-found --wait=false

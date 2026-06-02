@@ -111,3 +111,15 @@ jobs:
       version: ${{ needs.release.outputs.version }}
       released: ${{ needs.release.outputs.released == 'true' }}
       ref: ${{ needs.release.outputs.sha }}
+
+  deploy-prod:
+    needs: [release, client-docker, server-docker]
+    if: ${{ needs.release.outputs.released == 'true' }}
+    uses: ./.github/workflows/deploy.yml
+    secrets: inherit
+    with:
+      environment: k8s-prod
+      release-name: kontor
+      namespace: team-3m
+      image-tag: ${{ needs.release.outputs.version }}
+      action: deploy

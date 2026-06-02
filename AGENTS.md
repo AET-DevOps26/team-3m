@@ -23,6 +23,7 @@ _Kontor_ is a Progressive Web App (mobile and desktop) that consolidates persona
 | Lint | `npm run lint` |
 | Lint (autofix) | `npm run lint:fix` |
 | Format (autofix) | `npm run format` |
+| Regenerate API client | `npm run generate:api` |
 
 ### Server
 
@@ -38,6 +39,23 @@ Each microservice lives in its own directory with a Gradle wrapper.
 | Format check | `./gradlew spotlessCheck` |
 | Format fix | `./gradlew spotlessApply` |
 | Lint | `./gradlew checkstyleMain checkstyleTest` |
+| Regenerate OpenAPI spec | `./gradlew generateOpenApiDocs` |
+
+## OpenAPI
+
+The TypeScript client (`client/src/network/generated/`) is generated from the
+server's OpenAPI spec (`core/docs/openapi.yml`), which is itself generated from
+the annotated controllers. After changing any controller or its request/response
+DTOs, regenerate both — `./gradlew generateOpenApiDocs` (core) then
+`npm run generate:api` (client) — and commit the result. CI's `openapi-sync`
+workflow fails if the committed files are out of sync.
+
+## Deployment
+
+Helm chart at `deploy/helm/kontor/` (client, core, Postgres, Keycloak), deployed
+by CI: push to `main` → prod in namespace `team-3m`; PR + `deploy:preview` label →
+ephemeral preview in `team-3m-pr-<N>`. See `deploy/helm/kontor/README.md` and
+`deploy/rbac/README.md`.
 
 ## Rules
 

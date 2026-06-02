@@ -3,6 +3,7 @@ name: PR CI/CD
 on:
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened, labeled, unlabeled, closed]
   workflow_dispatch:
 
 permissions:
@@ -38,6 +39,7 @@ jobs:
               - 'deploy/**'
               - '.github/workflows/helm-quality.yml'
               - '.github/workflows/pr.yml'
+              - '.github/workflows/deploy.yml'
               - '.trivyignore.yaml'
 
   helm-quality:
@@ -50,6 +52,7 @@ jobs:
 
   client-docker:
     needs: [client-quality, openapi-sync]
+    if: ${{ github.event.action != 'closed' && github.event.action != 'unlabeled' }}
     uses: ./.github/workflows/docker-build-push.yml
     with:
       context: client
@@ -57,7 +60,91 @@ jobs:
 
   server-docker:
     needs: [server-quality, openapi-sync]
+    if: ${{ github.event.action != 'closed' && github.event.action != 'unlabeled' }}
     uses: ./.github/workflows/docker-build-push.yml
     with:
       context: core
       image-name: kontor-core
+
+  preview-gate:
+    name: Preview gate
+    runs-on: ubuntu-latest
+    outputs:
+      deploy: ${{ steps.gate.outputs.deploy }}
+      teardown: ${{ steps.gate.outputs.teardown }}
+      image-tag: ${{ steps.gate.outputs.image-tag }}
+    steps:
+      - id: gate
+        env:
+          ACTION: ${{ github.event.action }}
+          LABEL_NAME: ${{ github.event.label.name }}
+          HAS_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'deploy:preview') }}
+        run: |
+          set -euo pipefail
+          deploy=false
+          teardown=false
+          case "$ACTION" in
+            labeled)   [ "$LABEL_NAME" = "deploy:preview" ] && deploy=true ;;
+            unlabeled) [ "$LABEL_NAME" = "deploy:preview" ] && teardown=true ;;
+            opened|synchronize|reopened) [ "$HAS_LABEL" = "true" ] && deploy=true ;;
+            closed)    teardown=true ;;
+          esac
+          {
+            echo "deploy=$deploy"
+            echo "teardown=$teardown"
+            echo "image-tag=sha-${GITHUB_SHA:0:7}"
+          } >> "$GITHUB_OUTPUT"
+
+  deploy-preview:
+    needs: [preview-gate, client-docker, server-docker]
+    if: ${{ needs.preview-gate.outputs.deploy == 'true' }}
+    uses: ./.github/workflows/deploy.yml
+    secrets: inherit
+    with:
+      environment: k8s-preview
+      release-name: kontor-pr-${{ github.event.number }}
+      namespace: team-3m-pr-${{ github.event.number }}
+      pr-number: ${{ github.event.number }}
+      image-tag: ${{ needs.preview-gate.outputs.image-tag }}
+      action: deploy
+
+  preview-comment:
+    needs: [preview-gate, deploy-preview]
+    if: ${{ needs.preview-gate.outputs.deploy == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: peter-evans/find-comment@v3
+        id: fc
+        with:
+          issue-number: ${{ github.event.number }}
+          comment-author: "github-actions[bot]"
+          body-includes: Preview environment
+      - uses: peter-evans/create-or-update-comment@v5
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.number }}
+          edit-mode: replace
+          body: |
+            ### Preview environment
+
+            | | URL |
+            |---|---|
+            | App | https://pr-${{ github.event.number }}.team-3m.stud.k8s.aet.cit.tum.de/ |
+            | Auth | https://auth.pr-${{ github.event.number }}.team-3m.stud.k8s.aet.cit.tum.de/ |
+
+            Test login: `dev` / `dev`. TLS uses Let's Encrypt **staging**, so expect a browser certificate warning on first visit.
+
+            Remove the `deploy:preview` label or close the PR to tear this down.
+
+  teardown-preview:
+    needs: preview-gate
+    if: ${{ needs.preview-gate.outputs.teardown == 'true' }}
+    uses: ./.github/workflows/deploy.yml
+    secrets: inherit
+    with:
+      environment: k8s-preview
+      release-name: kontor-pr-${{ github.event.number }}
+      namespace: team-3m-pr-${{ github.event.number }}
+      action: teardown

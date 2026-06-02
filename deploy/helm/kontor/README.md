@@ -59,6 +59,37 @@ helm upgrade --install kontor ./deploy/helm/kontor -n team-3m \
 under one Ingress; the legacy single `ingress.host` still works as a fallback
 when `hosts` is empty.
 
+## Continuous deployment (GitHub Actions)
+
+The manual `helm` flow above is mirrored in CI. A reusable workflow
+(`.github/workflows/deploy.yml`) owns all helm/kubectl logic; it authenticates as
+the dedicated `kontor-ci` ServiceAccount (see `deploy/rbac/`) using a kubeconfig
+stored in the `KUBECONFIG_B64` repository secret. Passwords are passed via
+`--set-string` from environment secrets — never written to disk.
+
+- **Prod** — on push to `main`, `ci-cd.yml` runs semantic-release, builds images
+  tagged with the released version, then `deploy-prod` upgrades the `kontor`
+  release in `team-3m` with `values-prod.yaml`.
+- **Preview** — add the `deploy:preview` label to a PR. `pr.yml` builds PR images
+  and stands up an ephemeral release in `team-3m-pr-<N>`, templating
+  `values-pr.example.yaml` per PR. The namespace is created in the team's Rancher
+  project (`RANCHER_PROJECT_ID`). Removing the label or closing the PR tears the
+  namespace down.
+
+### Required GitHub configuration
+
+| Kind | Name | Notes |
+|------|------|-------|
+| Variable | `RANCHER_PROJECT_ID` | `c-f49m7:p-xj8vv` — places namespaces in the team project (quota + RBAC). |
+| Secret (repo) | `KUBECONFIG_B64` | base64 of `deploy/rbac/extract-kubeconfig.sh` output. |
+| Secret (env `k8s-prod`) | `POSTGRES_PASSWORD`, `KEYCLOAK_ADMIN_PASSWORD`, `KEYCLOAK_DB_PASSWORD` | Must match the live cluster Secrets so existing DBs keep working. |
+| Secret (env `k8s-preview`) | `POSTGRES_PASSWORD`, `KEYCLOAK_ADMIN_PASSWORD` | Throwaway; `dev-mem` Keycloak needs no DB password. |
+
+The `k8s-prod` / `k8s-preview` GitHub Environments can be created with the
+`Bootstrap Environments` workflow (`workflow_dispatch`, takes the environment
+name as input). One-time RBAC bootstrap and the Rancher-project verification are
+documented in [`deploy/rbac/README.md`](../../rbac/README.md).
+
 ## Client runtime configuration
 
 The client image is built once and configured at deploy time — the `VITE_*`

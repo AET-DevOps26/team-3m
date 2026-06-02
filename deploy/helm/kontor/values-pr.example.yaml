@@ -30,3 +30,5 @@ keycloak:
 ingress:
   hosts:
     - pr-123.team-3m.stud.k8s.aet.cit.tum.de
+  tls:
+    clusterIssuer: letsencrypt-staging

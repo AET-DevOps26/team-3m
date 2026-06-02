@@ -1,4 +1,5 @@
 import {
+  BarChart2,
   Code,
   Database,
   FileSpreadsheet,
@@ -197,6 +198,26 @@ export function StartPage() {
                 message={databaseCheck.error.message}
               />
             )}
+          </CardContent>
+        </Card>
+
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart2 className="size-4" />
+              Portfolio
+            </CardTitle>
+            <CardDescription>
+              View your consolidated portfolio across cash, stocks, and funds
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="outline">
+              <Link to="/portfolio">
+                <BarChart2 />
+                View Portfolio
+              </Link>
+            </Button>
           </CardContent>
         </Card>
 

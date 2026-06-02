@@ -1,0 +1,206 @@
+import { ArrowLeft, Banknote, Briefcase, TrendingUp } from "lucide-react"
+import { Suspense } from "react"
+import { Link } from "react-router-dom"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  type PortfolioHolding,
+  usePortfolioOverview,
+} from "@/network/endpoints/portfolio"
+
+function formatCurrency(value: number, currency: string): string {
+  return new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value)
+}
+
+function formatShares(value: number): string {
+  return new Intl.NumberFormat(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 6,
+  }).format(value)
+}
+
+interface HoldingTableProps {
+  holdings: PortfolioHolding[]
+}
+
+function HoldingsTable({ holdings }: HoldingTableProps) {
+  if (holdings.length === 0) {
+    return (
+      <p className="py-6 text-center text-sm text-muted-foreground">
+        No holdings found. Import transactions to see your portfolio.
+      </p>
+    )
+  }
+
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Name</TableHead>
+          <TableHead>Symbol</TableHead>
+          <TableHead>Class</TableHead>
+          <TableHead className="text-right">Shares</TableHead>
+          <TableHead className="text-right">Last Price</TableHead>
+          <TableHead className="text-right">Value</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {holdings.map((holding) => (
+          <TableRow key={holding.symbol}>
+            <TableCell className="font-medium">
+              {holding.name ?? holding.symbol}
+            </TableCell>
+            <TableCell className="font-mono text-xs text-muted-foreground">
+              {holding.symbol}
+            </TableCell>
+            <TableCell>{holding.assetClass ?? "—"}</TableCell>
+            <TableCell className="text-right tabular-nums">
+              {formatShares(holding.shares)}
+            </TableCell>
+            <TableCell className="text-right tabular-nums">
+              {holding.lastPrice != null
+                ? formatCurrency(holding.lastPrice, holding.currency)
+                : "—"}
+            </TableCell>
+            <TableCell className="text-right tabular-nums font-medium">
+              {formatCurrency(holding.currentValue, holding.currency)}
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  )
+}
+
+function PortfolioContent() {
+  const { data: overview } = usePortfolioOverview()
+
+  const holdingsValue = overview.totalValue - overview.cashBalance
+
+  return (
+    <div className="flex w-full max-w-4xl flex-col gap-6">
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription className="flex items-center gap-2">
+              <TrendingUp className="size-4" />
+              Total Portfolio
+            </CardDescription>
+            <CardTitle className="text-2xl tabular-nums">
+              {formatCurrency(overview.totalValue, overview.currency)}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription className="flex items-center gap-2">
+              <Briefcase className="size-4" />
+              Investments
+            </CardDescription>
+            <CardTitle className="text-2xl tabular-nums">
+              {formatCurrency(holdingsValue, overview.currency)}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription className="flex items-center gap-2">
+              <Banknote className="size-4" />
+              Cash
+            </CardDescription>
+            <CardTitle className="text-2xl tabular-nums">
+              {formatCurrency(overview.cashBalance, overview.currency)}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Holdings</CardTitle>
+          <CardDescription>
+            Current positions based on imported transactions
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <HoldingsTable holdings={overview.holdings} />
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+function PortfolioSkeleton() {
+  return (
+    <div className="flex w-full max-w-4xl animate-pulse flex-col gap-6">
+      <div className="grid gap-4 sm:grid-cols-3">
+        {[0, 1, 2].map((i) => (
+          <Card key={i}>
+            <CardHeader className="pb-2">
+              <div className="h-4 w-24 rounded bg-muted" />
+              <div className="mt-2 h-8 w-32 rounded bg-muted" />
+            </CardHeader>
+          </Card>
+        ))}
+      </div>
+      <Card>
+        <CardHeader>
+          <div className="h-5 w-24 rounded bg-muted" />
+          <div className="h-4 w-64 rounded bg-muted" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="h-10 w-full rounded bg-muted" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+export function PortfolioOverviewPage() {
+  return (
+    <div className="flex min-h-svh flex-col items-center bg-background p-4 sm:p-6">
+      <div className="flex w-full max-w-4xl flex-col gap-4">
+        <div className="flex items-center gap-4">
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/">
+              <ArrowLeft />
+              Back
+            </Link>
+          </Button>
+          <Separator orientation="vertical" className="h-4" />
+          <h1 className="text-xl font-semibold">Portfolio Overview</h1>
+        </div>
+
+        <Suspense fallback={<PortfolioSkeleton />}>
+          <PortfolioContent />
+        </Suspense>
+      </div>
+    </div>
+  )
+}

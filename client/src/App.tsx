@@ -15,6 +15,11 @@ const ImportTransactionsPage = lazy(() =>
     default: module.ImportTransactionsPage,
   })),
 )
+const PortfolioOverviewPage = lazy(() =>
+  import("@/pages/portfolio-overview").then((module) => ({
+    default: module.PortfolioOverviewPage,
+  })),
+)
 
 export function App() {
   return (
@@ -37,6 +42,15 @@ export function App() {
               <ProtectedRoute>
                 <AuthHeader />
                 <ImportTransactionsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/portfolio"
+            element={
+              <ProtectedRoute>
+                <AuthHeader />
+                <PortfolioOverviewPage />
               </ProtectedRoute>
             }
           />

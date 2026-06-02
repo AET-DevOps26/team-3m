@@ -9,9 +9,10 @@ terraform {
   }
 
   backend "azurerm" {
-    container_name = "tfstate"
-    key            = "azure-vm.tfstate"
-    # resource_group_name and storage_account_name are passed at init time
+    resource_group_name  = "Kontor"
+    storage_account_name = "kontortfstate3m"
+    container_name       = "tfstate"
+    key                  = "azure-vm.tfstate"
   }
 }
 

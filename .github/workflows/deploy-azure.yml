@@ -1,20 +1,9 @@
 name: Deploy to Azure
 
 # Manually triggered. Provisions the VM with Terraform, then starts the stack.
-# Requires a GitHub environment named "azure" with:
 #
-# Secrets:
-#   ARM_CLIENT_ID         — service principal app ID
-#   ARM_CLIENT_SECRET     — service principal secret
-#   ARM_TENANT_ID         — Azure AD tenant ID
-#   ARM_SUBSCRIPTION_ID   — Azure subscription ID
-#   ALLOWED_SSH_CIDR      — CIDR allowed to SSH into the VM (e.g. 1.2.3.4/32)
-#
-# Variables:
-#   TF_BACKEND_RESOURCE_GROUP    — resource group containing the tfstate storage account
-#   TF_BACKEND_STORAGE_ACCOUNT   — storage account name for Terraform state
-#   RESOURCE_GROUP               — resource group for the VM (e.g. Kontor)
-#   VM_NAME                      — VM name (e.g. kontor-vm)
+# Secrets: AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_TENANT_ID,
+#          AZURE_SUBSCRIPTION_ID, AZURE_ALLOWED_SSH_CIDR
 
 on:
   workflow_dispatch:
@@ -23,13 +12,12 @@ jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    environment: azure
 
     env:
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
     steps:
       - name: Checkout
@@ -40,15 +28,12 @@ jobs:
 
       - name: Terraform init
         working-directory: deploy/azure
-        run: |
-          terraform init \
-            -backend-config="resource_group_name=${{ vars.TF_BACKEND_RESOURCE_GROUP }}" \
-            -backend-config="storage_account_name=${{ vars.TF_BACKEND_STORAGE_ACCOUNT }}"
+        run: terraform init
 
       - name: Terraform apply
         working-directory: deploy/azure
         env:
-          TF_VAR_allowed_ssh_source_address_prefix: ${{ secrets.ALLOWED_SSH_CIDR }}
+          TF_VAR_allowed_ssh_source_address_prefix: ${{ secrets.AZURE_ALLOWED_SSH_CIDR }}
         run: terraform apply -auto-approve
 
       - name: Deploy app
@@ -59,7 +44,7 @@ jobs:
             --tenant "$ARM_TENANT_ID" \
             --output none
           az vm run-command invoke \
-            --resource-group "${{ vars.RESOURCE_GROUP }}" \
-            --name "${{ vars.VM_NAME }}" \
+            --resource-group "Kontor" \
+            --name "kontor-vm" \
             --command-id RunShellScript \
             --scripts "cd /home/azureuser/team-3m && git pull && docker compose -f docker-compose.azure.yml up -d --build"

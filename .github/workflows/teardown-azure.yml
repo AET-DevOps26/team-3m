@@ -1,7 +1,7 @@
 name: Teardown Azure
 
 # Manually triggered. Stops the stack and destroys all Azure infrastructure.
-# Uses the same "azure" environment and secrets as deploy-azure.yml.
+# Uses the same secrets as deploy-azure.yml.
 
 on:
   workflow_dispatch:
@@ -10,13 +10,12 @@ jobs:
   teardown:
     name: Teardown
     runs-on: ubuntu-latest
-    environment: azure
 
     env:
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
     steps:
       - name: Checkout
@@ -27,10 +26,7 @@ jobs:
 
       - name: Terraform init
         working-directory: deploy/azure
-        run: |
-          terraform init \
-            -backend-config="resource_group_name=${{ vars.TF_BACKEND_RESOURCE_GROUP }}" \
-            -backend-config="storage_account_name=${{ vars.TF_BACKEND_STORAGE_ACCOUNT }}"
+        run: terraform init
 
       - name: Stop app
         continue-on-error: true
@@ -41,13 +37,13 @@ jobs:
             --tenant "$ARM_TENANT_ID" \
             --output none
           az vm run-command invoke \
-            --resource-group "${{ vars.RESOURCE_GROUP }}" \
-            --name "${{ vars.VM_NAME }}" \
+            --resource-group "Kontor" \
+            --name "kontor-vm" \
             --command-id RunShellScript \
             --scripts "cd /home/azureuser/team-3m && docker compose -f docker-compose.azure.yml down -v"
 
       - name: Terraform destroy
         working-directory: deploy/azure
         env:
-          TF_VAR_allowed_ssh_source_address_prefix: ${{ secrets.ALLOWED_SSH_CIDR }}
+          TF_VAR_allowed_ssh_source_address_prefix: ${{ secrets.AZURE_ALLOWED_SSH_CIDR }}
         run: terraform destroy -auto-approve

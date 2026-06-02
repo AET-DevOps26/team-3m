@@ -15,8 +15,12 @@ if (!authority || !clientId) {
 export const authConfig: AuthProviderProps = {
   authority,
   client_id: clientId,
-  redirect_uri: redirectUri ?? window.location.origin,
-  post_logout_redirect_uri: postLogoutRedirectUri ?? window.location.origin,
+  redirect_uri: redirectUri
+    ? redirectUri
+    : `${window.location.origin}/auth/callback`,
+  post_logout_redirect_uri: postLogoutRedirectUri
+    ? postLogoutRedirectUri
+    : window.location.origin,
   response_type: "code",
   scope: "openid profile email",
   automaticSilentRenew: true,

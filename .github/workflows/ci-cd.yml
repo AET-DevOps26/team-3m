@@ -20,9 +20,12 @@ jobs:
     with:
       working-directory: core
 
+  openapi-sync:
+    uses: ./.github/workflows/openapi-sync.yml
+
   release:
     name: Semantic Release
-    needs: [client-quality, server-quality]
+    needs: [client-quality, server-quality, openapi-sync]
     runs-on: ubuntu-latest
     outputs:
       released: ${{ steps.semantic.outputs.new_release_published }}

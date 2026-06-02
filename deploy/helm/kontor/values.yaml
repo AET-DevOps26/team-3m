@@ -58,9 +58,9 @@ core:
       cpu: "1"
       memory: 1Gi
   probes:
-    # Spring Boot doesn't expose actuator yet; /hello is the smoke endpoint.
-    livenessPath: /hello
-    readinessPath: /hello
+    # Spring Boot Actuator health groups, served under the /api base path.
+    livenessPath: /api/health/liveness
+    readinessPath: /api/health/readiness
     initialDelaySeconds: 30
     periodSeconds: 10
     timeoutSeconds: 3
@@ -89,9 +89,10 @@ client:
     pullPolicy: ""
   replicaCount: 1
   # Runtime configuration injected into the SPA at container startup by vite-envs.
-  # REQUIRED — the chart fails to render if apiBaseUrl is empty.
   # -- Public base URL of the deployment, rendered as VITE_API_BASE_URL, e.g.
   # https://kontor.example.com (no /api suffix — the client appends /api/v1/...).
+  # Leave empty to call the API same-origin (relative /api), which keeps the SPA
+  # working unchanged across every host the ingress serves.
   apiBaseUrl: ""
   service:
     type: ClusterIP
@@ -130,6 +131,7 @@ client:
 postgres:
   enabled: true
   image:
+    registry: docker.io
     repository: pgvector/pgvector
     tag: pg18-trixie
     pullPolicy: ""
@@ -147,7 +149,7 @@ postgres:
     enabled: true
     size: 8Gi
     # csi-rbd-sc is the cluster default; left empty so it's picked up automatically.
-    storageClass: "rbg-rbd"
+    storageClass: "csi-rbd-sc"
     accessModes:
       - ReadWriteOnce
   resources:
@@ -157,15 +159,18 @@ postgres:
     limits:
       cpu: "1"
       memory: 1Gi
-  # The image's USER 999 (postgres) is inherited; fsGroup is required so the
-  # PVC mount is writable by that user.
+  # The postgres user in the image is uid/gid 999; run as it explicitly so
+  # runAsNonRoot is satisfied, and set fsGroup so the PVC mount is writable.
   podSecurityContext:
     runAsNonRoot: true
+    runAsUser: 999
+    runAsGroup: 999
     fsGroup: 999
     seccompProfile:
       type: RuntimeDefault
   containerSecurityContext:
     allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
     capabilities:
       drop: ["ALL"]
   nodeSelector: {}
@@ -216,6 +221,7 @@ keycloak:
   # failure/backup domain from the app DB.
   db:
     image:
+      registry: docker.io
       repository: pgvector/pgvector
       tag: pg18-trixie
       pullPolicy: ""
@@ -228,7 +234,7 @@ keycloak:
     persistence:
       enabled: true
       size: 8Gi
-      storageClass: "rbg-rbd"
+      storageClass: "csi-rbd-sc"
       accessModes:
         - ReadWriteOnce
     resources:
@@ -238,15 +244,18 @@ keycloak:
       limits:
         cpu: 500m
         memory: 512Mi
-    # Same pattern as the app Postgres: inherit USER 999 from the image, set
-    # fsGroup so the PVC is writable by the postgres user.
+    # Same pattern as the app Postgres: run as the image's postgres uid/gid 999
+    # so runAsNonRoot is satisfied, and set fsGroup so the PVC is writable.
     podSecurityContext:
       runAsNonRoot: true
+      runAsUser: 999
+      runAsGroup: 999
       fsGroup: 999
       seccompProfile:
         type: RuntimeDefault
     containerSecurityContext:
       allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
       capabilities:
         drop: ["ALL"]
   # Templated realm import (the "dynamic realm import file"). Rendered into a

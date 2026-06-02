@@ -31,7 +31,7 @@ spec:
               protocol: TCP
           env:
             - name: VITE_API_BASE_URL
-              value: {{ required "client.apiBaseUrl is required: set it to the public base URL of the deployment, e.g. https://kontor.example.com (no /api suffix — the client appends /api/v1/...)." .Values.client.apiBaseUrl | quote }}
+              value: {{ .Values.client.apiBaseUrl | quote }}
             {{- with (include "kontor.oidc.issuerUrl" .) }}
             - name: VITE_OIDC_AUTHORITY
               value: {{ . | quote }}

@@ -33,6 +33,8 @@ spec:
               containerPort: 8080
               protocol: TCP
           env:
+            - name: APP_VERSION
+              value: {{ default .Chart.AppVersion .Values.core.image.tag | quote }}
             - name: POSTGRES_HOST
               value: {{ include "kontor.postgres.fullname" . | quote }}
             - name: POSTGRES_PORT

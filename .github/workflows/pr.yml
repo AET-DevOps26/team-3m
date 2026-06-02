@@ -18,6 +18,28 @@ jobs:
     with:
       working-directory: core
 
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      deploy: ${{ steps.filter.outputs.deploy }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            deploy:
+              - 'deploy/**'
+
+  helm-quality:
+    needs: changes
+    if: ${{ needs.changes.outputs.deploy == 'true' }}
+    uses: ./.github/workflows/helm-quality.yml
+
   client-docker:
     needs: client-quality
     uses: ./.github/workflows/docker-build-push.yml

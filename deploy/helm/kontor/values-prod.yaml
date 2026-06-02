@@ -1,16 +1,24 @@
 # Production environment.
-# Exposed on both the real domain (kontor.live) and the TUM cluster wildcard.
+# Served on both kontor.live and the TUM cluster host; the ingress fronts the
+# client (/) and core (/api) on each. The SPA therefore calls the API same-origin
+# (empty apiBaseUrl) and returns to the host it was loaded from after login
+# (empty redirect URIs -> the client uses window.location.origin), so both hosts
+# work without cross-origin calls or a forced domain switch. Keycloak keeps a
+# single fixed issuer (auth.kontor.live) — issuerUrl stays absolute.
 # Keycloak runs its own instance here with strict hostname checks and no seeded user.
 # Secrets (postgres.password, keycloak.admin.password, keycloak.db.password) come
 # from -f secrets.yaml.
 
 client:
-  apiBaseUrl: https://kontor.live
+  apiBaseUrl: ""
+
+core:
+  corsAllowedOrigins:
+    - https://kontor.live
+    - https://team-3m.stud.k8s.aet.cit.tum.de
 
 oidc:
   issuerUrl: https://auth.kontor.live/realms/kontor
-  redirectUri: https://kontor.live/
-  postLogoutRedirectUri: https://kontor.live/
 
 keycloak:
   deploy: true

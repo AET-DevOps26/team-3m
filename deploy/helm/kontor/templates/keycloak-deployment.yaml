@@ -2,7 +2,10 @@
 {{- if not .Values.keycloak.hostnames }}
 {{- fail "keycloak.hostnames must list at least one public hostname when keycloak.deploy is true (the first entry becomes KC_HOSTNAME / the issuer base)." -}}
 {{- end -}}
-{{- $host := first .Values.keycloak.hostnames }}
+{{- $host := (first .Values.keycloak.hostnames | default "" | trim) }}
+{{- if eq $host "" -}}
+{{- fail "keycloak.hostnames[0] must be a non-empty hostname when keycloak.deploy is true (it becomes KC_HOSTNAME / the issuer base)." -}}
+{{- end -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -25,6 +28,9 @@ spec:
         # Roll the pods when the admin secret or realm import changes.
         checksum/secret: {{ include (print $.Template.BasePath "/keycloak-secret.yaml") . | sha256sum }}
         checksum/realm: {{ include (print $.Template.BasePath "/keycloak-realm-configmap.yaml") . | sha256sum }}
+        {{- if and (eq .Values.keycloak.database "postgres") (not .Values.keycloak.db.existingSecret) }}
+        checksum/db-secret: {{ include (print $.Template.BasePath "/keycloak-postgres-secret.yaml") . | sha256sum }}
+        {{- end }}
     spec:
       securityContext:
         {{- toYaml .Values.keycloak.podSecurityContext | nindent 8 }}

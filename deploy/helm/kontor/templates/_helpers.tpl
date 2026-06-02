@@ -82,6 +82,9 @@ Usage: include "kontor.image" (dict "root" . "component" .Values.core)
 */}}
 {{- define "kontor.image" -}}
 {{- $registry := .root.Values.image.registry -}}
+{{- if hasKey .component.image "registry" -}}
+{{- $registry = .component.image.registry -}}
+{{- end -}}
 {{- $repo := .component.image.repository -}}
 {{- $tag := default .root.Chart.AppVersion .component.image.tag -}}
 {{- if $registry -}}

@@ -92,10 +92,20 @@ function HoldingsTable({ holdings }: HoldingTableProps) {
   )
 }
 
+function groupByAssetClass(holdings: PortfolioHolding[]): Map<string, number> {
+  const groups = new Map<string, number>()
+  for (const h of holdings) {
+    const key = h.assetClass ?? "Other"
+    groups.set(key, (groups.get(key) ?? 0) + h.currentValue)
+  }
+  return groups
+}
+
 function PortfolioContent() {
   const { data: overview } = usePortfolioOverview()
 
   const holdingsValue = overview.totalValue - overview.cashBalance
+  const byClass = groupByAssetClass(overview.holdings)
 
   return (
     <div className="flex w-full max-w-4xl flex-col gap-6">
@@ -121,6 +131,23 @@ function PortfolioContent() {
             <CardTitle className="text-2xl tabular-nums">
               {formatCurrency(holdingsValue, overview.currency)}
             </CardTitle>
+            {byClass.size > 0 && (
+              <dl className="mt-1 space-y-0.5">
+                {[...byClass.entries()].map(([cls, value]) => (
+                  <div
+                    key={cls}
+                    className="flex items-baseline justify-between gap-2"
+                  >
+                    <dt className="text-xs capitalize text-muted-foreground">
+                      {cls.toLowerCase()}
+                    </dt>
+                    <dd className="text-xs tabular-nums text-muted-foreground">
+                      {formatCurrency(value, overview.currency)}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            )}
           </CardHeader>
         </Card>
 

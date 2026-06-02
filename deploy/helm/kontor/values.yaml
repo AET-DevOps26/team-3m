@@ -269,6 +269,8 @@ keycloak:
     webOrigins: []
     # -- sslRequired: external for public deployments — never "none".
     sslRequired: external
+    # -- Allow self-service user registration (the "Register" link on the login page).
+    registrationAllowed: false
     # -- Seed a dev/dev test user. Dev / PR instances only; false in prod.
     seedDevUser: false
   resources:

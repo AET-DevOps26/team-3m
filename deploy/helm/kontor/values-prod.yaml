@@ -29,6 +29,7 @@ keycloak:
   hostnameStrict: true
   realm:
     seedDevUser: false
+    registrationAllowed: true
     redirectUris:
       - https://kontor.live/*
       - https://team-3m.stud.k8s.aet.cit.tum.de/*

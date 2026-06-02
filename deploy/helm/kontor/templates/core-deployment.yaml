@@ -55,6 +55,12 @@ spec:
             - name: APP_CORS_ALLOWED_ORIGINS
               value: {{ join "," . | quote }}
             {{- end }}
+            {{- with (include "kontor.oidc.issuerUrl" .) }}
+            - name: KEYCLOAK_ISSUER
+              value: {{ . | quote }}
+            - name: KEYCLOAK_JWK_SET_URI
+              value: {{ printf "%s/protocol/openid-connect/certs" . | quote }}
+            {{- end }}
             {{- range $key, $value := .Values.core.env }}
             - name: {{ $key }}
               value: {{ $value | quote }}

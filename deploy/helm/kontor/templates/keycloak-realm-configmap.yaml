@@ -13,7 +13,7 @@ data:
       "realm": {{ $realm | quote }},
       "enabled": true,
       "sslRequired": {{ .Values.keycloak.realm.sslRequired | quote }},
-      "registrationAllowed": false,
+      "registrationAllowed": {{ .Values.keycloak.realm.registrationAllowed }},
       "loginWithEmailAllowed": true,
       "duplicateEmailsAllowed": false,
       "resetPasswordAllowed": false,

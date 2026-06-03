@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query"
-import { type APIError, RecoverableError } from "../errors"
-import { httpRequest } from "../http"
+import { apiClient } from "../api-client"
+import { APIError, RecoverableError } from "../errors"
 
 export type HealthEndpoint = "server" | "database"
 
@@ -13,19 +13,10 @@ export interface UseHealthCheckOptions {
   silent?: boolean
 }
 
-interface ActuatorHealth {
-  status: string
-}
-
-interface ActuatorInfo {
-  app?: { version?: string }
-  build?: { version?: string }
-}
-
-const HEALTH_PATHS: Record<HealthEndpoint, string> = {
-  server: "/api/health",
-  database: "/api/health/database",
-}
+const HEALTH_PATHS = {
+  server: "/api/v1/health/server",
+  database: "/api/v1/health/database",
+} as const satisfies Record<HealthEndpoint, string>
 
 const ERROR_TITLES: Record<HealthEndpoint, string> = {
   server: "Server connection failed",
@@ -39,22 +30,19 @@ export function useHealthCheck(
   return useMutation<HealthCheckResult, APIError>({
     mutationFn: async () => {
       const start = performance.now()
-      const health = await httpRequest<ActuatorHealth>({
-        method: "GET",
-        path: HEALTH_PATHS[endpoint],
+      const { data } = await apiClient.GET(HEALTH_PATHS[endpoint], {
+        parseAs: "text",
       })
-      const latencyMs = Math.round(performance.now() - start)
-
-      if (endpoint === "server") {
-        const info = await httpRequest<ActuatorInfo>({
-          method: "GET",
-          path: "/api/info",
+      if (data === undefined) {
+        throw new APIError({
+          code: "parse",
+          message: "Server returned an empty health response",
         })
-        const version = info.app?.version ?? info.build?.version ?? "unknown"
-        return { message: `${health.status} · version ${version}`, latencyMs }
       }
-
-      return { message: health.status, latencyMs }
+      return {
+        message: data,
+        latencyMs: Math.round(performance.now() - start),
+      }
     },
     meta: {
       silent: options.silent ?? true,

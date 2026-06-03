@@ -51,7 +51,7 @@ variable "allowed_ssh_source_address_prefix" {
   description = "Source address prefix allowed to SSH into the VM. Must be a valid CIDR (e.g. your public IP as x.x.x.x/32). Never use '*'."
 
   validation {
-    condition     = var.allowed_ssh_source_address_prefix != "*" && can(cidrhost(var.allowed_ssh_source_address_prefix, 0))
-    error_message = "allowed_ssh_source_address_prefix must be a valid CIDR block (e.g. '1.2.3.4/32'). Open access via '*' is not permitted."
+    condition     = !contains(["*", "0.0.0.0/0", "::/0"], var.allowed_ssh_source_address_prefix) && can(cidrhost(var.allowed_ssh_source_address_prefix, 0))
+    error_message = "allowed_ssh_source_address_prefix must be a valid CIDR block (e.g. '1.2.3.4/32'). Open access via '*', '0.0.0.0/0', or '::/0' is not permitted."
   }
 }

@@ -69,7 +69,7 @@ SSH into the VM (cloud-init installs Docker on first boot — wait ~2 min if Doc
 ssh -i ~/.ssh/team-3m-azure-rsa azureuser@<public_ip_address>
 ```
 
-Clone the repo, create `.env`, and start the stack:
+Clone the repo, create `.env`, and start the stack. **Replace all placeholder passwords with strong, unique values before running.**
 
 ```sh
 git clone https://github.com/AET-DevOps26/team-3m.git && cd team-3m

@@ -6,7 +6,11 @@
 # keycloak.admin.password.
 
 client:
-  apiBaseUrl: https://pr-123.team-3m.stud.k8s.aet.cit.tum.de
+  apiBaseUrl: ""
+
+core:
+  corsAllowedOrigins:
+    - https://pr-123.team-3m.stud.k8s.aet.cit.tum.de
 
 oidc:
   # issuerUrl is left empty: it defaults to the first keycloak hostname + realm,

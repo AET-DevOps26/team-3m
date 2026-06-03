@@ -25,6 +25,11 @@ on:
         required: false
         type: string
         default: ""
+      base-domain:
+        description: "Base domain for preview hostnames (pr-<N>.<base-domain>)"
+        required: false
+        type: string
+        default: "team-3m.stud.k8s.aet.cit.tum.de"
       action:
         description: "deploy | teardown"
         required: true
@@ -99,10 +104,12 @@ jobs:
         env:
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
+          PR_NUMBER: ${{ inputs.pr-number }}
+          BASE_DOMAIN: ${{ inputs.base-domain }}
         run: |
           set -euo pipefail
-          PR='${{ inputs.pr-number }}'
-          sed "s/pr-123/pr-${PR}/g" "$CHART/values-pr.example.yaml" > /tmp/values-pr.yaml
+          envsubst '${PR_NUMBER} ${BASE_DOMAIN}' \
+            < "$CHART/values-pr.template.yaml" > /tmp/values-pr.yaml
           helm upgrade --install '${{ inputs.release-name }}' "$CHART" \
             -n '${{ inputs.namespace }}' \
             -f /tmp/values-pr.yaml \

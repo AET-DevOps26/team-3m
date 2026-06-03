@@ -31,7 +31,7 @@ repos:
         pass_filenames: false
       - id: helm-lint
         name: Helm Lint
-        entry: bash -c 'c=deploy/helm/kontor; s="--set postgres.password=ci --set keycloak.admin.password=ci --set keycloak.db.password=ci"; for v in values.yaml values-prod.yaml values-pr.example.yaml; do o=""; [ "$v" = values.yaml ] || o="-f $c/$v"; helm lint --strict "$c" $o $s || exit 1; done'
+        entry: bash -c 'c=deploy/helm/kontor; s="--set postgres.password=ci --set keycloak.admin.password=ci --set keycloak.db.password=ci"; for v in values.yaml values-prod.yaml values-pr.template.yaml; do o=""; [ "$v" = values.yaml ] || o="-f $c/$v"; helm lint --strict "$c" $o $s || exit 1; done'
         language: system
         files: ^deploy/helm/
         pass_filenames: false

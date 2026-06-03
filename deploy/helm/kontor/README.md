@@ -45,7 +45,7 @@ secrets always stay in the gitignored `secrets.yaml`.
 |------|---------|
 | `values.yaml` | Defaults — safe placeholders, every component enabled. |
 | `values-prod.yaml` | Production overlay: `kontor.live` + the TUM cluster host, Postgres-backed Keycloak with strict hostname checks. |
-| `values-pr.example.yaml` | Template for an ephemeral PR preview. CI templates the PR number / hostnames per PR. Uses `keycloak.database=dev-mem` so no PVC is provisioned. |
+| `values-pr.template.yaml` | Template for an ephemeral PR preview. CI renders it with `envsubst` (`${PR_NUMBER}`, `${BASE_DOMAIN}`) per PR. Uses `keycloak.database=dev-mem` so no PVC is provisioned. |
 
 Combine with `-f`:
 
@@ -72,7 +72,7 @@ stored in the `KUBECONFIG_B64` repository secret. Passwords are passed via
   release in `team-3m` with `values-prod.yaml`.
 - **Preview** — add the `deploy:preview` label to a PR. `pr.yml` builds PR images
   and stands up an ephemeral release in `team-3m-pr-<N>`, templating
-  `values-pr.example.yaml` per PR. The namespace is created in the team's Rancher
+  `values-pr.template.yaml` per PR. The namespace is created in the team's Rancher
   project (`RANCHER_PROJECT_ID`). Removing the label or closing the PR tears the
   namespace down.
 

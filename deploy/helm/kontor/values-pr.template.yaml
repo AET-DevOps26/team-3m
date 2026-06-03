@@ -1,0 +1,42 @@
+# Template for an ephemeral PR preview environment. CI renders this with
+# `envsubst`, substituting ${PR_NUMBER} and ${BASE_DOMAIN}, then feeds the
+# result to `helm upgrade --install`. Each PR env is fully self-contained: it
+# deploys the app AND its own throwaway Keycloak (in-memory, no DB/PVC), all
+# torn down with `helm uninstall`.
+# Requires -f secrets.yaml with postgres.password (app DB) and
+# keycloak.admin.password.
+
+client:
+  apiBaseUrl: ""
+
+core:
+  corsAllowedOrigins:
+    - https://pr-${PR_NUMBER}.${BASE_DOMAIN}
+
+oidc:
+  # issuerUrl is left empty: it defaults to the first keycloak hostname + realm,
+  # i.e. https://auth.pr-${PR_NUMBER}.${BASE_DOMAIN}/realms/kontor
+  redirectUri: https://pr-${PR_NUMBER}.${BASE_DOMAIN}/
+  postLogoutRedirectUri: https://pr-${PR_NUMBER}.${BASE_DOMAIN}/
+  # Ingress serves a Let's Encrypt staging cert the core JVM won't trust, so
+  # fetch JWKS from the in-cluster Keycloak Service over HTTP instead.
+  internalJwks: true
+
+keycloak:
+  deploy: true
+  database: dev-mem
+  hostnames:
+    - auth.pr-${PR_NUMBER}.${BASE_DOMAIN}
+  hostnameStrict: true
+  realm:
+    seedDevUser: true
+    redirectUris:
+      - https://pr-${PR_NUMBER}.${BASE_DOMAIN}/*
+    webOrigins:
+      - https://pr-${PR_NUMBER}.${BASE_DOMAIN}
+
+ingress:
+  hosts:
+    - pr-${PR_NUMBER}.${BASE_DOMAIN}
+  tls:
+    clusterIssuer: letsencrypt-staging

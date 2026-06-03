@@ -14,8 +14,8 @@ import java.util.List;
 public record CsvImportApiResponse(
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean success,
         CsvImportResult data,
-        String error,
-        List<?> details) {
+        @Schema(nullable = true) String error,
+        @Schema(nullable = true) List<?> details) {
 
     public static CsvImportApiResponse from(ApiResponse<CsvImportResult> source) {
         return new CsvImportApiResponse(source.success(), source.data(), source.error(), source.details());

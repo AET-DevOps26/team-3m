@@ -56,7 +56,7 @@ jobs:
           sparse-checkout: deploy
 
       - name: Set up Helm
-        uses: azure/setup-helm@v4
+        uses: azure/setup-helm@v5
 
       - name: Configure kubeconfig
         run: |
@@ -75,16 +75,6 @@ jobs:
           set -euo pipefail
           export RANCHER_PROJECT_LABEL="${RANCHER_PROJECT_ID#*:}"
           envsubst < "$NS_TEMPLATE" | kubectl apply -f -
-
-      - name: Ensure CI RoleBinding
-        if: inputs.action == 'deploy'
-        run: |
-          set -euo pipefail
-          kubectl create rolebinding kontor-ci \
-            --clusterrole=kontor-ci-app \
-            --serviceaccount=team-3m:kontor-ci \
-            -n '${{ inputs.namespace }}' \
-            --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Helm deploy (prod)
         if: inputs.action == 'deploy' && inputs.environment == 'k8s-prod'

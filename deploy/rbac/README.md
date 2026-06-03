@@ -1,43 +1,48 @@
-# CI ServiceAccount & RBAC
+# CI cluster access & RBAC
 
-These manifests provision a dedicated, least-privileged `kontor-ci` ServiceAccount
-that the GitHub Actions deploy workflows authenticate as. It is decoupled from any
-personal kubeconfig, audit-friendly, and revocable in one command.
+The GitHub Actions deploy workflows reach the cluster through the **Rancher
+authenticating proxy** (`https://rancher.ase.cit.tum.de/k8s/clusters/c-f49m7`),
+because the kube-apiserver itself is not reachable from GitHub-hosted runners
+(VPN/campus-only). The proxy authenticates **Rancher API tokens** — not
+Kubernetes ServiceAccount tokens — so CI authenticates as a Rancher principal,
+and authorization comes from that principal's **Rancher project membership**
+(`project-owner` on `c-f49m7:p-xj8vv`, the `devops26-team-3m` project), not from
+the Kubernetes RBAC manifests in this directory.
 
 ## Files
 
 | File | Purpose |
 |------|---------|
-| `serviceaccount.yaml` | `ServiceAccount kontor-ci` in `team-3m` + a long-lived token `Secret` (k8s ≥1.24 no longer auto-mints SA tokens). |
-| `clusterrole-namespaces.yaml` | `ClusterRole kontor-ci-namespaces` — `create`/`get`/`list`/`delete` on cluster-scoped `namespaces`. |
-| `clusterrolebinding.yaml` | Binds `kontor-ci-namespaces` to `team-3m:kontor-ci`. |
-| `clusterrole-app.yaml` | `ClusterRole kontor-ci-app` — CRUD on the resource set the chart owns. A ClusterRole so one object can be RoleBound into N preview namespaces. |
-| `rolebinding-prod.yaml` | RoleBinding in `team-3m` → `kontor-ci-app`. Preview namespaces get their own RoleBinding created idempotently by the deploy workflow. |
+| `extract-kubeconfig.sh` | Formats a kubeconfig for the Rancher proxy from `RANCHER_TOKEN`. No CA pin — the proxy serves a publicly-trusted cert, so the runner's system trust store validates it. |
 | `namespace.tpl` | Namespace template carrying the Rancher project annotation+label. CI fills `NAMESPACE`, `RANCHER_PROJECT_ID`, `RANCHER_PROJECT_LABEL` via `envsubst` so preview namespaces land in the team's Rancher project (quota + propagated RBAC). Not a `.yaml` file on purpose, so `kubectl apply -f deploy/rbac/` skips it. |
-| `extract-kubeconfig.sh` | Emits an SA-token kubeconfig to stdout. |
+| `serviceaccount.yaml`, `clusterrole-namespaces.yaml`, `clusterrolebinding.yaml`, `clusterrole-app.yaml`, `rolebinding-prod.yaml` | **Not used by the proxy-based CI.** Retained for the alternative direct-apiserver path (an in-cluster/self-hosted runner), where a `kontor-ci` ServiceAccount token authenticates against the apiserver at `:6443`. |
 
 ## One-time bootstrap
 
-```bash
-kubectl apply -f deploy/rbac/
+1. In Rancher, create an API key scoped to this cluster: avatar → **Account & API
+   Keys** → **Create API Key**, Scope = the cluster (`c-f49m7`). Copy the
+   `token-xxxxx:...` bearer token. Tokens here expire (cluster max is 90 days),
+   so this must be rotated — see below.
+2. Format the kubeconfig and copy its base64 to the clipboard for the GH secret:
 
-# Produce the kubeconfig and copy its base64 to the clipboard for the GH secret.
-./deploy/rbac/extract-kubeconfig.sh | base64 | pbcopy   # → repo secret KUBECONFIG_B64
+```bash
+RANCHER_TOKEN='token-xxxxx:...' ./deploy/rbac/extract-kubeconfig.sh | base64 | pbcopy
+# → repo secret KUBECONFIG_B64
 ```
 
-Smoke-test the SA (using the extracted kubeconfig as `KUBECONFIG`):
+Smoke-test the token (using the extracted kubeconfig as `KUBECONFIG`):
 
 ```bash
+kubectl auth whoami                                # → your Rancher user
 kubectl auth can-i create deployments -n team-3m   # → yes
-kubectl auth can-i delete pods -n kube-system      # → no
 kubectl auth can-i create namespaces               # → yes
 ```
 
 ### Verify Rancher project assignment
 
-Preview namespaces must land in the team's Rancher project. Confirm the SA can
-create a project-assigned namespace (the one capability Rancher's webhook may
-gate on project membership):
+Preview namespaces must land in the team's Rancher project so its `project-owner`
+RBAC propagates into them (this is what authorizes CI to deploy there — no manual
+RoleBinding needed). Confirm namespace creation assigns the project:
 
 ```bash
 NAMESPACE=team-3m-pr-0 \
@@ -52,11 +57,11 @@ kubectl get ns team-3m-pr-0 \
 kubectl delete ns team-3m-pr-0
 ```
 
-If the projectId does not stick, grant `kontor-ci` project membership once in the
-Rancher UI (Project → Members) or via a `ProjectRoleTemplateBinding`
-(`project-member`), then re-test.
-
 ## Rotation / revocation
 
-- Rotate the token: `kubectl delete secret kontor-ci-token -n team-3m && kubectl apply -f serviceaccount.yaml`, re-run `extract-kubeconfig.sh`, update `KUBECONFIG_B64`.
-- Revoke all CI access: `kubectl delete -f deploy/rbac/`.
+- **Rotate** (required before the token's ≤90-day expiry): create a new scoped API
+  key, re-run `extract-kubeconfig.sh`, update `KUBECONFIG_B64`, then delete the old
+  token in Rancher (**Account & API Keys**, or
+  `DELETE https://rancher.ase.cit.tum.de/v3/token/<id>`).
+- **Revoke** CI access immediately: delete the token in Rancher. The kubeconfig in
+  `KUBECONFIG_B64` is inert without a live token.

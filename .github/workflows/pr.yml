@@ -11,61 +11,6 @@ permissions:
   packages: write
 
 jobs:
-  client-quality:
-    uses: ./.github/workflows/client-quality.yml
-
-  server-quality:
-    uses: ./.github/workflows/server-quality.yml
-    with:
-      working-directory: core
-
-  changes:
-    name: Detect changes
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: read
-    outputs:
-      deploy: ${{ steps.filter.outputs.deploy }}
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-      - uses: dorny/paths-filter@v4.0.1
-        id: filter
-        with:
-          filters: |
-            deploy:
-              - 'deploy/**'
-              - '.github/workflows/helm-quality.yml'
-              - '.github/workflows/pr.yml'
-              - '.github/workflows/deploy.yml'
-              - '.trivyignore.yaml'
-
-  helm-quality:
-    needs: changes
-    if: ${{ needs.changes.outputs.deploy == 'true' }}
-    uses: ./.github/workflows/helm-quality.yml
-
-  openapi-sync:
-    uses: ./.github/workflows/openapi-sync.yml
-
-  client-docker:
-    needs: [client-quality, openapi-sync]
-    if: ${{ github.event.action != 'closed' && github.event.action != 'unlabeled' }}
-    uses: ./.github/workflows/docker-build-push.yml
-    with:
-      context: client
-      image-name: kontor-client
-
-  server-docker:
-    needs: [server-quality, openapi-sync]
-    if: ${{ github.event.action != 'closed' && github.event.action != 'unlabeled' }}
-    uses: ./.github/workflows/docker-build-push.yml
-    with:
-      context: core
-      image-name: kontor-core
-
   preview-gate:
     name: Preview gate
     runs-on: ubuntu-latest
@@ -95,8 +40,69 @@ jobs:
             echo "image-tag=sha-${GITHUB_SHA:0:7}"
           } >> "$GITHUB_OUTPUT"
 
+  client-quality:
+    needs: preview-gate
+    if: ${{ needs.preview-gate.outputs.teardown != 'true' }}
+    uses: ./.github/workflows/client-quality.yml
+
+  server-quality:
+    needs: preview-gate
+    if: ${{ needs.preview-gate.outputs.teardown != 'true' }}
+    uses: ./.github/workflows/server-quality.yml
+    with:
+      working-directory: core
+
+  changes:
+    name: Detect changes
+    needs: preview-gate
+    if: ${{ needs.preview-gate.outputs.teardown != 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      deploy: ${{ steps.filter.outputs.deploy }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: dorny/paths-filter@v4.0.1
+        id: filter
+        with:
+          filters: |
+            deploy:
+              - 'deploy/**'
+              - '.github/workflows/helm-quality.yml'
+              - '.github/workflows/pr.yml'
+              - '.github/workflows/deploy.yml'
+              - '.trivyignore.yaml'
+
+  helm-quality:
+    needs: [changes, preview-gate]
+    if: ${{ needs.changes.outputs.deploy == 'true' }}
+    uses: ./.github/workflows/helm-quality.yml
+
+  openapi-sync:
+    needs: preview-gate
+    if: ${{ needs.preview-gate.outputs.teardown != 'true' }}
+    uses: ./.github/workflows/openapi-sync.yml
+
+  client-docker:
+    needs: [client-quality, openapi-sync]
+    uses: ./.github/workflows/docker-build-push.yml
+    with:
+      context: client
+      image-name: kontor-client
+
+  server-docker:
+    needs: [server-quality, openapi-sync]
+    uses: ./.github/workflows/docker-build-push.yml
+    with:
+      context: core
+      image-name: kontor-core
+
   deploy-preview:
-    needs: [preview-gate, client-docker, server-docker]
+    needs: [preview-gate, helm-quality, client-docker, server-docker]
     if: ${{ needs.preview-gate.outputs.deploy == 'true' }}
     uses: ./.github/workflows/deploy.yml
     secrets: inherit

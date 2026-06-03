@@ -22,6 +22,7 @@ resource "azurerm_public_ip" "main" {
   resource_group_name = data.azurerm_resource_group.existing.name
   allocation_method   = "Static"
   sku                 = "Standard"
+  domain_name_label   = var.dns_label
 }
 
 resource "azurerm_network_security_group" "main" {

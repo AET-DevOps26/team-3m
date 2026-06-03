@@ -1,5 +1,6 @@
 resource_group_name = "Kontor"
 name_prefix         = "kontor"
+dns_label           = "kontor"
 location            = "swedencentral"
 computer_name       = "kontor-vm"
 admin_username      = "azureuser"

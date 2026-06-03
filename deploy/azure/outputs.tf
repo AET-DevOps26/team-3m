@@ -18,7 +18,12 @@ output "ssh_command" {
   value       = "ssh -i ${trimsuffix(var.admin_ssh_public_key_path, ".pub")} ${var.admin_username}@${azurerm_public_ip.main.ip_address}"
 }
 
-output "traefik_ip" {
-  description = "Public IP for Traefik. Create a DNS A record pointing your domain to this address, then access the app at https://<DOMAIN>."
-  value       = azurerm_public_ip.main.ip_address
+output "domain" {
+  description = "Azure-assigned hostname. Use as DOMAIN in .env — no custom domain needed."
+  value       = azurerm_public_ip.main.fqdn
+}
+
+output "app_url" {
+  description = "URL of the deployed application."
+  value       = "https://${azurerm_public_ip.main.fqdn}"
 }

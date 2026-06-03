@@ -2,11 +2,13 @@
 
 Provisions an Ubuntu 22.04 VM on Azure with Docker pre-installed, then runs the full stack behind Traefik with automatic TLS.
 
-| Subdomain | Service |
-| --------- | ------- |
-| `yourdomain.com` | Client |
-| `api.yourdomain.com` | Core |
-| `auth.yourdomain.com` | Keycloak |
+The app is served from Azure's free DNS label — no custom domain required:
+
+| Path | Service |
+| ---- | ------- |
+| `https://<label>.region.cloudapp.azure.com` | Client |
+| `https://<label>.region.cloudapp.azure.com/api` | Core |
+| `https://<label>.region.cloudapp.azure.com/auth` | Keycloak |
 
 ---
 
@@ -55,19 +57,7 @@ terraform plan
 terraform apply
 ```
 
-Note the `traefik_ip` output — you need it for DNS.
-
----
-
-## DNS
-
-Point three A records at `traefik_ip`:
-
-| Hostname | Type | Value |
-| -------- | ---- | ----- |
-| `yourdomain.com` | A | `<traefik_ip>` |
-| `api.yourdomain.com` | A | `<traefik_ip>` |
-| `auth.yourdomain.com` | A | `<traefik_ip>` |
+Note the `domain` output — this is your app's hostname.
 
 ---
 
@@ -76,7 +66,7 @@ Point three A records at `traefik_ip`:
 SSH into the VM (cloud-init installs Docker on first boot — wait ~2 min if Docker is not yet available):
 
 ```sh
-ssh -i ~/.ssh/team-3m-azure-rsa azureuser@<traefik_ip>
+ssh -i ~/.ssh/team-3m-azure-rsa azureuser@<public_ip_address>
 ```
 
 Clone the repo, create `.env`, and start the stack:
@@ -85,7 +75,7 @@ Clone the repo, create `.env`, and start the stack:
 git clone https://github.com/AET-DevOps26/team-3m.git && cd team-3m
 
 cat > .env << 'EOF'
-DOMAIN=yourdomain.com
+DOMAIN=<domain output from terraform>
 ACME_EMAIL=you@example.com
 POSTGRES_PASSWORD=change-me
 KEYCLOAK_POSTGRES_PASSWORD=change-me
@@ -93,10 +83,10 @@ KEYCLOAK_ADMIN_USER=admin
 KEYCLOAK_ADMIN_PASSWORD=change-me
 EOF
 
-docker compose -f docker-compose.azure.yml up -d --build
+docker compose -f docker-compose.azure.yml up -d
 ```
 
-The app is available at `https://yourdomain.com` once Traefik has issued the TLS certificate.
+The app is available at `https://<domain>` once Traefik has issued the TLS certificate.
 
 ---
 

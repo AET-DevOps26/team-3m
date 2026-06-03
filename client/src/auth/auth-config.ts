@@ -1,10 +1,14 @@
 import { WebStorageStateStore } from "oidc-client-ts"
 import type { AuthProviderProps } from "react-oidc-context"
 
-const authority = import.meta.env.VITE_OIDC_AUTHORITY
-const clientId = import.meta.env.VITE_OIDC_CLIENT_ID
-const redirectUri = import.meta.env.VITE_OIDC_REDIRECT_URI
-const postLogoutRedirectUri = import.meta.env.VITE_OIDC_POST_LOGOUT_REDIRECT_URI
+const runtimeEnv = (key: string): string | undefined =>
+  window._ENV_?.[key] ??
+  (import.meta.env[key as keyof ImportMetaEnv] as string | undefined)
+
+const authority = runtimeEnv("VITE_OIDC_AUTHORITY")
+const clientId = runtimeEnv("VITE_OIDC_CLIENT_ID")
+const redirectUri = runtimeEnv("VITE_OIDC_REDIRECT_URI")
+const postLogoutRedirectUri = runtimeEnv("VITE_OIDC_POST_LOGOUT_REDIRECT_URI")
 
 if (!authority || !clientId || !redirectUri) {
   throw new Error(

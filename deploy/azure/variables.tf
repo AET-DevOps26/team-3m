@@ -40,6 +40,12 @@ variable "vm_size" {
   default     = "Standard_D2s_v3"
 }
 
+variable "dns_label" {
+  type        = string
+  description = "DNS label for the public IP. Results in <label>.<location>.cloudapp.azure.com."
+  default     = "kontor"
+}
+
 variable "allowed_ssh_source_address_prefix" {
   type        = string
   description = "Source address prefix allowed to SSH into the VM. Must be a valid CIDR (e.g. your public IP as x.x.x.x/32). Never use '*'."

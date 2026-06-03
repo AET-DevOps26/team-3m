@@ -52,7 +52,12 @@ services:
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.0
-    command: ["start", "--import-realm"]
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        sed 's|DOMAIN_PLACEHOLDER|${DOMAIN}|g' /realm-template/kontor-realm.json \
+          > /opt/keycloak/data/import/kontor-realm.json
+        exec /opt/keycloak/bin/kc.sh start --import-realm
     depends_on:
       keycloak-db:
         condition: service_healthy
@@ -64,20 +69,21 @@ services:
       KC_DB_URL_DATABASE: "${KEYCLOAK_POSTGRES_DB:-keycloak}"
       KC_DB_USERNAME: "${KEYCLOAK_POSTGRES_USER:-keycloak}"
       KC_DB_PASSWORD: "${KEYCLOAK_POSTGRES_PASSWORD}"
-      KC_HOSTNAME: "https://auth.${DOMAIN}"
+      KC_HOSTNAME: "https://${DOMAIN}/auth"
+      KC_HTTP_RELATIVE_PATH: "/auth"
       KC_HTTP_ENABLED: "true"
       KC_PROXY_HEADERS: xforwarded
       KC_HEALTH_ENABLED: "true"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.keycloak.rule=Host(`auth.${DOMAIN}`)"
+      - "traefik.http.routers.keycloak.rule=Host(`${DOMAIN}`) && PathPrefix(`/auth`)"
       - "traefik.http.routers.keycloak.entrypoints=websecure"
       - "traefik.http.routers.keycloak.tls.certresolver=le"
       - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
     volumes:
-      - ./infra/keycloak/realms:/opt/keycloak/data/import:ro
+      - ./infra/keycloak/realms:/realm-template:ro
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health/ready >/dev/null 2>&1 || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/auth/health/ready >/dev/null 2>&1 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 20
@@ -85,8 +91,7 @@ services:
     restart: unless-stopped
 
   core:
-    build:
-      context: ./core
+    image: ghcr.io/aet-devops26/team-3m/kontor-core:latest
     depends_on:
       db:
         condition: service_healthy
@@ -98,14 +103,16 @@ services:
       POSTGRES_DB: "${POSTGRES_DB:-team3m}"
       POSTGRES_USER: "${POSTGRES_USER:-team3m}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
-      KEYCLOAK_ISSUER: "https://auth.${DOMAIN}/realms/kontor"
-      KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/realms/kontor/protocol/openid-connect/certs"
+      KEYCLOAK_ISSUER: "https://${DOMAIN}/auth/realms/kontor"
+      KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/auth/realms/kontor/protocol/openid-connect/certs"
       KEYCLOAK_AUDIENCE: "${KEYCLOAK_AUDIENCE:-kontor-api}"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.core.rule=Host(`api.${DOMAIN}`)"
+      - "traefik.http.routers.core.rule=Host(`${DOMAIN}`) && PathPrefix(`/api`)"
       - "traefik.http.routers.core.entrypoints=websecure"
       - "traefik.http.routers.core.tls.certresolver=le"
+      - "traefik.http.middlewares.core-strip.stripprefix.prefixes=/api"
+      - "traefik.http.routers.core.middlewares=core-strip"
       - "traefik.http.services.core.loadbalancer.server.port=8080"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8080/hello >/dev/null 2>&1 || exit 1"]
@@ -116,11 +123,17 @@ services:
     restart: unless-stopped
 
   client:
-    build:
-      context: ./client
+    image: ghcr.io/aet-devops26/team-3m/kontor-client:latest
     depends_on:
       core:
         condition: service_healthy
+    environment:
+      VITE_API_BASE_URL: "https://${DOMAIN}/api"
+      VITE_OIDC_AUTHORITY: "https://${DOMAIN}/auth/realms/kontor"
+      VITE_OIDC_CLIENT_ID: "kontor-spa"
+      VITE_OIDC_REDIRECT_URI: "https://${DOMAIN}/auth/callback"
+      VITE_OIDC_POST_LOGOUT_REDIRECT_URI: "https://${DOMAIN}/"
+      VITE_OIDC_AUDIENCE: "kontor-api"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.client.rule=Host(`${DOMAIN}`)"

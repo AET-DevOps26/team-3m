@@ -3,10 +3,17 @@ name: Deploy to Azure
 # Manually triggered. Provisions the VM with Terraform, then starts the stack.
 #
 # Secrets: AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_TENANT_ID,
-#          AZURE_SUBSCRIPTION_ID, AZURE_ALLOWED_SSH_CIDR
+#          AZURE_SUBSCRIPTION_ID, AZURE_ALLOWED_SSH_CIDR,
+#          AZURE_POSTGRES_PASSWORD, AZURE_KEYCLOAK_POSTGRES_PASSWORD,
+#          AZURE_KEYCLOAK_ADMIN_PASSWORD
+# Variables: AZURE_ACME_EMAIL, AZURE_KEYCLOAK_ADMIN_USER
 
 on:
   workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
 
 jobs:
   deploy:
@@ -34,17 +41,41 @@ jobs:
         working-directory: deploy/azure
         env:
           TF_VAR_allowed_ssh_source_address_prefix: ${{ secrets.AZURE_ALLOWED_SSH_CIDR }}
-        run: terraform apply -auto-approve
+        run: |
+          terraform apply -auto-approve
+          echo "DOMAIN=$(terraform output -raw domain)" >> $GITHUB_ENV
 
       - name: Deploy app
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+          ENV_FILE: |
+            DOMAIN=${{ env.DOMAIN }}
+            ACME_EMAIL=${{ vars.AZURE_ACME_EMAIL }}
+            POSTGRES_PASSWORD=${{ secrets.AZURE_POSTGRES_PASSWORD }}
+            KEYCLOAK_POSTGRES_PASSWORD=${{ secrets.AZURE_KEYCLOAK_POSTGRES_PASSWORD }}
+            KEYCLOAK_ADMIN_USER=${{ vars.AZURE_KEYCLOAK_ADMIN_USER }}
+            KEYCLOAK_ADMIN_PASSWORD=${{ secrets.AZURE_KEYCLOAK_ADMIN_PASSWORD }}
         run: |
           az login --service-principal \
             --username "$ARM_CLIENT_ID" \
             --password "$ARM_CLIENT_SECRET" \
             --tenant "$ARM_TENANT_ID" \
             --output none
+
+          ENV_B64=$(printf '%s' "$ENV_FILE" | base64 -w 0)
+          TOKEN_B64=$(printf '%s' "$GHCR_TOKEN" | base64 -w 0)
+
           az vm run-command invoke \
             --resource-group "Kontor" \
             --name "kontor-vm" \
             --command-id RunShellScript \
-            --scripts "cd /home/azureuser/team-3m && git pull && docker compose -f docker-compose.azure.yml up -d --build"
+            --scripts "
+              echo '$TOKEN_B64' | base64 -d | docker login ghcr.io -u $GHCR_USER --password-stdin
+              git clone --depth 1 https://github.com/AET-DevOps26/team-3m.git /home/azureuser/team-3m 2>/dev/null \
+                || git -C /home/azureuser/team-3m pull
+              echo '$ENV_B64' | base64 -d > /home/azureuser/team-3m/.env
+              cd /home/azureuser/team-3m
+              docker compose -f docker-compose.azure.yml pull
+              docker compose -f docker-compose.azure.yml up -d
+            "

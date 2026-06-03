@@ -14,7 +14,14 @@ FROM nginxinc/nginx-unprivileged:1.29-alpine
 
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+
+USER root
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh \
+    && touch /usr/share/nginx/html/env.js \
+    && chown nginx:nginx /usr/share/nginx/html/env.js
+USER nginx
 
 EXPOSE 8080
 
-CMD ["nginx", "-g", "daemon off;"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

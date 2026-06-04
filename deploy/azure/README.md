@@ -5,11 +5,11 @@ Provisions an Ubuntu 22.04 VM on Azure with Docker pre-installed, then runs the 
 The app is served from the custom domain `azure.kontor.live` (configurable via the
 `AZURE_DOMAIN` GitHub variable or the `domain` workflow input).
 
-| Path | Service |
-| ---- | ------- |
+| URL | Service |
+| --- | ------- |
 | `https://azure.kontor.live`      | Client (SPA) |
 | `https://azure.kontor.live/api`  | Core (Spring Boot) |
-| `https://azure.kontor.live/auth` | Keycloak |
+| `https://auth.azure.kontor.live` | Keycloak |
 
 ### DNS model
 
@@ -24,19 +24,20 @@ That FQDN tracks whichever IP Azure assigns the VM, including across
 `terraform destroy` / `apply` cycles, as long as the label (`kontor` by default)
 is reused. We never reference the bare IP for DNS.
 
-GoDaddy (or any other DNS provider for `kontor.live`) then carries **one
-permanent CNAME** — set up once, never touched again:
+GoDaddy (or any other DNS provider for `kontor.live`) then carries **two
+permanent CNAMEs** — one for the app, one for Keycloak. Set up once, never
+touched again:
 
 ```
-Type:  CNAME
-Name:  azure
-Value: kontor.swedencentral.cloudapp.azure.com
+Type:  CNAME    Name:  azure        Value:  kontor.swedencentral.cloudapp.azure.com
+Type:  CNAME    Name:  auth.azure   Value:  kontor.swedencentral.cloudapp.azure.com
 ```
 
 Resolution chain:
 
 ```
-azure.kontor.live  →  kontor.swedencentral.cloudapp.azure.com  →  <current Azure IP>
+azure.kontor.live       →  kontor.swedencentral.cloudapp.azure.com  →  <current Azure IP>
+auth.azure.kontor.live  →  kontor.swedencentral.cloudapp.azure.com  →  <current Azure IP>
 ```
 
 This means: no static-IP costs (the Standard-SKU public IP is the cheapest
@@ -95,19 +96,19 @@ terraform apply
 ```
 
 Note the `domain` output (`kontor.swedencentral.cloudapp.azure.com` with the
-defaults). If this is the first time bringing the stack up, set the CNAME at
-the DNS provider:
+defaults). If this is the first time bringing the stack up, set the two
+CNAMEs at the DNS provider:
 
 ```
-azure.kontor.live  CNAME  kontor.swedencentral.cloudapp.azure.com
+azure.kontor.live       CNAME  kontor.swedencentral.cloudapp.azure.com
+auth.azure.kontor.live  CNAME  kontor.swedencentral.cloudapp.azure.com
 ```
 
-Wait until it resolves before continuing — Traefik's ACME TLS challenge fails
-otherwise:
+Wait until they resolve before continuing — Traefik's ACME TLS challenge
+fails otherwise:
 
 ```sh
-dig +short azure.kontor.live
-# should return kontor.swedencentral.cloudapp.azure.com. eventually followed by an IP
+dig +short azure.kontor.live auth.azure.kontor.live
 ```
 
 On subsequent deploys you can skip this step entirely.

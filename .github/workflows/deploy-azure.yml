@@ -73,8 +73,9 @@ jobs:
           echo "VM public IP:     $PUBLIC_IP   (for reference; not used for DNS)"
           echo
           echo "DNS expected (one-time, at the DNS provider for kontor.live):"
-          echo "  $DOMAIN  CNAME  $AZURE_FQDN"
-          echo "Traefik's ACME challenge will fail until this CNAME resolves."
+          echo "  $DOMAIN       CNAME  $AZURE_FQDN"
+          echo "  auth.$DOMAIN  CNAME  $AZURE_FQDN"
+          echo "Traefik's ACME challenge will fail until both CNAMEs resolve."
 
       - name: Deploy app
         env:

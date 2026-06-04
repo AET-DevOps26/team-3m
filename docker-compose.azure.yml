@@ -55,6 +55,7 @@ services:
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
+        mkdir -p /opt/keycloak/data/import
         sed 's|DOMAIN_PLACEHOLDER|${DOMAIN}|g' /realm-template/kontor-realm.json \
           > /opt/keycloak/data/import/kontor-realm.json
         exec /opt/keycloak/bin/kc.sh start --import-realm
@@ -69,24 +70,28 @@ services:
       KC_DB_URL_DATABASE: "${KEYCLOAK_POSTGRES_DB:-keycloak}"
       KC_DB_USERNAME: "${KEYCLOAK_POSTGRES_USER:-keycloak}"
       KC_DB_PASSWORD: "${KEYCLOAK_POSTGRES_PASSWORD}"
-      KC_HOSTNAME: "https://${DOMAIN}/auth"
-      KC_HTTP_RELATIVE_PATH: "/auth"
+      # Keycloak is served on its own subdomain (auth.<DOMAIN>), with no
+      # relative-path prefix — issuer URLs are https://auth.<DOMAIN>/realms/...
+      KC_HOSTNAME: "https://${KEYCLOAK_DOMAIN:-auth.${DOMAIN}}"
       KC_HTTP_ENABLED: "true"
       KC_PROXY_HEADERS: xforwarded
       KC_HEALTH_ENABLED: "true"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.keycloak.rule=Host(`${DOMAIN}`) && PathPrefix(`/auth`)"
+      - "traefik.http.routers.keycloak.rule=Host(`${KEYCLOAK_DOMAIN:-auth.${DOMAIN}}`)"
       - "traefik.http.routers.keycloak.entrypoints=websecure"
       - "traefik.http.routers.keycloak.tls.certresolver=le"
       - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
     volumes:
       - ./infra/keycloak/realms:/realm-template:ro
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/auth/health/ready >/dev/null 2>&1 || exit 1"]
+      # Health probes live on the management port (9000) at /health/*.
+      # The image ships neither curl nor wget, so probe via Bash's /dev/tcp
+      # and parse the HTTP status line.
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.0\\r\\nHost: localhost\\r\\n\\r\\n' >&3 && head -n1 <&3 | grep -q '200 OK'"]
       interval: 10s
       timeout: 5s
-      retries: 20
+      retries: 30
       start_period: 60s
     restart: unless-stopped
 
@@ -103,8 +108,8 @@ services:
       POSTGRES_DB: "${POSTGRES_DB:-team3m}"
       POSTGRES_USER: "${POSTGRES_USER:-team3m}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
-      KEYCLOAK_ISSUER: "https://${DOMAIN}/auth/realms/kontor"
-      KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/auth/realms/kontor/protocol/openid-connect/certs"
+      KEYCLOAK_ISSUER: "https://${KEYCLOAK_DOMAIN:-auth.${DOMAIN}}/realms/kontor"
+      KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/realms/kontor/protocol/openid-connect/certs"
       KEYCLOAK_AUDIENCE: "${KEYCLOAK_AUDIENCE:-kontor-api}"
       APP_CORS_ALLOWED_ORIGINS: "https://${DOMAIN}"
     labels:
@@ -128,7 +133,7 @@ services:
         condition: service_healthy
     environment:
       VITE_API_BASE_URL: "https://${DOMAIN}"
-      VITE_OIDC_AUTHORITY: "https://${DOMAIN}/auth/realms/kontor"
+      VITE_OIDC_AUTHORITY: "https://${KEYCLOAK_DOMAIN:-auth.${DOMAIN}}/realms/kontor"
       VITE_OIDC_CLIENT_ID: "kontor-spa"
       VITE_OIDC_REDIRECT_URI: "https://${DOMAIN}/auth/callback"
       VITE_OIDC_POST_LOGOUT_REDIRECT_URI: "https://${DOMAIN}/"

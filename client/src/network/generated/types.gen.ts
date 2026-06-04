@@ -57,27 +57,36 @@ export type ImportCsvResponses = {
 
 export type ImportCsvResponse = ImportCsvResponses[keyof ImportCsvResponses]
 
-export type HelloData = {
+export type ServerData = {
   body?: never
   path?: never
   query?: never
-  url: "/hello"
+  url: "/api/v1/health/server"
 }
 
-export type HelloResponses = {
+export type ServerErrors = {
   /**
-   * OK
+   * Server is unhealthy
+   */
+  503: string
+}
+
+export type ServerError = ServerErrors[keyof ServerErrors]
+
+export type ServerResponses = {
+  /**
+   * Server is up
    */
   200: string
 }
 
-export type HelloResponse = HelloResponses[keyof HelloResponses]
+export type ServerResponse = ServerResponses[keyof ServerResponses]
 
 export type DatabaseData = {
   body?: never
   path?: never
   query?: never
-  url: "/database"
+  url: "/api/v1/health/database"
 }
 
 export type DatabaseErrors = {

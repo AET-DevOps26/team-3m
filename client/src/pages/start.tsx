@@ -21,7 +21,6 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { API_BASE_URL } from "@/network"
 import { useHealthCheck } from "@/network/endpoints/health"
 import { TransactionsBlock } from "@/pages/transactions-overview"
 
@@ -48,7 +47,7 @@ const techStack = [
 ]
 
 export function StartPage() {
-  const serverCheck = useHealthCheck("hello")
+  const serverCheck = useHealthCheck("server")
   const databaseCheck = useHealthCheck("database")
 
   return (
@@ -137,7 +136,7 @@ export function StartPage() {
               Server Connection
             </CardTitle>
             <CardDescription>
-              Test the backend API and database at {API_BASE_URL}
+              Test the backend API and database connection
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

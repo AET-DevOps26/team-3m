@@ -40,9 +40,9 @@ export const zImportCsvBody = z.object({
 export const importCsvResponseSchema = csvImportApiResponseSchema
 
 /**
- * OK
+ * Server is up
  */
-export const helloResponseSchema = z.string()
+export const serverResponseSchema = z.string()
 
 /**
  * Database connection OK

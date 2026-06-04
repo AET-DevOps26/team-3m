@@ -2,7 +2,7 @@ import { useMutation } from "@tanstack/react-query"
 import { apiClient } from "../api-client"
 import { APIError, RecoverableError } from "../errors"
 
-export type HealthEndpoint = "hello" | "database"
+export type HealthEndpoint = "server" | "database"
 
 export interface HealthCheckResult {
   message: string
@@ -13,8 +13,13 @@ export interface UseHealthCheckOptions {
   silent?: boolean
 }
 
+const HEALTH_PATHS = {
+  server: "/api/v1/health/server",
+  database: "/api/v1/health/database",
+} as const satisfies Record<HealthEndpoint, string>
+
 const ERROR_TITLES: Record<HealthEndpoint, string> = {
-  hello: "Server connection failed",
+  server: "Server connection failed",
   database: "Database connection failed",
 }
 
@@ -25,7 +30,7 @@ export function useHealthCheck(
   return useMutation<HealthCheckResult, APIError>({
     mutationFn: async () => {
       const start = performance.now()
-      const { data } = await apiClient.GET(`/${endpoint}`, {
+      const { data } = await apiClient.GET(HEALTH_PATHS[endpoint], {
         parseAs: "text",
       })
       if (data === undefined) {

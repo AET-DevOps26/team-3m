@@ -35,22 +35,28 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiResponse"
-  /hello:
+  /api/v1/health/server:
     get:
       tags:
-      - hello-controller
-      operationId: hello
+      - health-controller
+      operationId: server
       responses:
         "200":
-          description: OK
+          description: Server is up
           content:
             '*/*':
               schema:
                 type: string
-  /database:
+        "503":
+          description: Server is unhealthy
+          content:
+            '*/*':
+              schema:
+                type: string
+  /api/v1/health/database:
     get:
       tags:
-      - database-controller
+      - health-controller
       operationId: database
       responses:
         "200":

@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "kontor.core.fullname" . }}
+  labels:
+    {{- include "kontor.labels" . | nindent 4 }}
+    app.kubernetes.io/component: core
+spec:
+  type: {{ .Values.core.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.core.service.port }}
+      targetPort: http
+      protocol: TCP
+  selector:
+    {{- include "kontor.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: core

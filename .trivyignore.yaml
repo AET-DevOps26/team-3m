@@ -1,0 +1,11 @@
+misconfigurations:
+  - id: AVD-KSV-0014
+    paths:
+      - "**/client-deployment.yaml"
+      - "**/keycloak-deployment.yaml"
+    statement: >-
+      readOnlyRootFilesystem is deferred for the client (nginx + vite-envs
+      rewrites index.html at startup) and Keycloak (kc.sh start re-augments
+      under /opt/keycloak/lib/quarkus). Both require image-level changes
+      (nginx assets init-container; Keycloak kc.sh build --optimized) and
+      cluster re-testing. The Postgres and Keycloak DB workloads are hardened.

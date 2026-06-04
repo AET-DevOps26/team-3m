@@ -15,10 +15,10 @@ interface TextResponseOperation {
 }
 
 interface ApiPaths {
-  "/database": {
+  "/api/v1/health/server": {
     get: TextResponseOperation
   }
-  "/hello": {
+  "/api/v1/health/database": {
     get: TextResponseOperation
   }
   "/api/v1/financial-transactions": {

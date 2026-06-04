@@ -20,12 +20,44 @@ jobs:
     with:
       working-directory: core
 
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      deploy: ${{ steps.filter.outputs.deploy }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            deploy:
+              - 'deploy/**'
+              - '.github/workflows/helm-quality.yml'
+              - '.github/workflows/ci-cd.yml'
+              - '.trivyignore.yaml'
+
+  helm-quality:
+    needs: changes
+    if: ${{ needs.changes.outputs.deploy == 'true' }}
+    uses: ./.github/workflows/helm-quality.yml
+
   openapi-sync:
     uses: ./.github/workflows/openapi-sync.yml
 
   release:
     name: Semantic Release
-    needs: [client-quality, server-quality, openapi-sync]
+    needs: [client-quality, server-quality, changes, helm-quality, openapi-sync]
+    if: ${{ always()
+      && needs.client-quality.result == 'success'
+      && needs.server-quality.result == 'success'
+      && needs.helm-quality.result == 'success'
+      && (needs.changes.outputs.deploy != 'true' || needs.helm-quality.result == 'success') }}
     runs-on: ubuntu-latest
     outputs:
       released: ${{ steps.semantic.outputs.new_release_published }}

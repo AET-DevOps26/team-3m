@@ -43,8 +43,8 @@ class OpenApiDocumentationTest {
                 .contains(
                         "importCsv",
                         "CsvImportApiResponse",
-                        "/database",
-                        "/hello",
+                        "/api/v1/health/server",
+                        "/api/v1/health/database",
                         "listTransactions",
                         "/api/v1/financial-transactions");
 

@@ -11,11 +11,34 @@
 
 client:
   apiBaseUrl: ""
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 96Mi
 
 core:
   corsAllowedOrigins:
     - https://kontor.live
     - https://team-3m.stud.k8s.aet.cit.tum.de
+  resources:
+    requests:
+      cpu: 200m
+      memory: 384Mi
+    limits:
+      cpu: 700m
+      memory: 704Mi
+
+postgres:
+  resources:
+    requests:
+      cpu: 150m
+      memory: 256Mi
+    limits:
+      cpu: 350m
+      memory: 416Mi
 
 oidc:
   issuerUrl: https://auth.kontor.live/realms/kontor
@@ -27,6 +50,21 @@ keycloak:
     - auth.kontor.live
     - auth.team-3m.stud.k8s.aet.cit.tum.de
   hostnameStrict: true
+  resources:
+    requests:
+      cpu: 250m
+      memory: 384Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  db:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 192Mi
   realm:
     seedDevUser: false
     registrationAllowed: true

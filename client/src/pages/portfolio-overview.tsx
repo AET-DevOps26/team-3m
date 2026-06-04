@@ -97,7 +97,9 @@ function filterByRange(
   const cutoff = cutoffDateFor(
     TIME_RANGES.find((r) => r.label === range)?.days ?? null,
   )
-  return cutoff === null ? snapshots : snapshots.filter((s) => s.date >= cutoff)
+  return cutoff === null
+    ? snapshots
+    : snapshots.filter((s) => s.date != null && s.date >= cutoff)
 }
 
 interface RangeSelectorProps {
@@ -152,9 +154,12 @@ function PerformanceChart({
     )
   }
 
-  const data = snapshots.map((s) => ({ date: s.date, value: s.value }))
-  const first = snapshots[0].value
-  const last = snapshots[snapshots.length - 1].value
+  const data = snapshots.map((s) => ({
+    date: s.date ?? "",
+    value: s.value ?? 0,
+  }))
+  const first = snapshots[0].value ?? 0
+  const last = snapshots[snapshots.length - 1].value ?? 0
   const isPositive = last >= first
 
   return (
@@ -241,11 +246,11 @@ interface PerformanceChartContentProps {
 
 function PerformanceChartContent({ range }: PerformanceChartContentProps) {
   const { data: performance } = usePortfolioPerformance()
-  const filtered = filterByRange(performance.snapshots, range)
+  const filtered = filterByRange(performance.snapshots ?? [], range)
   return (
     <PerformanceChart
       snapshots={filtered}
-      currency={performance.currency}
+      currency={performance.currency ?? ""}
       range={range}
     />
   )
@@ -304,8 +309,8 @@ function HoldingsTable({ holdings }: HoldingTableProps) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {holdings.map((holding) => (
-          <TableRow key={holding.symbol}>
+        {holdings.map((holding, i) => (
+          <TableRow key={holding.symbol ?? i}>
             <TableCell className="font-medium">
               {holding.name ?? holding.symbol}
             </TableCell>
@@ -314,15 +319,18 @@ function HoldingsTable({ holdings }: HoldingTableProps) {
             </TableCell>
             <TableCell>{holding.assetClass ?? "—"}</TableCell>
             <TableCell className="text-right tabular-nums">
-              {formatShares(holding.shares)}
+              {formatShares(holding.shares ?? 0)}
             </TableCell>
             <TableCell className="text-right tabular-nums">
               {holding.lastPrice != null
-                ? formatCurrency(holding.lastPrice, holding.currency)
+                ? formatCurrency(holding.lastPrice, holding.currency ?? "")
                 : "—"}
             </TableCell>
             <TableCell className="text-right tabular-nums font-medium">
-              {formatCurrency(holding.currentValue, holding.currency)}
+              {formatCurrency(
+                holding.currentValue ?? 0,
+                holding.currency ?? "",
+              )}
             </TableCell>
           </TableRow>
         ))}
@@ -337,7 +345,7 @@ function groupByAssetClass(holdings: PortfolioHolding[]): Map<string, number> {
   const groups = new Map<string, number>()
   for (const h of holdings) {
     const key = h.assetClass ?? "Other"
-    groups.set(key, (groups.get(key) ?? 0) + h.currentValue)
+    groups.set(key, (groups.get(key) ?? 0) + (h.currentValue ?? 0))
   }
   return groups
 }
@@ -347,8 +355,8 @@ function groupByAssetClass(holdings: PortfolioHolding[]): Map<string, number> {
 function PortfolioContent() {
   const { data: overview } = usePortfolioOverview()
 
-  const holdingsValue = overview.totalValue - overview.cashBalance
-  const byClass = groupByAssetClass(overview.holdings)
+  const holdingsValue = (overview.totalValue ?? 0) - (overview.cashBalance ?? 0)
+  const byClass = groupByAssetClass(overview.holdings ?? [])
 
   return (
     <div className="flex w-full max-w-4xl flex-col gap-6">
@@ -360,7 +368,10 @@ function PortfolioContent() {
               Total Portfolio
             </CardDescription>
             <CardTitle className="text-2xl tabular-nums">
-              {formatCurrency(overview.totalValue, overview.currency)}
+              {formatCurrency(
+                overview.totalValue ?? 0,
+                overview.currency ?? "",
+              )}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -372,7 +383,7 @@ function PortfolioContent() {
               Investments
             </CardDescription>
             <CardTitle className="text-2xl tabular-nums">
-              {formatCurrency(holdingsValue, overview.currency)}
+              {formatCurrency(holdingsValue, overview.currency ?? "")}
             </CardTitle>
             {byClass.size > 0 && (
               <dl className="mt-1 space-y-0.5">
@@ -385,7 +396,7 @@ function PortfolioContent() {
                       {cls.toLowerCase()}
                     </dt>
                     <dd className="text-xs tabular-nums text-muted-foreground">
-                      {formatCurrency(value, overview.currency)}
+                      {formatCurrency(value, overview.currency ?? "")}
                     </dd>
                   </div>
                 ))}
@@ -401,7 +412,10 @@ function PortfolioContent() {
               Cash
             </CardDescription>
             <CardTitle className="text-2xl tabular-nums">
-              {formatCurrency(overview.cashBalance, overview.currency)}
+              {formatCurrency(
+                overview.cashBalance ?? 0,
+                overview.currency ?? "",
+              )}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -417,7 +431,7 @@ function PortfolioContent() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <HoldingsTable holdings={overview.holdings} />
+          <HoldingsTable holdings={overview.holdings ?? []} />
         </CardContent>
       </Card>
     </div>

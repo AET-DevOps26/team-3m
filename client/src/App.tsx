@@ -2,7 +2,8 @@ import { lazy, Suspense } from "react"
 import { BrowserRouter, Route, Routes } from "react-router-dom"
 import { AuthCallback } from "@/auth/auth-callback"
 import { ProtectedRoute } from "@/auth/protected-route"
-import { AuthHeader } from "@/components/auth-header"
+import { AppHeader } from "@/components/app-header"
+import { AppNav } from "@/components/app-nav"
 import { RouteFallback } from "@/components/route-fallback"
 
 const StartPage = lazy(() =>
@@ -31,7 +32,8 @@ export function App() {
             path="/"
             element={
               <ProtectedRoute>
-                <AuthHeader />
+                <AppHeader />
+                <AppNav />
                 <StartPage />
               </ProtectedRoute>
             }
@@ -40,7 +42,8 @@ export function App() {
             path="/import"
             element={
               <ProtectedRoute>
-                <AuthHeader />
+                <AppHeader />
+                <AppNav />
                 <ImportTransactionsPage />
               </ProtectedRoute>
             }
@@ -49,7 +52,8 @@ export function App() {
             path="/portfolio"
             element={
               <ProtectedRoute>
-                <AuthHeader />
+                <AppHeader />
+                <AppNav />
                 <PortfolioOverviewPage />
               </ProtectedRoute>
             }

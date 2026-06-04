@@ -1,6 +1,5 @@
-import { BarChart2, LogOut, User } from "lucide-react"
+import { LogOut, User } from "lucide-react"
 import { useAuth } from "react-oidc-context"
-import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 
 /**
@@ -8,7 +7,7 @@ import { Button } from "@/components/ui/button"
  * user (preferred_username or email) and a single Logout action that triggers
  * the OIDC end-session flow.
  */
-export function AuthHeader() {
+export function AppHeader() {
   const auth = useAuth()
 
   if (!auth.isAuthenticated || !auth.user) {
@@ -24,14 +23,7 @@ export function AuthHeader() {
         : "Signed in"
 
   return (
-    <header className="flex items-center justify-between gap-3 border-b border-border bg-background/80 px-4 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <Button asChild variant="ghost" size="sm">
-        <Link to="/portfolio">
-          <BarChart2 className="size-4" />
-          Portfolio
-        </Link>
-      </Button>
-
+    <header className="flex items-center justify-end gap-3 border-b border-border bg-background/80 px-4 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex items-center gap-3">
         <span className="flex items-center gap-2 text-sm text-muted-foreground">
           <User className="size-4" />

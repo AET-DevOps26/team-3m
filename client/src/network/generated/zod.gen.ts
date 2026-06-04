@@ -19,8 +19,8 @@ export const csvImportApiResponseSchema = z.object({
 export const apiResponseSchema = z.object({
   success: z.boolean(),
   data: z.unknown().optional(),
-  error: z.string().optional(),
-  details: z.array(z.unknown()).optional(),
+  error: z.string().nullish(),
+  details: z.array(z.unknown()).nullish(),
 })
 
 export const portfolioSnapshotSchema = z.object({
@@ -36,8 +36,8 @@ export const portfolioPerformanceSchema = z.object({
 export const apiResponsePortfolioPerformanceSchema = z.object({
   success: z.boolean(),
   data: portfolioPerformanceSchema.optional(),
-  error: z.string().optional(),
-  details: z.array(z.unknown()).optional(),
+  error: z.string().nullish(),
+  details: z.array(z.unknown()).nullish(),
 })
 
 export const portfolioHoldingSchema = z.object({
@@ -60,8 +60,8 @@ export const portfolioOverviewSchema = z.object({
 export const apiResponsePortfolioOverviewSchema = z.object({
   success: z.boolean(),
   data: portfolioOverviewSchema.optional(),
-  error: z.string().optional(),
-  details: z.array(z.unknown()).optional(),
+  error: z.string().nullish(),
+  details: z.array(z.unknown()).nullish(),
 })
 
 export const zImportCsvBody = z.object({

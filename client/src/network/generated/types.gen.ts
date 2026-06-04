@@ -19,15 +19,15 @@ export type CsvImportResult = {
 export type ApiResponse = {
   success: boolean
   data?: unknown
-  error?: string
-  details?: Array<unknown>
+  error?: string | null
+  details?: Array<unknown> | null
 }
 
 export type ApiResponsePortfolioPerformance = {
   success: boolean
   data?: PortfolioPerformance
-  error?: string
-  details?: Array<unknown>
+  error?: string | null
+  details?: Array<unknown> | null
 }
 
 export type PortfolioPerformance = {
@@ -43,8 +43,8 @@ export type PortfolioSnapshot = {
 export type ApiResponsePortfolioOverview = {
   success: boolean
   data?: PortfolioOverview
-  error?: string
-  details?: Array<unknown>
+  error?: string | null
+  details?: Array<unknown> | null
 }
 
 export type PortfolioHolding = {

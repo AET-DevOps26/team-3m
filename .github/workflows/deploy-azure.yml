@@ -8,14 +8,17 @@ name: Deploy to Azure
 #          AZURE_KEYCLOAK_ADMIN_PASSWORD
 # Variables: AZURE_ACME_EMAIL, AZURE_KEYCLOAK_ADMIN_USER, AZURE_DOMAIN
 #
-# AZURE_DOMAIN must point (via an external DNS A record) to the VM's public IP
-# exposed by Terraform output `public_ip_address`. Default: azure.kontor.live.
+# DNS model: `AZURE_DOMAIN` (default azure.kontor.live) is fronted by a single
+# CNAME in GoDaddy pointing at Terraform output `domain`
+# (= `<dns_label>.<region>.cloudapp.azure.com`). The Azure FQDN tracks whichever
+# public IP the VM currently has, so the CNAME never has to be updated even
+# when the infrastructure is destroyed and recreated.
 
 on:
   workflow_dispatch:
     inputs:
       domain:
-        description: "Public domain the stack is served on (must resolve to the VM's public IP via DNS)."
+        description: "Public domain the stack is served on (must CNAME to the Azure FQDN)."
         required: false
         type: string
         default: "azure.kontor.live"
@@ -54,8 +57,8 @@ jobs:
         run: |
           terraform apply -auto-approve
           {
-            echo "PUBLIC_IP=$(terraform output -raw public_ip_address)"
             echo "AZURE_FQDN=$(terraform output -raw domain)"
+            echo "PUBLIC_IP=$(terraform output -raw public_ip_address)"
           } >> "$GITHUB_ENV"
 
       - name: Resolve public domain
@@ -65,10 +68,13 @@ jobs:
         run: |
           DOMAIN="${INPUT_DOMAIN:-${VAR_DOMAIN:-azure.kontor.live}}"
           echo "DOMAIN=$DOMAIN" >> "$GITHUB_ENV"
-          echo "Resolved public domain: $DOMAIN"
-          echo "VM public IP:         $PUBLIC_IP"
-          echo "Azure FQDN fallback:  $AZURE_FQDN"
-          echo "Ensure an external DNS A record points '$DOMAIN' -> '$PUBLIC_IP' before TLS issuance succeeds."
+          echo "Public domain:    $DOMAIN"
+          echo "Azure FQDN:       $AZURE_FQDN"
+          echo "VM public IP:     $PUBLIC_IP   (for reference; not used for DNS)"
+          echo
+          echo "DNS expected (one-time, at the DNS provider for kontor.live):"
+          echo "  $DOMAIN  CNAME  $AZURE_FQDN"
+          echo "Traefik's ACME challenge will fail until this CNAME resolves."
 
       - name: Deploy app
         env:

@@ -20,9 +20,16 @@ resource "azurerm_public_ip" "main" {
   name                = "${var.name_prefix}-public-ip"
   location            = var.location
   resource_group_name = data.azurerm_resource_group.existing.name
-  allocation_method   = "Static"
-  sku                 = "Standard"
-  domain_name_label   = var.dns_label
+
+  # Standard SKU forces Static allocation (Basic SKU was retired on
+  # 2025-09-30). The IP itself can still change across destroy/recreate cycles;
+  # what stays stable is the `domain_name_label` FQDN below — Azure repoints
+  # `<label>.<region>.cloudapp.azure.com` to whatever IP this resource holds.
+  # GoDaddy then carries a single CNAME `azure -> <label>.…cloudapp.azure.com`
+  # that never needs to be touched again.
+  allocation_method = "Static"
+  sku               = "Standard"
+  domain_name_label = var.dns_label
 }
 
 resource "azurerm_network_security_group" "main" {

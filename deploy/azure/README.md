@@ -3,8 +3,7 @@
 Provisions an Ubuntu 22.04 VM on Azure with Docker pre-installed, then runs the full stack behind Traefik with automatic TLS.
 
 The app is served from the custom domain `azure.kontor.live` (configurable via the
-`AZURE_DOMAIN` GitHub variable or the `domain` workflow input). A DNS A record for
-that domain must point at the VM's public IP before Traefik can issue a TLS cert.
+`AZURE_DOMAIN` GitHub variable or the `domain` workflow input).
 
 | Path | Service |
 | ---- | ------- |
@@ -12,8 +11,41 @@ that domain must point at the VM's public IP before Traefik can issue a TLS cert
 | `https://azure.kontor.live/api`  | Core (Spring Boot) |
 | `https://azure.kontor.live/auth` | Keycloak |
 
-The Azure-assigned `cloudapp.azure.com` hostname is still exposed as a Terraform
-output (`domain`) so it can be used as a fallback for the DNS A record target.
+### DNS model
+
+Terraform attaches a `domain_name_label` to the VM's public IP, which gives
+Azure a free, stable FQDN:
+
+```
+kontor.swedencentral.cloudapp.azure.com
+```
+
+That FQDN tracks whichever IP Azure assigns the VM, including across
+`terraform destroy` / `apply` cycles, as long as the label (`kontor` by default)
+is reused. We never reference the bare IP for DNS.
+
+GoDaddy (or any other DNS provider for `kontor.live`) then carries **one
+permanent CNAME** — set up once, never touched again:
+
+```
+Type:  CNAME
+Name:  azure
+Value: kontor.swedencentral.cloudapp.azure.com
+```
+
+Resolution chain:
+
+```
+azure.kontor.live  →  kontor.swedencentral.cloudapp.azure.com  →  <current Azure IP>
+```
+
+This means: no static-IP costs (the Standard-SKU public IP is the cheapest
+option after the Basic SKU retirement on 2025-09-30), no GoDaddy API
+integration, and no DNS update when the VM is recreated.
+
+The Azure FQDN and the current public IP are both exposed as Terraform
+outputs (`domain` and `public_ip_address`) and printed in the deploy workflow
+log for reference.
 
 ---
 
@@ -62,14 +94,23 @@ terraform plan
 terraform apply
 ```
 
-Note the `public_ip_address` output and create an A record in your DNS provider:
+Note the `domain` output (`kontor.swedencentral.cloudapp.azure.com` with the
+defaults). If this is the first time bringing the stack up, set the CNAME at
+the DNS provider:
 
 ```
-azure.kontor.live  A  <public_ip_address>
+azure.kontor.live  CNAME  kontor.swedencentral.cloudapp.azure.com
 ```
 
-Wait until the record resolves (`dig +short azure.kontor.live`) before
-continuing — Traefik's ACME TLS challenge will fail otherwise.
+Wait until it resolves before continuing — Traefik's ACME TLS challenge fails
+otherwise:
+
+```sh
+dig +short azure.kontor.live
+# should return kontor.swedencentral.cloudapp.azure.com. eventually followed by an IP
+```
+
+On subsequent deploys you can skip this step entirely.
 
 ---
 
@@ -100,9 +141,9 @@ docker compose -f docker-compose.azure.yml up -d
 
 The app is available at `https://azure.kontor.live` once Traefik has issued the TLS certificate (first start can take ~30 s).
 
-> Pinning to a different domain? Set `DOMAIN` in `.env` accordingly and update
-> the DNS A record before bringing the stack up — Keycloak's realm import and
-> the Traefik routers all read this single variable.
+> Pinning to a different domain? Set `DOMAIN` in `.env` accordingly and add a
+> CNAME for it pointing at the Azure FQDN before bringing the stack up —
+> Keycloak's realm import and the Traefik routers all read this single variable.
 
 ---
 

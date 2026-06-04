@@ -3,6 +3,7 @@ package de.devops26.kontor.core.portfolio;
 import de.devops26.kontor.core.security.AuthenticatedUser;
 import de.devops26.kontor.core.user.AppUser;
 import de.devops26.kontor.core.web.ApiResponse;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,13 +22,15 @@ public class PortfolioController {
     }
 
     @GetMapping("/overview")
-    public ResponseEntity<ApiResponse<PortfolioOverview>> getOverview(@AuthenticatedUser AppUser user) {
+    public ResponseEntity<ApiResponse<PortfolioOverview>> getOverview(
+            @Parameter(hidden = true) @AuthenticatedUser AppUser user) {
         var overview = service.getOverview(user.id());
         return ResponseEntity.ok(ApiResponse.ok(overview));
     }
 
     @GetMapping("/performance")
-    public ResponseEntity<ApiResponse<PortfolioPerformance>> getPerformance(@AuthenticatedUser AppUser user) {
+    public ResponseEntity<ApiResponse<PortfolioPerformance>> getPerformance(
+            @Parameter(hidden = true) @AuthenticatedUser AppUser user) {
         var performance = performanceService.getPerformance(user.id());
         return ResponseEntity.ok(ApiResponse.ok(performance));
     }

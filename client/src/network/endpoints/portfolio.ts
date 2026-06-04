@@ -1,9 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { z } from "zod"
-import { httpRequest } from "../http"
+import { apiClient } from "../api-client"
 
-const OVERVIEW_PATH = "/api/v1/portfolio/overview"
-const PERFORMANCE_PATH = "/api/v1/portfolio/performance"
 const OVERVIEW_QUERY_KEY = ["portfolio", "overview"] as const
 const PERFORMANCE_QUERY_KEY = ["portfolio", "performance"] as const
 
@@ -54,10 +52,10 @@ export function usePortfolioOverview() {
   return useSuspenseQuery<PortfolioOverview>({
     queryKey: OVERVIEW_QUERY_KEY,
     queryFn: async () => {
-      const raw = await httpRequest<unknown>({
-        method: "GET",
-        path: OVERVIEW_PATH,
-      })
+      const { data: raw } = await apiClient.GET(
+        "/api/v1/portfolio/overview",
+        {},
+      )
       return portfolioOverviewEnvelopeSchema.parse(raw).data
     },
   })
@@ -67,10 +65,10 @@ export function usePortfolioPerformance() {
   return useSuspenseQuery<PortfolioPerformance>({
     queryKey: PERFORMANCE_QUERY_KEY,
     queryFn: async () => {
-      const raw = await httpRequest<unknown>({
-        method: "GET",
-        path: PERFORMANCE_PATH,
-      })
+      const { data: raw } = await apiClient.GET(
+        "/api/v1/portfolio/performance",
+        {},
+      )
       return portfolioPerformanceEnvelopeSchema.parse(raw).data
     },
   })

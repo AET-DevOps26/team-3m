@@ -23,6 +23,47 @@ export type ApiResponse = {
   details?: Array<unknown>
 }
 
+export type ApiResponsePortfolioPerformance = {
+  success: boolean
+  data?: PortfolioPerformance
+  error?: string
+  details?: Array<unknown>
+}
+
+export type PortfolioPerformance = {
+  snapshots?: Array<PortfolioSnapshot>
+  currency?: string
+}
+
+export type PortfolioSnapshot = {
+  date?: string
+  value?: number
+}
+
+export type ApiResponsePortfolioOverview = {
+  success: boolean
+  data?: PortfolioOverview
+  error?: string
+  details?: Array<unknown>
+}
+
+export type PortfolioHolding = {
+  symbol?: string
+  name?: string
+  assetClass?: string
+  currency?: string
+  shares?: number
+  lastPrice?: number
+  currentValue?: number
+}
+
+export type PortfolioOverview = {
+  holdings?: Array<PortfolioHolding>
+  cashBalance?: number
+  currency?: string
+  totalValue?: number
+}
+
 export type ImportCsvData = {
   body?: {
     file: Blob | File
@@ -49,6 +90,40 @@ export type ImportCsvResponses = {
 }
 
 export type ImportCsvResponse = ImportCsvResponses[keyof ImportCsvResponses]
+
+export type GetPerformanceData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/api/v1/portfolio/performance"
+}
+
+export type GetPerformanceResponses = {
+  /**
+   * OK
+   */
+  200: ApiResponsePortfolioPerformance
+}
+
+export type GetPerformanceResponse =
+  GetPerformanceResponses[keyof GetPerformanceResponses]
+
+export type GetOverviewData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/api/v1/portfolio/overview"
+}
+
+export type GetOverviewResponses = {
+  /**
+   * OK
+   */
+  200: ApiResponsePortfolioOverview
+}
+
+export type GetOverviewResponse =
+  GetOverviewResponses[keyof GetOverviewResponses]
 
 export type ServerData = {
   body?: never

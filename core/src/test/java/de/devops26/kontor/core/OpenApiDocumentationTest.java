@@ -39,7 +39,14 @@ class OpenApiDocumentationTest {
                 .getResponse()
                 .getContentAsString();
 
-        assertThat(yaml).contains("importCsv", "CsvImportApiResponse", "/database", "/hello");
+        assertThat(yaml)
+                .contains(
+                        "importCsv",
+                        "CsvImportApiResponse",
+                        "/database",
+                        "/hello",
+                        "listTransactions",
+                        "/api/v1/financial-transactions");
 
         if (Boolean.getBoolean("openapi.write")) {
             Files.createDirectories(OUTPUT.getParent());

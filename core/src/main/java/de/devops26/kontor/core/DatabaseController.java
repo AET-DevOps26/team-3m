@@ -1,5 +1,9 @@
 package de.devops26.kontor.core;
 
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import java.sql.SQLException;
 import javax.sql.DataSource;
 import org.springframework.http.HttpStatus;
@@ -17,6 +21,16 @@ public class DatabaseController {
     }
 
     @GetMapping("/database")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "Database connection OK",
+                content = @Content(schema = @Schema(implementation = String.class))),
+        @ApiResponse(
+                responseCode = "503",
+                description = "Database connection check failed",
+                content = @Content(schema = @Schema(implementation = String.class)))
+    })
     public ResponseEntity<String> database() {
         try (var connection = dataSource.getConnection();
                 var statement = connection.createStatement();

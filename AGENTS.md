@@ -57,6 +57,11 @@ by CI: push to `main` → prod in namespace `team-3m`; PR + `deploy:preview` lab
 ephemeral preview in `team-3m-pr-<N>`. See `deploy/helm/kontor/README.md` and
 `deploy/rbac/README.md`.
 
+Manually triggering the `CI/CD` workflow (`workflow_dispatch`) always deploys
+prod, even when semantic-release produces no new version — in that case it
+redeploys the latest existing version tag. This is the supported way to
+re-run a prod deploy (e.g. after a failed rollout) without a code change.
+
 ## Rules
 
 - Do not manually fix formatting or linting errors — run the formatter/linter instead

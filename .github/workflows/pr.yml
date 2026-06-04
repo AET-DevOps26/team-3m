@@ -10,6 +10,10 @@ permissions:
   contents: read
   packages: write
 
+concurrency:
+  group: pr-ci-cd-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   preview-gate:
     name: Preview gate
@@ -103,7 +107,12 @@ jobs:
 
   deploy-preview:
     needs: [preview-gate, helm-quality, client-docker, server-docker]
-    if: ${{ needs.preview-gate.outputs.deploy == 'true' }}
+    if: >-
+      ${{ !cancelled()
+          && needs.preview-gate.outputs.deploy == 'true'
+          && needs.helm-quality.result != 'failure'
+          && needs.client-docker.result == 'success'
+          && needs.server-docker.result == 'success' }}
     uses: ./.github/workflows/deploy.yml
     secrets: inherit
     with:

@@ -30,3 +30,28 @@ kontor:
   security:
     issuer: ${KEYCLOAK_ISSUER:http://localhost:8081/realms/kontor}
     audience: ${KEYCLOAK_AUDIENCE:kontor-api}
+
+management:
+  endpoints:
+    web:
+      base-path: /api
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+      group:
+        database:
+          include: db
+  info:
+    build:
+      enabled: true
+    env:
+      enabled: true
+
+info:
+  app:
+    name: ${spring.application.name}
+    version: ${APP_VERSION:dev}

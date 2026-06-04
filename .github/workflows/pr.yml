@@ -61,6 +61,7 @@ jobs:
     needs: preview-gate
     if: ${{ needs.preview-gate.outputs.teardown != 'true' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 2
     permissions:
       contents: read
       pull-requests: read
@@ -125,7 +126,10 @@ jobs:
 
   preview-comment:
     needs: [preview-gate, deploy-preview]
-    if: ${{ needs.preview-gate.outputs.deploy == 'true' }}
+    if: >-
+      ${{ !cancelled()
+          && needs.preview-gate.outputs.deploy == 'true'
+          && needs.deploy-preview.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write

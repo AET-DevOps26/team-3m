@@ -1,0 +1,38 @@
+{{- if and .Values.keycloak.deploy .Values.keycloak.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "kontor.keycloak.fullname" . }}
+  labels:
+    {{- include "kontor.labels" . | nindent 4 }}
+    app.kubernetes.io/component: keycloak
+  annotations:
+    {{- if .Values.ingress.tls.enabled }}
+    cert-manager.io/cluster-issuer: {{ .Values.ingress.tls.clusterIssuer | quote }}
+    {{- end }}
+    # Auth flows carry large headers/cookies; give nginx room.
+    nginx.ingress.kubernetes.io/proxy-buffer-size: 16k
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- if .Values.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        {{- range .Values.keycloak.hostnames }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ include "kontor.keycloak.fullname" . }}-tls
+  {{- end }}
+  rules:
+    {{- range .Values.keycloak.hostnames }}
+    - host: {{ . | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "kontor.keycloak.fullname" $ }}
+                port:
+                  number: {{ $.Values.keycloak.service.httpPort }}
+    {{- end }}
+{{- end }}

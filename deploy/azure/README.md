@@ -2,13 +2,18 @@
 
 Provisions an Ubuntu 22.04 VM on Azure with Docker pre-installed, then runs the full stack behind Traefik with automatic TLS.
 
-The app is served from Azure's free DNS label — no custom domain required:
+The app is served from the custom domain `azure.kontor.live` (configurable via the
+`AZURE_DOMAIN` GitHub variable or the `domain` workflow input). A DNS A record for
+that domain must point at the VM's public IP before Traefik can issue a TLS cert.
 
 | Path | Service |
 | ---- | ------- |
-| `https://<label>.region.cloudapp.azure.com` | Client |
-| `https://<label>.region.cloudapp.azure.com/api` | Core |
-| `https://<label>.region.cloudapp.azure.com/auth` | Keycloak |
+| `https://azure.kontor.live`      | Client (SPA) |
+| `https://azure.kontor.live/api`  | Core (Spring Boot) |
+| `https://azure.kontor.live/auth` | Keycloak |
+
+The Azure-assigned `cloudapp.azure.com` hostname is still exposed as a Terraform
+output (`domain`) so it can be used as a fallback for the DNS A record target.
 
 ---
 
@@ -57,7 +62,14 @@ terraform plan
 terraform apply
 ```
 
-Note the `domain` output — this is your app's hostname.
+Note the `public_ip_address` output and create an A record in your DNS provider:
+
+```
+azure.kontor.live  A  <public_ip_address>
+```
+
+Wait until the record resolves (`dig +short azure.kontor.live`) before
+continuing — Traefik's ACME TLS challenge will fail otherwise.
 
 ---
 
@@ -75,7 +87,7 @@ Clone the repo, create `.env`, and start the stack. **Replace all placeholder pa
 git clone https://github.com/AET-DevOps26/team-3m.git && cd team-3m
 
 cat > .env << 'EOF'
-DOMAIN=<domain output from terraform>
+DOMAIN=azure.kontor.live
 ACME_EMAIL=you@example.com
 POSTGRES_PASSWORD=change-me
 KEYCLOAK_POSTGRES_PASSWORD=change-me
@@ -86,7 +98,11 @@ EOF
 docker compose -f docker-compose.azure.yml up -d
 ```
 
-The app is available at `https://<domain>` once Traefik has issued the TLS certificate.
+The app is available at `https://azure.kontor.live` once Traefik has issued the TLS certificate (first start can take ~30 s).
+
+> Pinning to a different domain? Set `DOMAIN` in `.env` accordingly and update
+> the DNS A record before bringing the stack up — Keycloak's realm import and
+> the Traefik routers all read this single variable.
 
 ---
 

@@ -12,16 +12,13 @@ RUN npm run build
 
 FROM nginxinc/nginx-unprivileged:1.29-alpine
 
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-
 USER root
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh \
-    && touch /usr/share/nginx/html/env.js \
-    && chown nginx:nginx /usr/share/nginx/html/env.js
-USER nginx
+WORKDIR /usr/share/nginx/html
+COPY --from=build /app/dist .
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+RUN chown -R 101:101 /usr/share/nginx/html
+USER 101
 
 EXPOSE 8080
 
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+ENTRYPOINT ["/bin/sh", "-c", "./vite-envs.sh && exec nginx -g 'daemon off;'"]

@@ -1,8 +1,13 @@
 package de.devops26.kontor.core.web;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 
-public record ApiResponse<T>(boolean success, T data, String error, List<?> details) {
+public record ApiResponse<T>(
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean success,
+        T data,
+        @Schema(nullable = true) String error,
+        @Schema(nullable = true) List<?> details) {
 
     public static <T> ApiResponse<T> ok(T data) {
         return new ApiResponse<>(true, data, null, null);

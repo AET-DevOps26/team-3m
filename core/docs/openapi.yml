@@ -1,0 +1,122 @@
+openapi: 3.1.0
+info:
+  title: OpenAPI definition
+  version: v0
+servers:
+- url: http://localhost
+  description: Generated server url
+paths:
+  /api/v1/financial-transactions/import:
+    post:
+      tags:
+      - financial-transaction-controller
+      operationId: importCsv
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required:
+              - file
+      responses:
+        "200":
+          description: CSV imported successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CsvImportApiResponse"
+        "400":
+          description: "Empty upload, malformed CSV, or row-level validation failure"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+  /api/v1/health/server:
+    get:
+      tags:
+      - health-controller
+      operationId: server
+      responses:
+        "200":
+          description: Server is up
+          content:
+            '*/*':
+              schema:
+                type: string
+        "503":
+          description: Server is unhealthy
+          content:
+            '*/*':
+              schema:
+                type: string
+  /api/v1/health/database:
+    get:
+      tags:
+      - health-controller
+      operationId: database
+      responses:
+        "200":
+          description: Database connection OK
+          content:
+            '*/*':
+              schema:
+                type: string
+        "503":
+          description: Database connection check failed
+          content:
+            '*/*':
+              schema:
+                type: string
+components:
+  schemas:
+    CsvImportApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/CsvImportResult"
+        error:
+          type:
+          - string
+          - "null"
+        details:
+          type:
+          - array
+          - "null"
+          items: {}
+      required:
+      - success
+    CsvImportResult:
+      type: object
+      properties:
+        importedCount:
+          type: integer
+          format: int32
+          minimum: 0
+        message:
+          type: string
+      required:
+      - importedCount
+      - message
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data: {}
+        error:
+          type:
+          - string
+          - "null"
+        details:
+          type:
+          - array
+          - "null"
+          items: {}
+      required:
+      - success

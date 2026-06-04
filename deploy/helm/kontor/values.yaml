@@ -14,6 +14,11 @@ image:
 oidc:
   # -- Issuer / authority URL.
   issuerUrl: ""
+  # -- Fetch JWKS from the in-cluster Keycloak Service over HTTP instead of the
+  # public issuer URL. For preview envs whose ingress serves an untrusted
+  # (Let's Encrypt staging) cert the core JVM can't validate. Token `iss`
+  # validation still uses issuerUrl. Requires keycloak.deploy=true.
+  internalJwks: false
   # -- Realm name. Used to build the default issuerUrl and names the realm import.
   realm: kontor
   # -- Public OIDC client ID for the SPA

@@ -29,7 +29,8 @@ jobs:
           persist-credentials: false
 
       - name: Set up Helm
-        uses: azure/setup-helm@v4
+        uses: azure/setup-helm@v5
+
 
       - name: Install kubeconform
         env:
@@ -51,10 +52,14 @@ jobs:
       - name: Lint & schema-validate each values file
         run: |
           set -euo pipefail
-          for values in values.yaml values-prod.yaml values-pr.example.yaml; do
+          for values in values.yaml values-prod.yaml values-pr.template.yaml; do
             echo "::group::$values"
             if [ "$values" = "values.yaml" ]; then
               overlay=""
+            elif [ "$values" = "values-pr.template.yaml" ]; then
+              PR_NUMBER=0 BASE_DOMAIN=preview.example.com \
+                envsubst '${PR_NUMBER} ${BASE_DOMAIN}' < "$CHART/$values" > "/tmp/$values"
+              overlay="-f /tmp/$values"
             else
               overlay="-f $CHART/$values"
             fi

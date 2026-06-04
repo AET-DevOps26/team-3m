@@ -4,8 +4,13 @@ FROM eclipse-temurin:25.0.3_9-jdk-alpine AS build
 
 WORKDIR /workspace
 
+COPY gradlew ./
+COPY gradle ./gradle
+COPY settings.gradle build.gradle ./
+RUN chmod +x gradlew && ./gradlew --no-daemon dependencies
+
 COPY . .
-RUN chmod +x gradlew && ./gradlew --no-daemon bootJar
+RUN ./gradlew --no-daemon bootJar
 
 FROM eclipse-temurin:25.0.3_9-jre-alpine
 

@@ -48,9 +48,11 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Prepare Terraform SSH public key
+        env:
+          AZURE_SSH_PUBLIC_KEY: ${{ vars.AZURE_SSH_PUBLIC_KEY }}
         run: |
           mkdir -p "$RUNNER_TEMP/azure-ssh"
-          echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCiWLX+rNXoo8O1OFJ52MTu4oNZF10BABy6S8NofTxY4TVT5RzRMvVODpy2MabXtko2CfYQ/dthbAaPXTS492bmr38pRx3vs9qhMjN4VM4DdTpyJALmFO8jNA1kfsN7dEJqRbtL9+tytyee5K0d5MqVl07m/FIFbrjL2Q++JbDmhla4gdoKG6cM8aReZQhsrEvASYFK68AodGDXFnaWFsY7mY7lqKZfdYaqcvPc1IbPhGTP+a2N/ZkIRuHuwGNVGARrU2Pd/twuPq0xmjABgCmvsRUDoyKVbmX43oQ7XRhFypXSkX7oAekGoY5jQ1rBxfDAUPj05kjqC1Q5s9MvKO9P team-3m-azure-placeholder" > "$RUNNER_TEMP/azure-ssh/team-3m-azure-rsa.pub"
+          printf '%s\n' "$AZURE_SSH_PUBLIC_KEY" > "$RUNNER_TEMP/azure-ssh/team-3m-azure-rsa.pub"
           echo "TF_VAR_admin_ssh_public_key_path=$RUNNER_TEMP/azure-ssh/team-3m-azure-rsa.pub" >> "$GITHUB_ENV"
 
       - name: Terraform init

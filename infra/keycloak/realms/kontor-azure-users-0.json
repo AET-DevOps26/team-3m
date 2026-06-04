@@ -1,0 +1,25 @@
+{
+  "realm": "kontor",
+  "users": [
+    {
+      "username": "dev",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Azure",
+      "lastName": "Dev",
+      "email": "dev@kontor.local",
+      "attributes": {
+        "persona": ["developer"],
+        "tenant": ["azure"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "azure-dev",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["kontor-user", "default-roles-kontor"]
+    }
+  ]
+}

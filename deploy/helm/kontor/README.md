@@ -62,9 +62,9 @@ when `hosts` is empty.
 ## Continuous deployment (GitHub Actions)
 
 The manual `helm` flow above is mirrored in CI. A reusable workflow
-(`.github/workflows/deploy.yml`) owns all helm/kubectl logic; it authenticates as
-the dedicated `kontor-ci` ServiceAccount (see `deploy/rbac/`) using a kubeconfig
-stored in the `KUBECONFIG_B64` repository secret. Passwords are passed via
+(`.github/workflows/deploy.yml`) owns all helm/kubectl logic; it authenticates
+through the Rancher proxy with a kubeconfig stored in the `KUBECONFIG_B64`
+repository secret (see `deploy/rbac/`). Passwords are passed via
 `--set-string` from environment secrets — never written to disk.
 
 - **Prod** — on push to `main`, `ci-cd.yml` runs semantic-release, builds images

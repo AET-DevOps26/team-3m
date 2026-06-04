@@ -93,7 +93,7 @@ spec:
     - metadata:
         name: data
         labels:
-          {{- include "kontor.labels" . | nindent 10 }}
+          {{- include "kontor.selectorLabels" . | nindent 10 }}
           app.kubernetes.io/component: keycloak-db
       spec:
         accessModes:

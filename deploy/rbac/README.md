@@ -1,21 +1,21 @@
-# CI cluster access & RBAC
+# CI cluster access
 
 The GitHub Actions deploy workflows reach the cluster through the **Rancher
 authenticating proxy** (`https://rancher.ase.cit.tum.de/k8s/clusters/c-f49m7`),
 because the kube-apiserver itself is not reachable from GitHub-hosted runners
 (VPN/campus-only). The proxy authenticates **Rancher API tokens** — not
 Kubernetes ServiceAccount tokens — so CI authenticates as a Rancher principal,
-and authorization comes from that principal's **Rancher project membership**
-(`project-owner` on `c-f49m7:p-xj8vv`, the `devops26-team-3m` project), not from
-the Kubernetes RBAC manifests in this directory.
+and authorization comes entirely from that principal's **Rancher project
+membership** (`project-owner` on `c-f49m7:p-xj8vv`, the `devops26-team-3m`
+project). No Kubernetes RBAC manifests are applied — project-owner RBAC
+propagates into every namespace assigned to the project.
 
 ## Files
 
 | File | Purpose |
 |------|---------|
 | `extract-kubeconfig.sh` | Formats a kubeconfig for the Rancher proxy from `RANCHER_TOKEN`. No CA pin — the proxy serves a publicly-trusted cert, so the runner's system trust store validates it. |
-| `namespace.tpl` | Namespace template carrying the Rancher project annotation+label. CI fills `NAMESPACE`, `RANCHER_PROJECT_ID`, `RANCHER_PROJECT_LABEL` via `envsubst` so preview namespaces land in the team's Rancher project (quota + propagated RBAC). Not a `.yaml` file on purpose, so `kubectl apply -f deploy/rbac/` skips it. |
-| `serviceaccount.yaml`, `clusterrole-namespaces.yaml`, `clusterrolebinding.yaml`, `clusterrole-app.yaml`, `rolebinding-prod.yaml` | **Not used by the proxy-based CI.** Retained for the alternative direct-apiserver path (an in-cluster/self-hosted runner), where a `kontor-ci` ServiceAccount token authenticates against the apiserver at `:6443`. |
+| `namespace.tpl` | Namespace template carrying the Rancher project annotation+label. CI fills `NAMESPACE`, `RANCHER_PROJECT_ID`, `RANCHER_PROJECT_LABEL` via `envsubst` so preview namespaces land in the team's Rancher project (quota + propagated RBAC). |
 
 ## One-time bootstrap
 

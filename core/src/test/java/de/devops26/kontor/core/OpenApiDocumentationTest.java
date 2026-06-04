@@ -48,7 +48,11 @@ class OpenApiDocumentationTest {
                         "getOverview",
                         "getPerformance",
                         "/api/v1/portfolio/overview",
-                        "/api/v1/portfolio/performance");
+                        "/api/v1/portfolio/performance",
+                        "bearerAuth",
+                        "type: http",
+                        "scheme: bearer",
+                        "\"401\"");
 
         if (Boolean.getBoolean("openapi.write")) {
             Files.createDirectories(OUTPUT.getParent());

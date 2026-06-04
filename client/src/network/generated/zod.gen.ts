@@ -74,17 +74,6 @@ export const zImportCsvBody = z.object({
 export const importCsvResponseSchema = csvImportApiResponseSchema
 
 /**
- * OK
- */
-export const getPerformanceResponseSchema =
-  apiResponsePortfolioPerformanceSchema
-
-/**
- * OK
- */
-export const getOverviewResponseSchema = apiResponsePortfolioOverviewSchema
-
-/**
  * Server is up
  */
 export const serverResponseSchema = z.string()

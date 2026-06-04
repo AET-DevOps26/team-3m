@@ -236,26 +236,22 @@ function PerformanceChart({
 }
 
 interface PerformanceChartContentProps {
-  currency: string
   range: TimeRange
 }
 
-function PerformanceChartContent({
-  currency,
-  range,
-}: PerformanceChartContentProps) {
+function PerformanceChartContent({ range }: PerformanceChartContentProps) {
   const { data: performance } = usePortfolioPerformance()
   const filtered = filterByRange(performance.snapshots, range)
   return (
-    <PerformanceChart snapshots={filtered} currency={currency} range={range} />
+    <PerformanceChart
+      snapshots={filtered}
+      currency={performance.currency}
+      range={range}
+    />
   )
 }
 
-interface PerformanceCardProps {
-  currency: string
-}
-
-function PerformanceCard({ currency }: PerformanceCardProps) {
+function PerformanceCard() {
   const [range, setRange] = useState<TimeRange>("MAX")
 
   return (
@@ -273,7 +269,7 @@ function PerformanceCard({ currency }: PerformanceCardProps) {
             <div className="h-40 w-full animate-pulse rounded bg-muted" />
           }
         >
-          <PerformanceChartContent currency={currency} range={range} />
+          <PerformanceChartContent range={range} />
         </Suspense>
       </CardContent>
     </Card>
@@ -411,7 +407,7 @@ function PortfolioContent() {
         </Card>
       </div>
 
-      <PerformanceCard currency={overview.currency} />
+      <PerformanceCard />
 
       <Card>
         <CardHeader>

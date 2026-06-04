@@ -98,15 +98,15 @@ export type GetPerformanceData = {
   url: "/api/v1/portfolio/performance"
 }
 
-export type GetPerformanceResponses = {
+export type GetPerformanceErrors = {
   /**
-   * OK
+   * Unauthorized
    */
-  200: ApiResponsePortfolioPerformance
+  401: ApiResponsePortfolioPerformance
 }
 
-export type GetPerformanceResponse =
-  GetPerformanceResponses[keyof GetPerformanceResponses]
+export type GetPerformanceError =
+  GetPerformanceErrors[keyof GetPerformanceErrors]
 
 export type GetOverviewData = {
   body?: never
@@ -115,15 +115,14 @@ export type GetOverviewData = {
   url: "/api/v1/portfolio/overview"
 }
 
-export type GetOverviewResponses = {
+export type GetOverviewErrors = {
   /**
-   * OK
+   * Unauthorized
    */
-  200: ApiResponsePortfolioOverview
+  401: ApiResponsePortfolioOverview
 }
 
-export type GetOverviewResponse =
-  GetOverviewResponses[keyof GetOverviewResponses]
+export type GetOverviewError = GetOverviewErrors[keyof GetOverviewErrors]
 
 export type ServerData = {
   body?: never

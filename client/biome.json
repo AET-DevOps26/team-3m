@@ -36,8 +36,15 @@
       "includes": ["src/components/ui/**"],
       "linter": {
         "rules": {
-          "security": { "noDangerouslySetInnerHtml": "off" },
           "suspicious": { "noArrayIndexKey": "off" }
+        }
+      }
+    },
+    {
+      "includes": ["src/components/ui/chart.tsx"],
+      "linter": {
+        "rules": {
+          "security": { "noDangerouslySetInnerHtml": "off" }
         }
       }
     }

@@ -51,7 +51,7 @@ jobs:
     name: ${{ inputs.action }} (${{ inputs.environment }})
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
-    timeout-minutes: 20
+    timeout-minutes: 4
 
     steps:
       - name: Checkout (deploy/ only)

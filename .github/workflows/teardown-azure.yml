@@ -1,0 +1,44 @@
+name: Teardown Azure
+
+# Manually triggered. Destroys all Azure infrastructure.
+# Uses the same Azure service-principal secrets as deploy-azure.yml.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  teardown:
+    name: Teardown
+    runs-on: ubuntu-latest
+    environment: azure
+
+    env:
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Prepare Terraform SSH public key
+        env:
+          AZURE_SSH_PUBLIC_KEY: ${{ vars.AZURE_SSH_PUBLIC_KEY }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/azure-ssh"
+          printf '%s\n' "$AZURE_SSH_PUBLIC_KEY" > "$RUNNER_TEMP/azure-ssh/team-3m-azure-rsa.pub"
+          echo "TF_VAR_admin_ssh_public_key_path=$RUNNER_TEMP/azure-ssh/team-3m-azure-rsa.pub" >> "$GITHUB_ENV"
+
+      - name: Terraform init
+        working-directory: deploy/azure
+        run: terraform init
+
+      - name: Terraform destroy
+        working-directory: deploy/azure
+        run: terraform destroy -auto-approve

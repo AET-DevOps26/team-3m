@@ -126,6 +126,7 @@ public class FinancialTransactionService {
             throw new CsvParsingException("CSV file contained no data rows", List.of());
         }
 
+        repository.deleteAllForUser(userId);
         int count = repository.upsertAll(rows, userId);
         return new CsvImportResult(count, "Successfully imported " + count + " transaction(s)");
     }

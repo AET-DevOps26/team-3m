@@ -1,0 +1,4 @@
+"datetime","date","account_type","category","type","asset_class","name","symbol","shares","price","amount","fee","tax","currency","original_amount","original_currency","fx_rate","description","transaction_id","counterparty_name","counterparty_iban","payment_reference","mcc_code"
+"2026-05-01T10:00:00.000000Z","2026-05-01","DEFAULT","CASH","CUSTOMER_INBOUND","","Employer B","","","","4500.000000","","","EUR","","","","May salary","11111111-1111-4111-8111-111111111111","Employer B","DE91100000000123456789","",""
+"2026-05-05T12:00:00.000000Z","2026-05-05","DEFAULT","CASH","CUSTOMER_OUTBOUND","","Landlord","","","","-1200.000000","","","EUR","","","","May rent","22222222-2222-4222-9222-222222222222","Landlord","DE36200400300123456000","",""
+"2026-05-10T09:15:00.000000Z","2026-05-10","DEFAULT","TRADING","BUY","STOCK","Tesla","US88160R1014","3.0000000000","175.500000","-526.50","-1.00","","EUR","","","","","33333333-3333-4333-a333-333333333333","","","",""

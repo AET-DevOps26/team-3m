@@ -148,7 +148,7 @@ export function useImportTransactionsCsv(
   return useFileUpload<ImportTransactionsCsvResult>({
     path: IMPORT_PATH,
     onSuccess: (result, file) => {
-      void queryClient.invalidateQueries({ queryKey: ["transactions"] })
+      void queryClient.resetQueries({ queryKey: ["transactions"] })
       options.onSuccess?.(result, file)
     },
     silent: true,

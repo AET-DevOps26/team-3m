@@ -71,6 +71,12 @@ public class FinancialTransactionRepository {
         return new TransactionPage(items, nextCursor);
     }
 
+    public void deleteAllForUser(UUID userId) {
+        dsl.deleteFrom(FINANCIAL_TRANSACTION)
+                .where(FINANCIAL_TRANSACTION.USER_ID.eq(userId))
+                .execute();
+    }
+
     public int upsertAll(List<TransactionCsvRow> rows, UUID userId) {
         if (rows.isEmpty()) {
             return 0;

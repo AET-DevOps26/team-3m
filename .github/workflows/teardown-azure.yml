@@ -1,7 +1,7 @@
 name: Teardown Azure
 
-# Manually triggered. Stops the stack and destroys all Azure infrastructure.
-# Uses the same secrets as deploy-azure.yml.
+# Manually triggered. Destroys all Azure infrastructure.
+# Uses the same Azure service-principal secrets as deploy-azure.yml.
 
 on:
   workflow_dispatch:
@@ -26,34 +26,16 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Prepare Terraform SSH key
+      - name: Prepare Terraform SSH public key
         run: |
           mkdir -p "$RUNNER_TEMP/azure-ssh"
-          ssh-keygen -t rsa -b 4096 -N "" \
-            -C "team-3m-azure-${GITHUB_RUN_ID}" \
-            -f "$RUNNER_TEMP/azure-ssh/team-3m-azure-rsa"
+          echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDRyoQ+ny8dD0ccpiJijhVOxITbHRarfZ0utrZRmwrnk team-3m-azure-destroy" > "$RUNNER_TEMP/azure-ssh/team-3m-azure-rsa.pub"
           echo "TF_VAR_admin_ssh_public_key_path=$RUNNER_TEMP/azure-ssh/team-3m-azure-rsa.pub" >> "$GITHUB_ENV"
 
       - name: Terraform init
         working-directory: deploy/azure
         run: terraform init
 
-      - name: Stop app
-        continue-on-error: true
-        run: |
-          az login --service-principal \
-            --username "$ARM_CLIENT_ID" \
-            --password "$ARM_CLIENT_SECRET" \
-            --tenant "$ARM_TENANT_ID" \
-            --output none
-          az vm run-command invoke \
-            --resource-group "Kontor" \
-            --name "kontor-vm" \
-            --command-id RunShellScript \
-            --scripts "cd /home/azureuser/team-3m && docker compose -f docker-compose.azure.yml down -v"
-
       - name: Terraform destroy
         working-directory: deploy/azure
-        env:
-          TF_VAR_allowed_ssh_source_address_prefix: ${{ secrets.AZURE_ALLOWED_SSH_CIDR }}
         run: terraform destroy -auto-approve

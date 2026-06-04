@@ -3,8 +3,8 @@ name: Deploy to Azure
 # Manually triggered. Provisions the VM with Terraform, then starts the stack.
 #
 # Secrets: AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_TENANT_ID,
-#          AZURE_SUBSCRIPTION_ID, AZURE_ALLOWED_SSH_CIDR,
-#          AZURE_POSTGRES_PASSWORD, AZURE_KEYCLOAK_POSTGRES_PASSWORD,
+#          AZURE_SUBSCRIPTION_ID, AZURE_POSTGRES_PASSWORD,
+#          AZURE_KEYCLOAK_POSTGRES_PASSWORD,
 #          AZURE_KEYCLOAK_ADMIN_PASSWORD
 # Variables: AZURE_ACME_EMAIL, AZURE_KEYCLOAK_ADMIN_USER, AZURE_DOMAIN
 #
@@ -48,12 +48,10 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Prepare Terraform SSH key
+      - name: Prepare Terraform SSH public key
         run: |
           mkdir -p "$RUNNER_TEMP/azure-ssh"
-          ssh-keygen -t rsa -b 4096 -N "" \
-            -C "team-3m-azure-${GITHUB_RUN_ID}" \
-            -f "$RUNNER_TEMP/azure-ssh/team-3m-azure-rsa"
+          echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDRyoQ+ny8dD0ccpiJijhVOxITbHRarfZ0utrZRmwrnk team-3m-azure-deploy" > "$RUNNER_TEMP/azure-ssh/team-3m-azure-rsa.pub"
           echo "TF_VAR_admin_ssh_public_key_path=$RUNNER_TEMP/azure-ssh/team-3m-azure-rsa.pub" >> "$GITHUB_ENV"
 
       - name: Terraform init
@@ -62,8 +60,6 @@ jobs:
 
       - name: Terraform apply
         working-directory: deploy/azure
-        env:
-          TF_VAR_allowed_ssh_source_address_prefix: ${{ secrets.AZURE_ALLOWED_SSH_CIDR }}
         run: |
           terraform apply -auto-approve
           {

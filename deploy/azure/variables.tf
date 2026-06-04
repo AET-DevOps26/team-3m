@@ -24,13 +24,13 @@ variable "computer_name" {
 
 variable "admin_username" {
   type        = string
-  description = "Admin username for SSH access to the VM."
+  description = "Admin username for the VM."
   default     = "azureuser"
 }
 
 variable "admin_ssh_public_key_path" {
   type        = string
-  description = "Path to the SSH public key used for VM access."
+  description = "Path to the SSH public key installed on the VM. Required by Azure Linux VM creation even when public SSH ingress is disabled."
   default     = "~/.ssh/team-3m-azure-rsa.pub"
 }
 
@@ -44,14 +44,4 @@ variable "dns_label" {
   type        = string
   description = "DNS label for the public IP. Results in <label>.<location>.cloudapp.azure.com."
   default     = "kontor"
-}
-
-variable "allowed_ssh_source_address_prefix" {
-  type        = string
-  description = "Source address prefix allowed to SSH into the VM. Must be a valid CIDR (e.g. your public IP as x.x.x.x/32). Never use '*'."
-
-  validation {
-    condition     = !contains(["*", "0.0.0.0/0", "::/0"], var.allowed_ssh_source_address_prefix) && can(cidrhost(var.allowed_ssh_source_address_prefix, 0))
-    error_message = "allowed_ssh_source_address_prefix must be a valid CIDR block (e.g. '1.2.3.4/32'). Open access via '*', '0.0.0.0/0', or '::/0' is not permitted."
-  }
 }

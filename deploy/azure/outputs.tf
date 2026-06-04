@@ -13,11 +13,6 @@ output "public_ip_address" {
   value       = azurerm_public_ip.main.ip_address
 }
 
-output "ssh_command" {
-  description = "SSH command for connecting to the VM."
-  value       = "ssh -i ${trimsuffix(var.admin_ssh_public_key_path, ".pub")} ${var.admin_username}@${azurerm_public_ip.main.ip_address}"
-}
-
 output "domain" {
   description = "Azure-assigned hostname. Use as DOMAIN in .env — no custom domain needed."
   value       = azurerm_public_ip.main.fqdn

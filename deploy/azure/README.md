@@ -54,7 +54,9 @@ log for reference.
 
 - [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) ≥ 2.50
 - [Terraform](https://developer.hashicorp.com/terraform/install) ≥ 1.5
-- An SSH key pair at `~/.ssh/team-3m-azure-rsa` — generate with:
+- A public SSH key at `~/.ssh/team-3m-azure-rsa.pub` for Azure Linux VM creation.
+  The VM does not expose public SSH ingress; deployments use Azure Run Command.
+  Generate a local key pair with:
 
 ```sh
 ssh-keygen -t rsa -b 4096 -f ~/.ssh/team-3m-azure-rsa -C "team-3m-azure"
@@ -79,11 +81,8 @@ az group create --name Kontor --location swedencentral
 cp terraform.tfvars.example terraform.tfvars
 ```
 
-Set `allowed_ssh_source_address_prefix` to your public IP as `x.x.x.x/32`:
-
-```sh
-curl -s ifconfig.me
-```
+The defaults in `terraform.tfvars.example` are enough for a local apply once
+the resource group and SSH public key exist.
 
 ---
 
@@ -117,18 +116,23 @@ On subsequent deploys you can skip this step entirely.
 
 ## Deploy
 
-SSH into the VM (cloud-init installs Docker on first boot — wait ~2 min if Docker is not yet available):
+The GitHub `Deploy to Azure` workflow provisions the VM, waits for cloud-init,
+then starts the stack through Azure Run Command.
+
+For a local manual deploy, use Azure Run Command to create `.env` and start the
+stack. **Replace all placeholder passwords with strong, unique values before running.**
 
 ```sh
-ssh -i ~/.ssh/team-3m-azure-rsa azureuser@<public_ip_address>
-```
-
-Clone the repo, create `.env`, and start the stack. **Replace all placeholder passwords with strong, unique values before running.**
-
-```sh
-git clone https://github.com/AET-DevOps26/team-3m.git && cd team-3m
-
-cat > .env << 'EOF'
+az vm run-command invoke \
+  --resource-group Kontor \
+  --name kontor-vm \
+  --command-id RunShellScript \
+  --scripts '
+    set -eu
+    cloud-init status --wait
+    git clone --depth 1 https://github.com/AET-DevOps26/team-3m.git /home/azureuser/team-3m 2>/dev/null \
+      || git -C /home/azureuser/team-3m pull
+    cat > /home/azureuser/team-3m/.env <<EOF
 DOMAIN=azure.kontor.live
 ACME_EMAIL=you@example.com
 POSTGRES_PASSWORD=change-me
@@ -136,8 +140,9 @@ KEYCLOAK_POSTGRES_PASSWORD=change-me
 KEYCLOAK_ADMIN_USER=admin
 KEYCLOAK_ADMIN_PASSWORD=change-me
 EOF
-
-docker compose -f docker-compose.azure.yml up -d
+    cd /home/azureuser/team-3m
+    docker compose -f docker-compose.azure.yml up -d
+  '
 ```
 
 The app is available at `https://azure.kontor.live` once Traefik has issued the TLS certificate (first start can take ~30 s).

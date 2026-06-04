@@ -37,7 +37,3 @@ interface ImportMeta {
 
   glob: import('vite-envs/types/importGlob').ImportGlobFunction
 }
-
-interface Window {
-  _ENV_?: Record<string, string>
-}

@@ -15,8 +15,6 @@ name: Deploy to Azure
 # when the infrastructure is destroyed and recreated.
 
 on:
-  pull_request:
-    branches: [main]
   workflow_dispatch:
     inputs:
       domain:

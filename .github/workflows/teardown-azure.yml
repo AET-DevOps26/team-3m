@@ -4,6 +4,8 @@ name: Teardown Azure
 # Uses the same Azure service-principal secrets as deploy-azure.yml.
 
 on:
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 jobs:

@@ -74,6 +74,7 @@ core, Postgres (with `pgvector`), and an optional Keycloak. The chart README
 documents environment overlays (`values-prod.yaml`,
 `values-pr.template.yaml`), required secrets, and the install / upgrade flow.
 
+
 ```sh
 helm upgrade --install kontor ./deploy/helm/kontor \
   -n team-3m \

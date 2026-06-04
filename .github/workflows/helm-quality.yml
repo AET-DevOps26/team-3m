@@ -31,6 +31,7 @@ jobs:
       - name: Set up Helm
         uses: azure/setup-helm@v5
 
+
       - name: Install kubeconform
         env:
           KUBECONFORM_VERSION: v0.6.7

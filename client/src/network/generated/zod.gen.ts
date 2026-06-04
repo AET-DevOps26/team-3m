@@ -12,22 +12,22 @@ export const csvImportResultSchema = z.object({
 export const csvImportApiResponseSchema = z.object({
   success: z.boolean(),
   data: csvImportResultSchema.optional(),
-  error: z.string().optional(),
-  details: z.array(z.unknown()).optional(),
+  error: z.string().nullish(),
+  details: z.array(z.unknown()).nullish(),
 })
 
 export const apiResponseSchema = z.object({
   success: z.boolean(),
   data: z.unknown().optional(),
-  error: z.string().optional(),
-  details: z.array(z.unknown()).optional(),
+  error: z.string().nullish(),
+  details: z.array(z.unknown()).nullish(),
 })
 
 export const apiResponseObjectSchema = z.object({
   success: z.boolean(),
   data: z.unknown().optional(),
-  error: z.string().optional(),
-  details: z.array(z.unknown()).optional(),
+  error: z.string().nullish(),
+  details: z.array(z.unknown()).nullish(),
 })
 
 export const zImportCsvBody = z.object({

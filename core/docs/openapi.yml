@@ -112,9 +112,13 @@ components:
         data:
           $ref: "#/components/schemas/CsvImportResult"
         error:
-          type: string
+          type:
+          - string
+          - "null"
         details:
-          type: array
+          type:
+          - array
+          - "null"
           items: {}
       required:
       - success
@@ -137,9 +141,13 @@ components:
           type: boolean
         data: {}
         error:
-          type: string
+          type:
+          - string
+          - "null"
         details:
-          type: array
+          type:
+          - array
+          - "null"
           items: {}
       required:
       - success
@@ -150,9 +158,13 @@ components:
           type: boolean
         data: {}
         error:
-          type: string
+          type:
+          - string
+          - "null"
         details:
-          type: array
+          type:
+          - array
+          - "null"
           items: {}
       required:
       - success

@@ -71,11 +71,6 @@ paths:
       - financial-transaction-controller
       operationId: listTransactions
       parameters:
-      - name: user
-        in: query
-        required: true
-        schema:
-          $ref: "#/components/schemas/AppUser"
       - name: pageSize
         in: query
         required: false
@@ -142,18 +137,6 @@ components:
           items: {}
       required:
       - success
-    AppUser:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        oidcSub:
-          type: string
-        email:
-          type: string
-        preferredUsername:
-          type: string
     ApiResponseObject:
       type: object
       properties:

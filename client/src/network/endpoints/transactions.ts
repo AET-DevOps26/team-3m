@@ -1,6 +1,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { useEffect, useMemo } from "react"
 import { z } from "zod"
+import { apiClient } from "../api-client"
 import { APIError } from "../errors"
 import { useFileUpload } from "../file-upload/use-file-upload"
 import type { CsvImportResult } from "../generated"
@@ -8,7 +9,6 @@ import {
   csvImportApiResponseSchema,
   csvImportResultSchema,
 } from "../generated/zod.gen"
-import { httpRequest } from "../http"
 
 const BASE_PATH = "/api/v1/financial-transactions"
 const IMPORT_PATH = `${BASE_PATH}/import`
@@ -78,14 +78,17 @@ export function useTransactions() {
     }: {
       pageParam: TransactionCursorParams | null
     }) => {
-      const params = new URLSearchParams({ pageSize: String(PAGE_SIZE) })
-      if (pageParam) {
-        params.set("afterDatetime", pageParam.afterDatetime)
-        params.set("afterId", pageParam.afterId)
-      }
-      const raw = await httpRequest<unknown>({
-        path: `${BASE_PATH}?${params}`,
-      })
+      const { data: raw } = await apiClient.GET(
+        "/api/v1/financial-transactions",
+        {
+          params: {
+            query: {
+              pageSize: PAGE_SIZE,
+              ...pageParam,
+            },
+          },
+        },
+      )
       return transactionPageEnvelopeSchema.parse(raw).data
     },
     initialPageParam: null as TransactionCursorParams | null,

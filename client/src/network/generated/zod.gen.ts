@@ -23,13 +23,6 @@ export const apiResponseSchema = z.object({
   details: z.array(z.unknown()).optional(),
 })
 
-export const appUserSchema = z.object({
-  id: z.uuid().optional(),
-  oidcSub: z.string().optional(),
-  email: z.string().optional(),
-  preferredUsername: z.string().optional(),
-})
-
 export const apiResponseObjectSchema = z.object({
   success: z.boolean(),
   data: z.unknown().optional(),
@@ -57,7 +50,6 @@ export const helloResponseSchema = z.string()
 export const databaseResponseSchema = z.string()
 
 export const zListTransactionsQuery = z.object({
-  user: appUserSchema,
   pageSize: z
     .int()
     .min(-2147483648, {

@@ -23,13 +23,6 @@ export type ApiResponse = {
   details?: Array<unknown>
 }
 
-export type AppUser = {
-  id?: string
-  oidcSub?: string
-  email?: string
-  preferredUsername?: string
-}
-
 export type ApiResponseObject = {
   success: boolean
   data?: unknown
@@ -108,8 +101,7 @@ export type DatabaseResponse = DatabaseResponses[keyof DatabaseResponses]
 export type ListTransactionsData = {
   body?: never
   path?: never
-  query: {
-    user: AppUser
+  query?: {
     pageSize?: number
     afterDatetime?: string
     afterId?: string

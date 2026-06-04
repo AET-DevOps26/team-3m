@@ -3,7 +3,6 @@
 export type {
   ApiResponse,
   ApiResponseObject,
-  AppUser,
   ClientOptions,
   CsvImportApiResponse,
   CsvImportResult,

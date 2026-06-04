@@ -33,7 +33,7 @@ public class FinancialTransactionController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<?>> listTransactions(
-            @AuthenticatedUser AppUser user,
+            @Parameter(hidden = true) @AuthenticatedUser AppUser user,
             @RequestParam(defaultValue = "200") int pageSize,
             @RequestParam(required = false) String afterDatetime,
             @RequestParam(required = false) UUID afterId) {

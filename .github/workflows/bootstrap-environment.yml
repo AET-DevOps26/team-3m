@@ -1,0 +1,16 @@
+name: Bootstrap Environments
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Name of the GitHub Environment to create (e.g. k8s-prod, k8s-preview)"
+        required: true
+        type: string
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}   # creates the environment if it doesn't exist
+    steps:
+      - run: echo "ensured environment '${{ inputs.environment }}'"

@@ -58,8 +58,10 @@ spec:
             {{- with (include "kontor.oidc.issuerUrl" .) }}
             - name: KEYCLOAK_ISSUER
               value: {{ . | quote }}
+            {{- end }}
+            {{- with (include "kontor.oidc.jwkSetUri" .) }}
             - name: KEYCLOAK_JWK_SET_URI
-              value: {{ printf "%s/protocol/openid-connect/certs" . | quote }}
+              value: {{ . | quote }}
             {{- end }}
             {{- range $key, $value := .Values.core.env }}
             - name: {{ $key }}

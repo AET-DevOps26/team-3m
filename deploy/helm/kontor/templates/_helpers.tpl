@@ -151,3 +151,19 @@ this release deploys Keycloak, derive it from the first hostname + realm.
 {{- printf "https://%s/realms/%s" (first .Values.keycloak.hostnames) .Values.oidc.realm -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Resolve the JWKS URI for core's token signature verification. When
+`oidc.internalJwks` is set (preview envs with an untrusted ingress cert),
+fetch keys from the in-cluster Keycloak Service over HTTP. Otherwise derive
+from the public issuer URL.
+*/}}
+{{- define "kontor.oidc.jwkSetUri" -}}
+{{- if and .Values.oidc.internalJwks .Values.keycloak.deploy -}}
+{{- printf "http://%s:%v/realms/%s/protocol/openid-connect/certs" (include "kontor.keycloak.fullname" .) .Values.keycloak.service.httpPort .Values.oidc.realm -}}
+{{- else -}}
+{{- with (include "kontor.oidc.issuerUrl" .) -}}
+{{- printf "%s/protocol/openid-connect/certs" . -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}

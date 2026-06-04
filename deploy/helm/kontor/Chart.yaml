@@ -3,11 +3,11 @@ name: kontor
 description: Kontor Finance App
 type: application
 version: 0.1.0
-appVersion: "0.5.0"
+appVersion: "0.6.0"
 kubeVersion: ">=1.30.0-0"
-home: https://github.com/devops26/team-3m
+home: https://github.com/AET-DevOps26/team-3m
 sources:
-  - https://github.com/devops26/team-3m
+  - https://github.com/AET-DevOps26/team-3m
 maintainers:
   - name: Mathilde Hagl
   - name: Magnus Kühne

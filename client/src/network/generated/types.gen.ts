@@ -7,8 +7,8 @@ export type ClientOptions = {
 export type CsvImportApiResponse = {
   success: boolean
   data?: CsvImportResult
-  error?: string | null
-  details?: Array<unknown> | null
+  error?: string
+  details?: Array<unknown>
 }
 
 export type CsvImportResult = {
@@ -19,8 +19,8 @@ export type CsvImportResult = {
 export type ApiResponse = {
   success: boolean
   data?: unknown
-  error?: string | null
-  details?: Array<unknown> | null
+  error?: string
+  details?: Array<unknown>
 }
 
 export type ApiResponseObject = {

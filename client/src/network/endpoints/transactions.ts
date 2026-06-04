@@ -1,4 +1,4 @@
-import { useInfiniteQuery } from "@tanstack/react-query"
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useMemo } from "react"
 import { z } from "zod"
 import { apiClient } from "../api-client"
@@ -15,7 +15,7 @@ const IMPORT_PATH = `${BASE_PATH}/import`
 const PAGE_SIZE = 200
 
 const transactionSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   datetime: z.string(),
   date: z.string(),
   accountType: z.string(),
@@ -34,7 +34,7 @@ const transactionSchema = z.object({
   originalCurrency: z.string().nullable(),
   fxRate: z.number().nullable(),
   description: z.string().nullable(),
-  externalTransactionId: z.string().uuid().nullable(),
+  externalTransactionId: z.string().nullable(),
   counterpartyName: z.string().nullable(),
   counterpartyIban: z.string().nullable(),
   paymentReference: z.string().nullable(),
@@ -43,7 +43,7 @@ const transactionSchema = z.object({
 
 const transactionCursorSchema = z.object({
   afterDatetime: z.string(),
-  afterId: z.string().uuid(),
+  afterId: z.uuid(),
 })
 
 const transactionPageEnvelopeSchema = z.object({
@@ -107,7 +107,8 @@ export function useTransactions() {
     [data],
   )
 
-  return { data: transactions, isPending, isError, error }
+  const isLoadingAll = isPending || hasNextPage || isFetchingNextPage
+  return { data: transactions, isPending: isLoadingAll, isError, error }
 }
 
 export type ImportTransactionsCsvResult = CsvImportResult
@@ -142,9 +143,14 @@ export interface UseImportTransactionsCsvOptions {
 export function useImportTransactionsCsv(
   options: UseImportTransactionsCsvOptions = {},
 ) {
+  const queryClient = useQueryClient()
+
   return useFileUpload<ImportTransactionsCsvResult>({
     path: IMPORT_PATH,
-    onSuccess: options.onSuccess,
+    onSuccess: (result, file) => {
+      void queryClient.invalidateQueries({ queryKey: ["transactions"] })
+      options.onSuccess?.(result, file)
+    },
     silent: true,
     parseResponse: (raw) => unwrapImportEnvelope(raw),
   })

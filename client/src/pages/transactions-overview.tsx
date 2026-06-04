@@ -148,12 +148,19 @@ function cleanTitle(value: string): string {
 }
 
 function formatAmount(amount: number, currency: string): string {
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount)
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount)
+  } catch {
+    return new Intl.NumberFormat(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount)
+  }
 }
 
 // Known overrides for type values that don't format well generically.
@@ -413,7 +420,10 @@ export function TransactionsBlock() {
   const sentinelRef = useRef<HTMLDivElement>(null)
 
   const categories = useMemo(
-    () => [...new Set((transactions ?? []).map((t) => t.category))].sort(),
+    () =>
+      [...new Set((transactions ?? []).map((t) => t.category))]
+        .filter(Boolean)
+        .sort(),
     [transactions],
   )
 

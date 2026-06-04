@@ -26,6 +26,14 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
 
+      - name: Prepare Terraform SSH key
+        run: |
+          mkdir -p "$RUNNER_TEMP/azure-ssh"
+          ssh-keygen -t rsa -b 4096 -N "" \
+            -C "team-3m-azure-${GITHUB_RUN_ID}" \
+            -f "$RUNNER_TEMP/azure-ssh/team-3m-azure-rsa"
+          echo "TF_VAR_admin_ssh_public_key_path=$RUNNER_TEMP/azure-ssh/team-3m-azure-rsa.pub" >> "$GITHUB_ENV"
+
       - name: Terraform init
         working-directory: deploy/azure
         run: terraform init

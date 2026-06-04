@@ -48,6 +48,14 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
 
+      - name: Prepare Terraform SSH key
+        run: |
+          mkdir -p "$RUNNER_TEMP/azure-ssh"
+          ssh-keygen -t rsa -b 4096 -N "" \
+            -C "team-3m-azure-${GITHUB_RUN_ID}" \
+            -f "$RUNNER_TEMP/azure-ssh/team-3m-azure-rsa"
+          echo "TF_VAR_admin_ssh_public_key_path=$RUNNER_TEMP/azure-ssh/team-3m-azure-rsa.pub" >> "$GITHUB_ENV"
+
       - name: Terraform init
         working-directory: deploy/azure
         run: terraform init
@@ -88,6 +96,7 @@ jobs:
             KEYCLOAK_POSTGRES_PASSWORD=${{ secrets.AZURE_KEYCLOAK_POSTGRES_PASSWORD }}
             KEYCLOAK_ADMIN_USER=${{ vars.AZURE_KEYCLOAK_ADMIN_USER }}
             KEYCLOAK_ADMIN_PASSWORD=${{ secrets.AZURE_KEYCLOAK_ADMIN_PASSWORD }}
+          DEPLOY_REF: ${{ github.ref }}
         run: |
           az login --service-principal \
             --username "$ARM_CLIENT_ID" \
@@ -96,16 +105,30 @@ jobs:
             --output none
 
           ENV_B64=$(printf '%s' "$ENV_FILE" | base64 -w 0)
+          DEPLOY_REF_B64=$(printf '%s' "$DEPLOY_REF" | base64 -w 0)
 
           az vm run-command invoke \
             --resource-group "Kontor" \
             --name "kontor-vm" \
             --command-id RunShellScript \
             --scripts "
-              git clone --depth 1 https://github.com/AET-DevOps26/team-3m.git /home/azureuser/team-3m 2>/dev/null \
-                || git -C /home/azureuser/team-3m pull
-              echo '$ENV_B64' | base64 -d > /home/azureuser/team-3m/.env
-              cd /home/azureuser/team-3m
+              set -eu
+              cloud-init status --wait
+
+              REPO_DIR=/home/azureuser/team-3m
+              DEPLOY_REF=\$(printf '%s' '$DEPLOY_REF_B64' | base64 -d)
+
+              if [ ! -d \"\$REPO_DIR/.git\" ]; then
+                rm -rf \"\$REPO_DIR\"
+                git clone --no-checkout --filter=blob:none https://github.com/AET-DevOps26/team-3m.git \"\$REPO_DIR\"
+              fi
+
+              git -C \"\$REPO_DIR\" fetch --depth 1 origin \"\$DEPLOY_REF\"
+              git -C \"\$REPO_DIR\" checkout --force FETCH_HEAD
+              git -C \"\$REPO_DIR\" clean -fdx
+              echo '$ENV_B64' | base64 -d > \"\$REPO_DIR/.env\"
+
+              cd \"\$REPO_DIR\"
               docker compose -f docker-compose.azure.yml pull
               docker compose -f docker-compose.azure.yml up -d
             "

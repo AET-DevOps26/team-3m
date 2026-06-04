@@ -32,7 +32,7 @@ class WebConfigTests {
 
     @Test
     void allowsConfiguredFrontendOrigins() throws Exception {
-        mockMvc.perform(options("/hello")
+        mockMvc.perform(options("/api/health")
                         .header("Origin", "http://localhost:5173")
                         .header("Access-Control-Request-Method", "GET"))
                 .andExpect(status().isOk())

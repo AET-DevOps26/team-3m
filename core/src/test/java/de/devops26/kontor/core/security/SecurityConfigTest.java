@@ -23,8 +23,8 @@ class SecurityConfigTest {
 
     @Test
     @DisplayName("Public endpoints are reachable without authentication")
-    void hello_publicEndpoint_returns200WithoutToken() throws Exception {
-        mockMvc.perform(get("/hello")).andExpect(status().isOk());
+    void health_publicEndpoint_returns200WithoutToken() throws Exception {
+        mockMvc.perform(get("/api/health")).andExpect(status().isOk());
     }
 
     @Test

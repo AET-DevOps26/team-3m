@@ -18,15 +18,45 @@ jobs:
     with:
       working-directory: core
 
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      deploy: ${{ steps.filter.outputs.deploy }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            deploy:
+              - 'deploy/**'
+              - '.github/workflows/helm-quality.yml'
+              - '.github/workflows/pr.yml'
+              - '.trivyignore.yaml'
+
+  helm-quality:
+    needs: changes
+    if: ${{ needs.changes.outputs.deploy == 'true' }}
+    uses: ./.github/workflows/helm-quality.yml
+
+  openapi-sync:
+    uses: ./.github/workflows/openapi-sync.yml
+
   client-docker:
-    needs: client-quality
+    needs: [client-quality, openapi-sync]
     uses: ./.github/workflows/docker-build-push.yml
     with:
       context: client
       image-name: kontor-client
 
   server-docker:
-    needs: server-quality
+    needs: [server-quality, openapi-sync]
     uses: ./.github/workflows/docker-build-push.yml
     with:
       context: core

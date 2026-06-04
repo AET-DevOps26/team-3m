@@ -1,8 +1,15 @@
 import { z } from "zod"
 import { APIError } from "../errors"
 import { useFileUpload } from "../file-upload/use-file-upload"
+import type { CsvImportResult } from "../generated"
+import {
+  csvImportApiResponseSchema,
+  csvImportResultSchema,
+} from "../generated/zod.gen"
 
 const IMPORT_PATH = "/api/v1/financial-transactions/import"
+
+export type ImportTransactionsCsvResult = CsvImportResult
 
 const csvRowValidationErrorSchema = z.object({
   row: z.number().int(),
@@ -16,14 +23,9 @@ const csvValidationFailureSchema = z.object({
   details: z.array(csvRowValidationErrorSchema).nullable().optional(),
 })
 
-const importTransactionsCsvResultSchema = z.object({
-  importedCount: z.number().int().nonnegative(),
-  message: z.string(),
-})
-
-const importTransactionsCsvEnvelopeSchema = z.object({
+const importTransactionsCsvEnvelopeSchema = csvImportApiResponseSchema.extend({
   success: z.literal(true),
-  data: importTransactionsCsvResultSchema,
+  data: csvImportResultSchema,
 })
 
 export type CsvRowValidationError = z.infer<typeof csvRowValidationErrorSchema>
@@ -31,9 +33,6 @@ export type CsvValidationFailure = {
   message: string
   errors: CsvRowValidationError[]
 }
-export type ImportTransactionsCsvResult = z.infer<
-  typeof importTransactionsCsvResultSchema
->
 
 export interface UseImportTransactionsCsvOptions {
   onSuccess?: (result: ImportTransactionsCsvResult, file: File) => void
@@ -46,8 +45,20 @@ export function useImportTransactionsCsv(
     path: IMPORT_PATH,
     onSuccess: options.onSuccess,
     silent: true,
-    parseResponse: (raw) => importTransactionsCsvEnvelopeSchema.parse(raw).data,
+    parseResponse: (raw) => unwrapImportEnvelope(raw),
   })
+}
+
+function unwrapImportEnvelope(raw: unknown): ImportTransactionsCsvResult {
+  const result = importTransactionsCsvEnvelopeSchema.safeParse(raw)
+  if (!result.success) {
+    throw new APIError({
+      code: "parse",
+      message: "Unexpected server response",
+      details: raw,
+    })
+  }
+  return result.data.data
 }
 
 export function extractValidationFailure(

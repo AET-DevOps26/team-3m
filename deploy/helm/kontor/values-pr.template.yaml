@@ -8,10 +8,33 @@
 
 client:
   apiBaseUrl: ""
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
 
 core:
   corsAllowedOrigins:
     - https://pr-${PR_NUMBER}.${BASE_DOMAIN}
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 800m
+      memory: 768Mi
+
+postgres:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 350m
+      memory: 256Mi
 
 oidc:
   # issuerUrl is left empty: it defaults to the first keycloak hostname + realm,
@@ -34,6 +57,13 @@ keycloak:
       - https://pr-${PR_NUMBER}.${BASE_DOMAIN}/*
     webOrigins:
       - https://pr-${PR_NUMBER}.${BASE_DOMAIN}
+  resources:
+    requests:
+      cpu: 250m
+      memory: 384Mi
+    limits:
+      cpu: 600m
+      memory: 768Mi
 
 ingress:
   hosts:

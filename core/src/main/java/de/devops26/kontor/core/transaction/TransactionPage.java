@@ -10,4 +10,6 @@ import java.util.List;
  */
 public record TransactionPage(
         @Schema(requiredMode = RequiredMode.REQUIRED) List<FinancialTransactionResponse> items,
-        @Schema(nullable = true) TransactionCursor nextCursor) {}
+
+        @Schema(anyOf = {TransactionCursor.class, Void.class})
+        TransactionCursor nextCursor) {}

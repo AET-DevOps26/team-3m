@@ -10,7 +10,7 @@ import {
   csvImportResultSchema,
   type financialTransactionResponseSchema,
   listTransactionsApiResponseSchema,
-  transactionCursorSchema,
+  type transactionCursorSchema,
   transactionPageSchema,
 } from "../generated/zod.gen"
 
@@ -18,15 +18,9 @@ const BASE_PATH = "/api/v1/financial-transactions"
 const IMPORT_PATH = `${BASE_PATH}/import`
 const PAGE_SIZE = 200
 
-// nextCursor arrives as null from the server when there are no more pages,
-// but the generated schema only allows undefined (optional). Extend it here.
-const transactionPageWithNullCursorSchema = transactionPageSchema.extend({
-  nextCursor: transactionCursorSchema.nullable(),
-})
-
 const transactionEnvelopeSchema = listTransactionsApiResponseSchema.extend({
   success: z.literal(true),
-  data: transactionPageWithNullCursorSchema,
+  data: transactionPageSchema,
 })
 
 type TransactionCursorParams = z.infer<typeof transactionCursorSchema>

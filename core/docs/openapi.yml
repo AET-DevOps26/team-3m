@@ -291,7 +291,8 @@ components:
           items:
             $ref: "#/components/schemas/FinancialTransactionResponse"
         nextCursor:
-          type: "null"
-          $ref: "#/components/schemas/TransactionCursor"
+          anyOf:
+          - $ref: "#/components/schemas/TransactionCursor"
+          - type: "null"
       required:
       - items

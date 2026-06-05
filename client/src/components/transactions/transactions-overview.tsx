@@ -1,13 +1,13 @@
 import { AlertCircle, List, Search } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { useTransactions } from "@/network/endpoints/transactions"
-import { FiltersBar } from "./filters-bar"
 import {
   applyFilters,
   type Filters,
   INITIAL_FILTERS,
-} from "./transaction-filters"
+} from "@/lib/transaction-filters"
+import { useTransactions } from "@/network/endpoints/transactions"
+import { FiltersBar } from "./filters-bar"
 import {
   normalizeType,
   TransactionRow,

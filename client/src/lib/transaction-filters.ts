@@ -1,5 +1,5 @@
+import { normalizeType } from "@/components/transactions/transaction-row"
 import type { Transaction } from "@/network/endpoints/transactions"
-import { normalizeType } from "./transaction-row"
 
 export type DatePreset = "all" | "30d" | "3m" | "custom"
 

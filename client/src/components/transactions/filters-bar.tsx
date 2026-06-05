@@ -12,7 +12,7 @@ import {
   DATE_PRESETS,
   type Filters,
   hasActiveFilters,
-} from "./transaction-filters"
+} from "@/lib/transaction-filters"
 
 const ALL_VALUE = "_all"
 

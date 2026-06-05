@@ -59,7 +59,7 @@ services:
         sed 's|DOMAIN_PLACEHOLDER|${DOMAIN}|g' /realm-template/kontor-realm.json \
           > /opt/keycloak/data/import/kontor-realm.json
         if [ "${KEYCLOAK_SEED_DEV_USER:-false}" = "true" ]; then
-          sed "s|\${KEYCLOAK_DEV_PASSWORD}|${KEYCLOAK_DEV_PASSWORD}|g" /realm-template/kontor-azure-users-0.json > /opt/keycloak/data/import/kontor-users-0.json
+          sed 's|KEYCLOAK_DEV_PASSWORD_PLACEHOLDER|${KEYCLOAK_DEV_PASSWORD}|g' /realm-template/kontor-azure-users-0.json > /opt/keycloak/data/import/kontor-users-0.json
         fi
         exec /opt/keycloak/bin/kc.sh start --import-realm
     depends_on:

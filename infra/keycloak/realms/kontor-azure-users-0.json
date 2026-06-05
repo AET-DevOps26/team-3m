@@ -15,7 +15,7 @@
       "credentials": [
         {
           "type": "password",
-          "value": "${KEYCLOAK_DEV_PASSWORD}",
+          "value": "KEYCLOAK_DEV_PASSWORD_PLACEHOLDER",
           "temporary": true
         }
       ],

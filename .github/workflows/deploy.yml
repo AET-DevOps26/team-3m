@@ -51,7 +51,7 @@ jobs:
     name: ${{ inputs.action }} (${{ inputs.environment }})
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
-    timeout-minutes: 6
+    timeout-minutes: 8
 
     steps:
       - name: Checkout (deploy/ only)
@@ -94,12 +94,12 @@ jobs:
           case "$status" in
             pending-install)
               echo "Stuck in pending-install (first install never completed); uninstalling."
-              helm uninstall "$RELEASE" -n "$NAMESPACE" --wait || true
+              helm uninstall "$RELEASE" -n "$NAMESPACE" --wait --timeout 2m || true
               ;;
             pending-upgrade|pending-rollback)
               echo "Stuck in $status; rolling back to last deployed revision."
               helm rollback "$RELEASE" -n "$NAMESPACE" --wait --timeout 3m \
-                || { echo "Rollback failed; uninstalling."; helm uninstall "$RELEASE" -n "$NAMESPACE" --wait || true; }
+                || { echo "Rollback failed; uninstalling."; helm uninstall "$RELEASE" -n "$NAMESPACE" --wait --timeout 2m || true; }
               ;;
             *)
               echo "No recovery needed."

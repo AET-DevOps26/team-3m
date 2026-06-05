@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 import { APIError } from "../errors"
 import { useFileUpload } from "../file-upload/use-file-upload"
@@ -6,6 +7,7 @@ import {
   csvImportApiResponseSchema,
   csvImportResultSchema,
 } from "../generated/zod.gen"
+import { OVERVIEW_QUERY_KEY, PERFORMANCE_QUERY_KEY } from "./portfolio"
 
 const IMPORT_PATH = "/api/v1/financial-transactions/import"
 
@@ -41,9 +43,15 @@ export interface UseImportTransactionsCsvOptions {
 export function useImportTransactionsCsv(
   options: UseImportTransactionsCsvOptions = {},
 ) {
+  const queryClient = useQueryClient()
+
   return useFileUpload<ImportTransactionsCsvResult>({
     path: IMPORT_PATH,
-    onSuccess: options.onSuccess,
+    onSuccess: (result, file) => {
+      void queryClient.resetQueries({ queryKey: OVERVIEW_QUERY_KEY })
+      void queryClient.resetQueries({ queryKey: PERFORMANCE_QUERY_KEY })
+      options.onSuccess?.(result, file)
+    },
     silent: true,
     parseResponse: (raw) => unwrapImportEnvelope(raw),
   })

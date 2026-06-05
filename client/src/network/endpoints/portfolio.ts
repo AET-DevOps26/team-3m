@@ -18,8 +18,8 @@ export type {
   PortfolioSnapshot,
 }
 
-const OVERVIEW_QUERY_KEY = ["portfolio", "overview"] as const
-const PERFORMANCE_QUERY_KEY = ["portfolio", "performance"] as const
+export const OVERVIEW_QUERY_KEY = ["portfolio", "overview"] as const
+export const PERFORMANCE_QUERY_KEY = ["portfolio", "performance"] as const
 
 export function usePortfolioOverview() {
   return useSuspenseQuery<PortfolioOverview>({

@@ -3,7 +3,6 @@ import { BrowserRouter, Route, Routes } from "react-router-dom"
 import { AuthCallback } from "@/auth/auth-callback"
 import { ProtectedRoute } from "@/auth/protected-route"
 import { AppHeader } from "@/components/app-header"
-import { AppNav } from "@/components/app-nav"
 import { RouteFallback } from "@/components/route-fallback"
 
 const StartPage = lazy(() =>
@@ -33,7 +32,6 @@ export function App() {
             element={
               <ProtectedRoute>
                 <AppHeader />
-                <AppNav />
                 <StartPage />
               </ProtectedRoute>
             }
@@ -43,7 +41,6 @@ export function App() {
             element={
               <ProtectedRoute>
                 <AppHeader />
-                <AppNav />
                 <ImportTransactionsPage />
               </ProtectedRoute>
             }
@@ -53,7 +50,6 @@ export function App() {
             element={
               <ProtectedRoute>
                 <AppHeader />
-                <AppNav />
                 <PortfolioOverviewPage />
               </ProtectedRoute>
             }

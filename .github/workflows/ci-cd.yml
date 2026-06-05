@@ -27,6 +27,7 @@ jobs:
   changes:
     name: Detect changes
     runs-on: ubuntu-latest
+    timeout-minutes: 2
     permissions:
       contents: read
       pull-requests: read
@@ -65,6 +66,7 @@ jobs:
       && needs.openapi-sync.result == 'success'
       && needs.helm-quality.result != 'failure' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 3
     outputs:
       released: ${{ steps.semantic.outputs.new_release_published }}
       version: ${{ steps.semantic.outputs.new_release_version }}

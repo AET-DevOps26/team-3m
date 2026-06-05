@@ -11,6 +11,7 @@ import {
 } from "lucide-react"
 import { Link } from "react-router-dom"
 import { ConnectionStatusBanner } from "@/components/connection-status-banner"
+import { TransactionsOverviewBlock } from "@/components/transactions/transactions-overview"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -22,7 +23,6 @@ import {
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { useHealthCheck } from "@/network/endpoints/health"
-import { TransactionsBlock } from "@/pages/transactions-overview"
 
 const teamMembers = [
   { name: "Mathilde", role: "UI/UX Expert" },
@@ -230,7 +230,7 @@ export function StartPage() {
             <CardDescription>All your financial transactions</CardDescription>
           </CardHeader>
           <CardContent>
-            <TransactionsBlock />
+            <TransactionsOverviewBlock />
           </CardContent>
         </Card>
       </div>

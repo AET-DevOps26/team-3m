@@ -23,9 +23,46 @@ export const apiResponseSchema = z.object({
   details: z.array(z.unknown()).nullish(),
 })
 
-export const apiResponseObjectSchema = z.object({
+export const financialTransactionResponseSchema = z.object({
+  id: z.uuid(),
+  datetime: z.iso.datetime(),
+  date: z.iso.date(),
+  accountType: z.string(),
+  category: z.string(),
+  type: z.string(),
+  assetClass: z.string().nullish(),
+  name: z.string().nullish(),
+  symbol: z.string().nullish(),
+  shares: z.number().nullish(),
+  price: z.number().nullish(),
+  amount: z.number(),
+  fee: z.number().nullish(),
+  tax: z.number().nullish(),
+  currency: z.string(),
+  originalAmount: z.number().nullish(),
+  originalCurrency: z.string().nullish(),
+  fxRate: z.number().nullish(),
+  description: z.string().nullish(),
+  externalTransactionId: z.uuid().nullish(),
+  counterpartyName: z.string().nullish(),
+  counterpartyIban: z.string().nullish(),
+  paymentReference: z.string().nullish(),
+  mccCode: z.string().nullish(),
+})
+
+export const transactionCursorSchema = z.object({
+  afterDatetime: z.iso.datetime(),
+  afterId: z.uuid(),
+})
+
+export const transactionPageSchema = z.object({
+  items: z.array(financialTransactionResponseSchema),
+  nextCursor: transactionCursorSchema.optional(),
+})
+
+export const listTransactionsApiResponseSchema = z.object({
   success: z.boolean(),
-  data: z.unknown().optional(),
+  data: transactionPageSchema.optional(),
   error: z.string().nullish(),
   details: z.array(z.unknown()).nullish(),
 })
@@ -65,6 +102,6 @@ export const zListTransactionsQuery = z.object({
 })
 
 /**
- * OK
+ * Transaction page
  */
-export const listTransactionsResponseSchema = apiResponseObjectSchema
+export const listTransactionsResponseSchema = listTransactionsApiResponseSchema

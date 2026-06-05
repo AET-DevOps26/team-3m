@@ -31,15 +31,32 @@ public class FinancialTransactionController {
         this.service = service;
     }
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<?>> listTransactions(
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "Transaction page",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ListTransactionsApiResponse.class))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "400",
+                description = "Invalid cursor parameters",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ApiResponse.class)))
+    })
+    public ResponseEntity<ListTransactionsApiResponse> listTransactions(
             @Parameter(hidden = true) @AuthenticatedUser AppUser user,
             @RequestParam(defaultValue = "200") int pageSize,
             @RequestParam(required = false) String afterDatetime,
             @RequestParam(required = false) UUID afterId) {
         if ((afterDatetime == null) != (afterId == null)) {
             return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("afterDatetime and afterId must be provided together"));
+                    .body(ListTransactionsApiResponse.from(
+                            ApiResponse.error("afterDatetime and afterId must be provided together")));
         }
         TransactionCursor cursor = null;
         if (afterDatetime != null) {
@@ -48,11 +65,12 @@ public class FinancialTransactionController {
                         OffsetDateTime.parse(afterDatetime, DateTimeFormatter.ISO_OFFSET_DATE_TIME), afterId);
             } catch (DateTimeParseException e) {
                 return ResponseEntity.badRequest()
-                        .body(ApiResponse.error("Invalid afterDatetime format; expected ISO-8601 with offset"));
+                        .body(ListTransactionsApiResponse.from(
+                                ApiResponse.error("Invalid afterDatetime format; expected ISO-8601 with offset")));
             }
         }
         var page = service.listTransactions(user.id(), pageSize, cursor);
-        return ResponseEntity.ok(ApiResponse.ok(page));
+        return ResponseEntity.ok(ListTransactionsApiResponse.from(ApiResponse.ok(page)));
     }
 
     @PostMapping(

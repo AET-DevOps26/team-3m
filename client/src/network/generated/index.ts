@@ -2,7 +2,6 @@
 
 export type {
   ApiResponse,
-  ApiResponseObject,
   ClientOptions,
   CsvImportApiResponse,
   CsvImportResult,
@@ -11,12 +10,16 @@ export type {
   DatabaseErrors,
   DatabaseResponse,
   DatabaseResponses,
+  FinancialTransactionResponse,
   ImportCsvData,
   ImportCsvError,
   ImportCsvErrors,
   ImportCsvResponse,
   ImportCsvResponses,
+  ListTransactionsApiResponse,
   ListTransactionsData,
+  ListTransactionsError,
+  ListTransactionsErrors,
   ListTransactionsResponse,
   ListTransactionsResponses,
   ServerData,
@@ -24,4 +27,6 @@ export type {
   ServerErrors,
   ServerResponse,
   ServerResponses,
+  TransactionCursor,
+  TransactionPage,
 } from "./types.gen"

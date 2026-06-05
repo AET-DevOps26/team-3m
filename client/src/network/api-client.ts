@@ -2,7 +2,7 @@ import createClient, { type Middleware } from "openapi-fetch"
 import { getAuthToken, triggerSigninRedirect } from "./auth-token"
 import { API_BASE_URL } from "./config"
 import { APIError } from "./errors"
-import type { ApiResponseObject } from "./generated"
+import type { ListTransactionsApiResponse } from "./generated"
 
 interface TextResponseOperation {
   responses: {
@@ -33,7 +33,7 @@ interface ApiPaths {
       responses: {
         200: {
           content: {
-            "*/*": ApiResponseObject
+            "application/json": ListTransactionsApiResponse
           }
         }
       }

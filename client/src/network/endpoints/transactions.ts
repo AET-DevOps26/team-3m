@@ -8,55 +8,30 @@ import type { CsvImportResult } from "../generated"
 import {
   csvImportApiResponseSchema,
   csvImportResultSchema,
+  type financialTransactionResponseSchema,
+  listTransactionsApiResponseSchema,
+  transactionCursorSchema,
+  transactionPageSchema,
 } from "../generated/zod.gen"
 
 const BASE_PATH = "/api/v1/financial-transactions"
 const IMPORT_PATH = `${BASE_PATH}/import`
 const PAGE_SIZE = 200
 
-const transactionSchema = z.object({
-  id: z.uuid(),
-  datetime: z.string(),
-  date: z.string(),
-  accountType: z.string(),
-  category: z.string(),
-  type: z.string(),
-  assetClass: z.string().nullable(),
-  name: z.string().nullable(),
-  symbol: z.string().nullable(),
-  shares: z.number().nullable(),
-  price: z.number().nullable(),
-  amount: z.number(),
-  fee: z.number().nullable(),
-  tax: z.number().nullable(),
-  currency: z.string(),
-  originalAmount: z.number().nullable(),
-  originalCurrency: z.string().nullable(),
-  fxRate: z.number().nullable(),
-  description: z.string().nullable(),
-  externalTransactionId: z.string().nullable(),
-  counterpartyName: z.string().nullable(),
-  counterpartyIban: z.string().nullable(),
-  paymentReference: z.string().nullable(),
-  mccCode: z.string().nullable(),
+// nextCursor arrives as null from the server when there are no more pages,
+// but the generated schema only allows undefined (optional). Extend it here.
+const transactionPageWithNullCursorSchema = transactionPageSchema.extend({
+  nextCursor: transactionCursorSchema.nullable(),
 })
 
-const transactionCursorSchema = z.object({
-  afterDatetime: z.string(),
-  afterId: z.uuid(),
-})
-
-const transactionPageEnvelopeSchema = z.object({
+const transactionEnvelopeSchema = listTransactionsApiResponseSchema.extend({
   success: z.literal(true),
-  data: z.object({
-    items: z.array(transactionSchema),
-    nextCursor: transactionCursorSchema.nullable(),
-  }),
+  data: transactionPageWithNullCursorSchema,
 })
 
 type TransactionCursorParams = z.infer<typeof transactionCursorSchema>
 
-export type Transaction = z.infer<typeof transactionSchema>
+export type Transaction = z.infer<typeof financialTransactionResponseSchema>
 
 /**
  * Fetches all transactions via keyset-paginated pages and returns the full flat
@@ -89,7 +64,7 @@ export function useTransactions() {
           },
         },
       )
-      return transactionPageEnvelopeSchema.parse(raw).data
+      return transactionEnvelopeSchema.parse(raw).data
     },
     initialPageParam: null as TransactionCursorParams | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor,

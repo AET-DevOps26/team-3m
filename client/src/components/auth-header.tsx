@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
  * user (preferred_username or email) and a single Logout action that triggers
  * the OIDC end-session flow.
  */
-export function AppHeader() {
+export function AuthHeader() {
   const auth = useAuth()
 
   if (!auth.isAuthenticated || !auth.user) {
@@ -24,22 +24,20 @@ export function AppHeader() {
 
   return (
     <header className="flex items-center justify-end gap-3 border-b border-border bg-background/80 px-4 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex items-center gap-3">
-        <span className="flex items-center gap-2 text-sm text-muted-foreground">
-          <User className="size-4" />
-          {displayName}
-        </span>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => {
-            void auth.signoutRedirect()
-          }}
-        >
-          <LogOut className="size-4" />
-          Logout
-        </Button>
-      </div>
+      <span className="flex items-center gap-2 text-sm text-muted-foreground">
+        <User className="size-4" />
+        {displayName}
+      </span>
+      <Button
+        size="sm"
+        variant="ghost"
+        onClick={() => {
+          void auth.signoutRedirect()
+        }}
+      >
+        <LogOut className="size-4" />
+        Logout
+      </Button>
     </header>
   )
 }

@@ -17,6 +17,7 @@ jobs:
   quality:
     name: Lint & Static Analysis
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     defaults:
       run:
         working-directory: ${{ inputs.working-directory }}

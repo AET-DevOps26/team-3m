@@ -36,14 +36,16 @@
       "frontchannelLogout": true,
       "protocol": "openid-connect",
       "redirectUris": [
-        "http://localhost:5173/*"
+        "http://localhost:5173/*",
+        "https://DOMAIN_PLACEHOLDER/*"
       ],
       "webOrigins": [
-        "http://localhost:5173"
+        "http://localhost:5173",
+        "https://DOMAIN_PLACEHOLDER"
       ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "post.logout.redirect.uris": "http://localhost:5173/*"
+        "post.logout.redirect.uris": "http://localhost:5173/*##https://DOMAIN_PLACEHOLDER/*"
       },
       "defaultClientScopes": [
         "web-origins",

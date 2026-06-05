@@ -18,12 +18,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <AuthError cause={guard.cause} onRetry={guard.retry} />
   }
 
-  const message =
-    guard.status === "connecting"
-      ? guard.attempt > 1
-        ? `Reconnecting to the sign-in service… (attempt ${guard.attempt} of ${guard.maxAttempts})`
-        : "Connecting to the sign-in service…"
-      : undefined
+  const message = guard.isRetrying ? "Retrying sign-in…" : "Signing you in…"
 
   return <RouteFallback message={message} />
 }

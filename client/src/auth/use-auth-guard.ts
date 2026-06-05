@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { useAuth } from "react-oidc-context"
 
 const MAX_SIGNIN_ATTEMPTS = 3
-const BASE_RETRY_DELAY_MS = 1000
+const RETRY_DELAY_MS = 300
 const SIGNIN_TIMEOUT_MS = 8000
 
 export type AuthGuardStatus =
@@ -13,8 +13,7 @@ export type AuthGuardStatus =
 
 export interface AuthGuardState {
   status: AuthGuardStatus
-  attempt: number
-  maxAttempts: number
+  isRetrying: boolean
   cause: unknown
   retry: () => void
 }
@@ -22,7 +21,7 @@ export interface AuthGuardState {
 export function useAuthGuard(): AuthGuardState {
   const auth = useAuth()
   const [status, setStatus] = useState<AuthGuardStatus>("initializing")
-  const [attempt, setAttempt] = useState(0)
+  const [isRetrying, setIsRetrying] = useState(false)
   const [cause, setCause] = useState<unknown>(null)
 
   const attemptsRef = useRef(0)
@@ -48,7 +47,7 @@ export function useAuthGuard(): AuthGuardState {
     inFlightRef.current = true
     attemptsRef.current += 1
     const thisAttempt = attemptsRef.current
-    setAttempt(thisAttempt)
+    setIsRetrying(thisAttempt > 1)
     setStatus("connecting")
 
     // signinRedirect resolves only by navigating away (page unloads). If it
@@ -75,8 +74,7 @@ export function useAuthGuard(): AuthGuardState {
         return
       }
 
-      const delay = BASE_RETRY_DELAY_MS * 2 ** (thisAttempt - 1)
-      retryTimerRef.current = setTimeout(attemptSignin, delay)
+      retryTimerRef.current = setTimeout(attemptSignin, RETRY_DELAY_MS)
     }
 
     watchdogRef.current = setTimeout(() => {
@@ -104,7 +102,7 @@ export function useAuthGuard(): AuthGuardState {
       clearTimers()
       inFlightRef.current = false
       attemptsRef.current = 0
-      setAttempt(0)
+      setIsRetrying(false)
       setStatus("authenticated")
       return
     }
@@ -121,5 +119,5 @@ export function useAuthGuard(): AuthGuardState {
 
   useEffect(() => clearTimers, [clearTimers])
 
-  return { status, attempt, maxAttempts: MAX_SIGNIN_ATTEMPTS, cause, retry }
+  return { status, isRetrying, cause, retry }
 }

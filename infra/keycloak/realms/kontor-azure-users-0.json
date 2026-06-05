@@ -15,10 +15,11 @@
       "credentials": [
         {
           "type": "password",
-          "value": "azure-dev",
-          "temporary": false
+          "value": "${KEYCLOAK_DEV_PASSWORD}",
+          "temporary": true
         }
       ],
+      "requiredActions": ["UPDATE_PASSWORD"],
       "realmRoles": ["kontor-user", "default-roles-kontor"]
     }
   ]

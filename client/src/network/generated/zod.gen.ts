@@ -57,7 +57,7 @@ export const transactionCursorSchema = z.object({
 
 export const transactionPageSchema = z.object({
   items: z.array(financialTransactionResponseSchema),
-  nextCursor: transactionCursorSchema.nullish(),
+  nextCursor: transactionCursorSchema.optional(),
 })
 
 export const listTransactionsApiResponseSchema = z.object({

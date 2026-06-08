@@ -64,7 +64,7 @@ export type TransactionCursor = {
 
 export type TransactionPage = {
   items: Array<FinancialTransactionResponse>
-  nextCursor?: TransactionCursor | null
+  nextCursor?: TransactionCursor
 }
 
 export type ImportCsvData = {

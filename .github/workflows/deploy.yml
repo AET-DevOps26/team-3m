@@ -51,7 +51,7 @@ jobs:
     name: ${{ inputs.action }} (${{ inputs.environment }})
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
-    timeout-minutes: 4
+    timeout-minutes: 8
 
     steps:
       - name: Checkout (deploy/ only)
@@ -83,6 +83,31 @@ jobs:
           export RANCHER_PROJECT_LABEL="${RANCHER_PROJECT_ID#*:}"
           envsubst < "$NS_TEMPLATE" | kubectl apply -f -
 
+      - name: Recover stuck release
+        if: inputs.action == 'deploy'
+        env:
+          RELEASE: ${{ inputs.release-name }}
+          NAMESPACE: ${{ inputs.namespace }}
+        run: |
+          set -euo pipefail
+          status="$(helm status "$RELEASE" -n "$NAMESPACE" -o json 2>/dev/null \
+            | jq -r '.info.status' || true)"
+          echo "Current release status: ${status:-<none>}"
+          case "$status" in
+            pending-install)
+              echo "Stuck in pending-install (first install never completed); uninstalling."
+              helm uninstall "$RELEASE" -n "$NAMESPACE" --wait --timeout 2m || true
+              ;;
+            pending-upgrade|pending-rollback)
+              echo "Stuck in $status; rolling back to last deployed revision."
+              helm rollback "$RELEASE" -n "$NAMESPACE" --wait --timeout 3m \
+                || { echo "Rollback failed; uninstalling."; helm uninstall "$RELEASE" -n "$NAMESPACE" --wait --timeout 2m || true; }
+              ;;
+            *)
+              echo "No recovery needed."
+              ;;
+          esac
+
       - name: Helm deploy (prod)
         if: inputs.action == 'deploy' && inputs.environment == 'k8s-prod'
         env:
@@ -99,7 +124,7 @@ jobs:
             --set-string postgres.password="$POSTGRES_PASSWORD" \
             --set-string keycloak.admin.password="$KEYCLOAK_ADMIN_PASSWORD" \
             --set-string keycloak.db.password="$KEYCLOAK_DB_PASSWORD" \
-            --rollback-on-failure --force-conflicts --wait --timeout 10m
+            --rollback-on-failure --force-conflicts --wait --timeout 4m
 
       - name: Helm deploy (preview)
         if: inputs.action == 'deploy' && inputs.environment == 'k8s-preview'
@@ -119,7 +144,7 @@ jobs:
             --set-string client.image.tag='${{ inputs.image-tag }}' \
             --set-string postgres.password="$POSTGRES_PASSWORD" \
             --set-string keycloak.admin.password="$KEYCLOAK_ADMIN_PASSWORD" \
-            --rollback-on-failure --force-conflicts --wait --timeout 10m
+            --rollback-on-failure --force-conflicts --wait --timeout 4m
 
       - name: Helm teardown
         if: inputs.action == 'teardown'

@@ -24,11 +24,10 @@ export const PERFORMANCE_QUERY_KEY = ["portfolio", "performance"] as const
 export function usePortfolioOverview() {
   return useSuspenseQuery<PortfolioOverview>({
     queryKey: OVERVIEW_QUERY_KEY,
-    queryFn: async () => {
-      const { data: raw } = await apiClient.GET(
-        "/api/v1/portfolio/overview",
-        {},
-      )
+    queryFn: async ({ signal }) => {
+      const { data: raw } = await apiClient.GET("/api/v1/portfolio/overview", {
+        signal,
+      })
       const envelope = apiResponsePortfolioOverviewSchema.parse(raw)
       if (!envelope.data)
         throw new Error("portfolio overview: missing data in response")
@@ -40,10 +39,10 @@ export function usePortfolioOverview() {
 export function usePortfolioPerformance() {
   return useSuspenseQuery<PortfolioPerformance>({
     queryKey: PERFORMANCE_QUERY_KEY,
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const { data: raw } = await apiClient.GET(
         "/api/v1/portfolio/performance",
-        {},
+        { signal },
       )
       const envelope = apiResponsePortfolioPerformanceSchema.parse(raw)
       if (!envelope.data)

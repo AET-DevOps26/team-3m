@@ -93,7 +93,8 @@ public class PortfolioRepository {
         var result = dsl.select(ft.CURRENCY)
                 .from(ft)
                 .where(ft.USER_ID.eq(userId))
-                .orderBy(ft.DATETIME.desc())
+                .groupBy(ft.CURRENCY)
+                .orderBy(DSL.count().desc())
                 .limit(1)
                 .fetchOne(ft.CURRENCY);
         return result != null ? result : "EUR";

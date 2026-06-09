@@ -79,10 +79,13 @@ const httpErrorMiddleware: Middleware = {
     if (response.ok) return
     if (response.status === 401) {
       triggerSigninRedirect()
+      const text = await response.clone().text()
+      const body = safeParse(text)
       throw new APIError({
         code: "unauthenticated",
         status: 401,
-        message: "Authentication required",
+        message: extractErrorMessage(body, response),
+        details: body,
       })
     }
     const text = await response.clone().text()

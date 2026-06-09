@@ -39,6 +39,8 @@ public class PortfolioPerformanceService {
         Map<String, BigDecimal> netShares = new LinkedHashMap<>();
         Map<String, BigDecimal> lastPrices = new LinkedHashMap<>();
         BigDecimal cashBalance = BigDecimal.ZERO;
+        // Running holdings total updated incrementally — O(1) per transaction instead of O(symbols).
+        BigDecimal holdingsTotal = BigDecimal.ZERO;
         // Insertion order = chronological order because transactions are sorted by datetime.
         // Same-day transactions overwrite with the state after the day's last transaction.
         LinkedHashMap<LocalDate, BigDecimal> transactionDayValues = new LinkedHashMap<>();
@@ -49,22 +51,37 @@ public class PortfolioPerformanceService {
             }
 
             if (tx.symbol() != null && tx.shares() != null) {
-                if ("BUY".equals(tx.type())) {
-                    netShares.merge(tx.symbol(), tx.shares(), BigDecimal::add);
-                } else if ("SELL".equals(tx.type())) {
-                    netShares.merge(tx.symbol(), tx.shares().negate(), BigDecimal::add);
+                var sym = tx.symbol();
+                var currentShares = netShares.getOrDefault(sym, BigDecimal.ZERO);
+                var currentPrice = lastPrices.get(sym);
+
+                // Remove old contribution for this symbol before mutating shares/price.
+                if (currentPrice != null) {
+                    holdingsTotal = holdingsTotal.subtract(currentShares.multiply(currentPrice));
                 }
+
+                BigDecimal newShares;
+                if ("BUY".equals(tx.type())) {
+                    newShares = currentShares.add(tx.shares());
+                } else if ("SELL".equals(tx.type())) {
+                    newShares = currentShares.subtract(tx.shares());
+                } else {
+                    newShares = currentShares;
+                }
+                netShares.put(sym, newShares);
+
                 if (tx.price() != null) {
-                    lastPrices.put(tx.symbol(), tx.price());
+                    lastPrices.put(sym, tx.price());
+                }
+
+                // Add new contribution using the now-current price.
+                var effectivePrice = lastPrices.get(sym);
+                if (effectivePrice != null) {
+                    holdingsTotal = holdingsTotal.add(newShares.multiply(effectivePrice));
                 }
             }
 
-            var holdingsValue = netShares.entrySet().stream()
-                    .filter(e -> lastPrices.containsKey(e.getKey()))
-                    .map(e -> e.getValue().multiply(lastPrices.get(e.getKey())))
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-            transactionDayValues.put(tx.date(), cashBalance.add(holdingsValue));
+            transactionDayValues.put(tx.date(), cashBalance.add(holdingsTotal));
         }
 
         // Fill every calendar day from the first transaction date to today, carrying the last

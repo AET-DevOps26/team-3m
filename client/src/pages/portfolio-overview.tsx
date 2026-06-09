@@ -1,5 +1,5 @@
 import { ArrowLeft, Banknote, Briefcase, TrendingUp } from "lucide-react"
-import { Suspense } from "react"
+import { Component, type ReactNode, Suspense } from "react"
 import { Link } from "react-router-dom"
 import { HoldingsTable } from "@/components/portfolio/portfolio-holdings-table"
 import { PerformanceCard } from "@/components/portfolio/portfolio-performance-card"
@@ -17,6 +17,32 @@ import {
   type PortfolioHolding,
   usePortfolioOverview,
 } from "@/network/endpoints/portfolio"
+
+interface PortfolioErrorBoundaryState {
+  error: Error | null
+}
+
+class PortfolioErrorBoundary extends Component<
+  { children: ReactNode },
+  PortfolioErrorBoundaryState
+> {
+  state: PortfolioErrorBoundaryState = { error: null }
+
+  static getDerivedStateFromError(error: Error) {
+    return { error }
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <p className="py-8 text-center text-sm text-destructive">
+          Failed to load portfolio data. Please refresh the page to try again.
+        </p>
+      )
+    }
+    return this.props.children
+  }
+}
 
 function groupByAssetClass(holdings: PortfolioHolding[]): Map<string, number> {
   const groups = new Map<string, number>()
@@ -167,9 +193,11 @@ export function PortfolioOverviewPage() {
           <h1 className="text-xl font-semibold">Portfolio Overview</h1>
         </div>
 
-        <Suspense fallback={<PortfolioSkeleton />}>
-          <PortfolioContent />
-        </Suspense>
+        <PortfolioErrorBoundary>
+          <Suspense fallback={<PortfolioSkeleton />}>
+            <PortfolioContent />
+          </Suspense>
+        </PortfolioErrorBoundary>
       </div>
     </div>
   )

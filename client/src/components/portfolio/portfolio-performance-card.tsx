@@ -1,4 +1,4 @@
-import { Suspense, useState } from "react"
+import { Suspense, useMemo, useState } from "react"
 import { Area, AreaChart, Label, XAxis } from "recharts"
 import {
   Card,
@@ -213,7 +213,10 @@ interface PerformanceChartContentProps {
 
 function PerformanceChartContent({ range }: PerformanceChartContentProps) {
   const { data: performance } = usePortfolioPerformance()
-  const filtered = filterByRange(performance.snapshots ?? [], range)
+  const filtered = useMemo(
+    () => filterByRange(performance.snapshots ?? [], range),
+    [performance.snapshots, range],
+  )
   return (
     <PerformanceChart
       snapshots={filtered}

@@ -49,6 +49,7 @@ Each microservice lives in its own directory with a Gradle wrapper.
 | Install dependencies | `uv sync` |
 | Dev server | `uv run uvicorn ai.main:app --reload` |
 | Test | `uv run pytest` |
+| Type check | `uv run ty check` |
 | Format check | `uv run ruff format --check .` |
 | Format fix | `uv run ruff format .` |
 | Lint | `uv run ruff check .` |

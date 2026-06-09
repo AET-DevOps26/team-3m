@@ -31,5 +31,8 @@ jobs:
       - name: Run Linter (ruff)
         run: uv run ruff check .
 
+      - name: Type Check (ty)
+        run: uv run ty check
+
       - name: Run Tests (pytest)
         run: uv run pytest

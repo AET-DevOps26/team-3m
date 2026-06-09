@@ -40,7 +40,13 @@ export function FullScreenError({ error, icon }: FullScreenErrorProps) {
             <Button
               key={option.label}
               variant={option.variant ?? "default"}
-              onClick={() => void option.action()}
+              onClick={() => {
+                void Promise.resolve()
+                  .then(() => option.action())
+                  .catch((cause) => {
+                    console.error("recovery action threw", cause)
+                  })
+              }}
             >
               {option.label}
             </Button>

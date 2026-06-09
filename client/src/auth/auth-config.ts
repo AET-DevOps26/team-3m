@@ -33,7 +33,11 @@ export const authConfig: AuthProviderProps = {
 
 function safeOrigin(value: string): string | null {
   try {
-    return new URL(value).origin
+    const url = new URL(value)
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      return null
+    }
+    return url.origin
   } catch {
     return null
   }

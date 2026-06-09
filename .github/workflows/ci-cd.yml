@@ -110,6 +110,7 @@ jobs:
 
   client-docker:
     needs: release
+    if: ${{ !cancelled() && needs.release.result == 'success' }}
     uses: ./.github/workflows/docker-build-push.yml
     with:
       context: client
@@ -120,6 +121,7 @@ jobs:
 
   server-docker:
     needs: release
+    if: ${{ !cancelled() && needs.release.result == 'success' }}
     uses: ./.github/workflows/docker-build-push.yml
     with:
       context: core
@@ -130,7 +132,11 @@ jobs:
 
   deploy-prod:
     needs: [release, client-docker, server-docker]
-    if: ${{ needs.release.outputs.released == 'true' || github.event_name == 'workflow_dispatch' }}
+    if: ${{ !cancelled()
+      && needs.release.result == 'success'
+      && needs.client-docker.result == 'success'
+      && needs.server-docker.result == 'success'
+      && (needs.release.outputs.released == 'true' || github.event_name == 'workflow_dispatch') }}
     uses: ./.github/workflows/deploy.yml
     secrets: inherit
     with:

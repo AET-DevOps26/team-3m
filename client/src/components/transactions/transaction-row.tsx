@@ -27,8 +27,10 @@ function isUnreadable(value: string): boolean {
   return IBAN_PATTERN.test(noSpaces)
 }
 
-// Matches an IBAN (with or without spaces) optionally wrapped in parentheses or brackets
-const INLINE_IBAN = /\s*[([]?[A-Z]{2}[0-9]{2}(?:\s?[A-Z0-9]){4,30}[)\]]?\s*/gi
+// Matches an IBAN in compact form (no spaces) or canonical 4-char-group form.
+// Alternation prevents the quantifier from creeping into adjacent words.
+const INLINE_IBAN =
+  /\s*[([]?[A-Z]{2}[0-9]{2}(?:[A-Z0-9]{10,30}|(?:\s[A-Z0-9]{4}){2,7}(?:\s[A-Z0-9]{1,4})?)[)\]]?\s*/g
 
 /** Strips boilerplate transfer prefixes and any embedded IBANs from a display value. */
 function cleanTitle(value: string): string {
@@ -99,11 +101,10 @@ export function normalizeType(type: string): string {
 }
 
 export function formatType(type: string): string {
+  const normalized = normalizeType(type)
   return (
-    TYPE_LABELS[normalizeType(type)] ??
-    normalizeType(type)
-      .replace(/_/g, " ")
-      .replace(/\b\w/g, (c) => c.toUpperCase())
+    TYPE_LABELS[normalized] ??
+    normalized.replace(/\b\w/g, (c) => c.toUpperCase())
   )
 }
 

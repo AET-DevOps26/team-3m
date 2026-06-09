@@ -36,7 +36,11 @@ function getFromDate(preset: DatePreset, customFrom: string): string | null {
   }
   if (preset === "3m") {
     const d = new Date()
+    const day = d.getDate()
+    d.setDate(1)
     d.setMonth(d.getMonth() - 3)
+    const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()
+    d.setDate(Math.min(day, daysInMonth))
     return d.toISOString().slice(0, 10)
   }
   if (preset === "custom" && customFrom) return customFrom

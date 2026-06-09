@@ -1,4 +1,5 @@
 import { Search, X } from "lucide-react"
+import { formatType } from "@/components/transactions/transaction-row"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -76,7 +77,7 @@ export function FiltersBar({
             <SelectItem value={ALL_VALUE}>All types</SelectItem>
             {types.map((t) => (
               <SelectItem key={t} value={t}>
-                {t}
+                {formatType(t)}
               </SelectItem>
             ))}
           </SelectContent>

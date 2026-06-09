@@ -23,6 +23,50 @@ export const apiResponseSchema = z.object({
   details: z.array(z.unknown()).nullish(),
 })
 
+export const financialTransactionResponseSchema = z.object({
+  id: z.uuid(),
+  datetime: z.iso.datetime(),
+  date: z.iso.date(),
+  accountType: z.string(),
+  category: z.string(),
+  type: z.string(),
+  assetClass: z.string().nullish(),
+  name: z.string().nullish(),
+  symbol: z.string().nullish(),
+  shares: z.number().nullish(),
+  price: z.number().nullish(),
+  amount: z.number(),
+  fee: z.number().nullish(),
+  tax: z.number().nullish(),
+  currency: z.string(),
+  originalAmount: z.number().nullish(),
+  originalCurrency: z.string().nullish(),
+  fxRate: z.number().nullish(),
+  description: z.string().nullish(),
+  externalTransactionId: z.uuid().nullish(),
+  counterpartyName: z.string().nullish(),
+  counterpartyIban: z.string().nullish(),
+  paymentReference: z.string().nullish(),
+  mccCode: z.string().nullish(),
+})
+
+export const transactionCursorSchema = z.object({
+  afterDatetime: z.iso.datetime(),
+  afterId: z.uuid(),
+})
+
+export const transactionPageSchema = z.object({
+  items: z.array(financialTransactionResponseSchema),
+  nextCursor: transactionCursorSchema.optional(),
+})
+
+export const listTransactionsApiResponseSchema = z.object({
+  success: z.boolean(),
+  data: transactionPageSchema.optional(),
+  error: z.string().nullish(),
+  details: z.array(z.unknown()).nullish(),
+})
+
 export const zImportCsvBody = z.object({
   file: z.string(),
 })
@@ -41,3 +85,23 @@ export const serverResponseSchema = z.string()
  * Database connection OK
  */
 export const databaseResponseSchema = z.string()
+
+export const zListTransactionsQuery = z.object({
+  pageSize: z
+    .int()
+    .min(-2147483648, {
+      error: "Invalid value: Expected int32 to be >= -2147483648",
+    })
+    .max(2147483647, {
+      error: "Invalid value: Expected int32 to be <= 2147483647",
+    })
+    .optional()
+    .default(200),
+  afterDatetime: z.string().optional(),
+  afterId: z.uuid().optional(),
+})
+
+/**
+ * Transaction page
+ */
+export const listTransactionsResponseSchema = listTransactionsApiResponseSchema

@@ -12,7 +12,8 @@ FROM python:3.13-alpine
 
 WORKDIR /app
 
-RUN addgroup -S app && adduser -S app -G app
+RUN apk add --no-cache wget && \
+    addgroup -S app && adduser -S app -G app
 
 COPY --from=build --chown=app:app /workspace/.venv ./.venv
 COPY --from=build --chown=app:app /workspace/src ./src

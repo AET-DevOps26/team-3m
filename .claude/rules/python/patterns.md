@@ -8,7 +8,7 @@ paths:
 
 ## Project Structure
 
-```
+```text
 ai/
   src/ai/
     main.py        # FastAPI app, router registration

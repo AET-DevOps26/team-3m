@@ -32,7 +32,7 @@ async def test_liveness(transport: ASGITransport) -> None:
 
 ## Test Organization
 
-```
+```text
 tests/
   test_health.py       # one test file per router/module
   test_<feature>.py

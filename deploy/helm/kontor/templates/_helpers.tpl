@@ -99,7 +99,7 @@ Usage: include "kontor.image" (dict "root" . "component" .Values.core)
 {{- end -}}
 
 {{/*
-Keycloak component-scoped resource names.
+Component-scoped resource names.
 */}}
 {{- define "kontor.ai.fullname" -}}
 {{- printf "%s-ai" (include "kontor.fullname" .) | trunc 63 | trimSuffix "-" -}}

@@ -23,6 +23,50 @@ export type ApiResponse = {
   details?: Array<unknown> | null
 }
 
+export type FinancialTransactionResponse = {
+  id: string
+  datetime: string
+  date: string
+  accountType: string
+  category: string
+  type: string
+  assetClass?: string | null
+  name?: string | null
+  symbol?: string | null
+  shares?: number | null
+  price?: number | null
+  amount: number
+  fee?: number | null
+  tax?: number | null
+  currency: string
+  originalAmount?: number | null
+  originalCurrency?: string | null
+  fxRate?: number | null
+  description?: string | null
+  externalTransactionId?: string | null
+  counterpartyName?: string | null
+  counterpartyIban?: string | null
+  paymentReference?: string | null
+  mccCode?: string | null
+}
+
+export type ListTransactionsApiResponse = {
+  success: boolean
+  data?: TransactionPage
+  error?: string | null
+  details?: Array<unknown> | null
+}
+
+export type TransactionCursor = {
+  afterDatetime: string
+  afterId: string
+}
+
+export type TransactionPage = {
+  items: Array<FinancialTransactionResponse>
+  nextCursor?: TransactionCursor
+}
+
 export type ImportCsvData = {
   body?: {
     file: Blob | File
@@ -99,3 +143,34 @@ export type DatabaseResponses = {
 }
 
 export type DatabaseResponse = DatabaseResponses[keyof DatabaseResponses]
+
+export type ListTransactionsData = {
+  body?: never
+  path?: never
+  query?: {
+    pageSize?: number
+    afterDatetime?: string
+    afterId?: string
+  }
+  url: "/api/v1/financial-transactions"
+}
+
+export type ListTransactionsErrors = {
+  /**
+   * Invalid cursor parameters
+   */
+  400: ApiResponse
+}
+
+export type ListTransactionsError =
+  ListTransactionsErrors[keyof ListTransactionsErrors]
+
+export type ListTransactionsResponses = {
+  /**
+   * Transaction page
+   */
+  200: ListTransactionsApiResponse
+}
+
+export type ListTransactionsResponse =
+  ListTransactionsResponses[keyof ListTransactionsResponses]

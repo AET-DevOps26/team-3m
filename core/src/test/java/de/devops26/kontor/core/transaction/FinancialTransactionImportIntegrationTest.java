@@ -76,8 +76,8 @@ class FinancialTransactionImportIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /import with same CSV twice upserts within the same user's rows")
-    void importSameCsvTwice_sameUser_upsertsSuccessfully() throws Exception {
+    @DisplayName("POST /import with same CSV twice replaces and yields the same row count")
+    void importSameCsvTwice_sameUser_replacesTransactions() throws Exception {
         var csvBytes = new ClassPathResource("csv/valid-transactions.csv").getContentAsByteArray();
         var first = new MockMultipartFile("file", "transactions.csv", "text/csv", csvBytes);
         var second = new MockMultipartFile("file", "transactions.csv", "text/csv", csvBytes);
@@ -92,6 +92,36 @@ class FinancialTransactionImportIntegrationTest {
                 .andExpect(status().isOk());
 
         assertThat(dsl.fetchCount(FINANCIAL_TRANSACTION)).isEqualTo(8);
+    }
+
+    @Test
+    @DisplayName("POST /import with a different CSV replaces old transactions for that user")
+    void importDifferentCsv_sameUser_replacesOldTransactions() throws Exception {
+        mockMvc.perform(multipart("/api/v1/financial-transactions/import")
+                        .file(validCsv())
+                        .with(jwtFor(USER_ALICE_SUB, "alice")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.importedCount").value(8));
+
+        var alternateCsv = new MockMultipartFile(
+                "file",
+                "alternate.csv",
+                "text/csv",
+                new ClassPathResource("csv/valid-transactions-alternate.csv").getInputStream());
+
+        mockMvc.perform(multipart("/api/v1/financial-transactions/import")
+                        .file(alternateCsv)
+                        .with(jwtFor(USER_ALICE_SUB, "alice")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.importedCount").value(3));
+
+        var aliceId = dsl.select(APP_USER.ID)
+                .from(APP_USER)
+                .where(APP_USER.OIDC_SUB.eq(USER_ALICE_SUB))
+                .fetchOne(APP_USER.ID);
+
+        assertThat(dsl.fetchCount(FINANCIAL_TRANSACTION, FINANCIAL_TRANSACTION.USER_ID.eq(aliceId)))
+                .isEqualTo(3);
     }
 
     @Test

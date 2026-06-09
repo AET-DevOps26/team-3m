@@ -1,6 +1,8 @@
 import createClient, { type Middleware } from "openapi-fetch"
+import { getAuthToken, triggerSigninRedirect } from "./auth-token"
 import { API_BASE_URL } from "./config"
 import { APIError } from "./errors"
+import type { ListTransactionsApiResponse } from "./generated"
 
 interface TextResponseOperation {
   responses: {
@@ -18,6 +20,24 @@ interface ApiPaths {
   }
   "/api/v1/health/database": {
     get: TextResponseOperation
+  }
+  "/api/v1/financial-transactions": {
+    get: {
+      parameters: {
+        query?: {
+          pageSize?: number
+          afterDatetime?: string
+          afterId?: string
+        }
+      }
+      responses: {
+        200: {
+          content: {
+            "application/json": ListTransactionsApiResponse
+          }
+        }
+      }
+    }
   }
 }
 
@@ -43,11 +63,30 @@ const networkSafeFetch: typeof fetch = async (input, init) => {
   }
 }
 
+const authMiddleware: Middleware = {
+  async onRequest({ request }) {
+    const token = getAuthToken()
+    if (token !== null) {
+      request.headers.set("Authorization", `Bearer ${token}`)
+    }
+    return request
+  },
+}
+
 const httpErrorMiddleware: Middleware = {
   async onResponse({ response }) {
     if (response.ok) return
     const text = await response.clone().text()
     const body = safeParse(text)
+    if (response.status === 401) {
+      triggerSigninRedirect()
+      throw new APIError({
+        code: "unauthenticated",
+        status: 401,
+        message: extractErrorMessage(body, response),
+        details: body,
+      })
+    }
     throw new APIError({
       code: response.status === 400 ? "validation" : "http",
       status: response.status,
@@ -115,5 +154,6 @@ export const apiClient = createClient<ApiPaths>({
   fetch: networkSafeFetch,
 })
 
+apiClient.use(authMiddleware)
 apiClient.use(successfulJsonParseMiddleware)
 apiClient.use(httpErrorMiddleware)

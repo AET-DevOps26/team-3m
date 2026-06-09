@@ -11,6 +11,7 @@ import org.jooq.DSLContext;
 import org.jooq.Query;
 import org.jooq.impl.DSL;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public class FinancialTransactionRepository {
@@ -19,6 +20,61 @@ public class FinancialTransactionRepository {
 
     public FinancialTransactionRepository(DSLContext dsl) {
         this.dsl = dsl;
+    }
+
+    @Transactional(readOnly = true)
+    public TransactionPage findPage(UUID userId, int pageSize, TransactionCursor cursor) {
+        var table = FINANCIAL_TRANSACTION;
+        var condition = table.USER_ID.eq(userId);
+        if (cursor != null) {
+            condition = condition.and(table.DATETIME
+                    .lessThan(cursor.afterDatetime())
+                    .or(table.DATETIME.eq(cursor.afterDatetime()).and(table.ID.lessThan(cursor.afterId()))));
+        }
+        // Fetch one extra row to detect whether a next page exists without a COUNT query.
+        var probe = dsl.selectFrom(table)
+                .where(condition)
+                .orderBy(table.DATETIME.desc(), table.ID.desc())
+                .limit(pageSize + 1)
+                .fetch(r -> new FinancialTransactionResponse(
+                        r.get(table.ID),
+                        r.get(table.DATETIME),
+                        r.get(table.DATE),
+                        r.get(table.ACCOUNT_TYPE),
+                        r.get(table.CATEGORY),
+                        r.get(table.TYPE),
+                        r.get(table.ASSET_CLASS),
+                        r.get(table.NAME),
+                        r.get(table.SYMBOL),
+                        r.get(table.SHARES),
+                        r.get(table.PRICE),
+                        r.get(table.AMOUNT),
+                        r.get(table.FEE),
+                        r.get(table.TAX),
+                        r.get(table.CURRENCY),
+                        r.get(table.ORIGINAL_AMOUNT),
+                        r.get(table.ORIGINAL_CURRENCY),
+                        r.get(table.FX_RATE),
+                        r.get(table.DESCRIPTION),
+                        r.get(table.EXTERNAL_TRANSACTION_ID),
+                        r.get(table.COUNTERPARTY_NAME),
+                        r.get(table.COUNTERPARTY_IBAN),
+                        r.get(table.PAYMENT_REFERENCE),
+                        r.get(table.MCC_CODE)));
+        var hasMore = probe.size() > pageSize;
+        var items = hasMore ? probe.subList(0, pageSize) : probe;
+        var nextCursor = hasMore
+                ? new TransactionCursor(
+                        items.get(items.size() - 1).datetime(),
+                        items.get(items.size() - 1).id())
+                : null;
+        return new TransactionPage(items, nextCursor);
+    }
+
+    public void deleteAllForUser(UUID userId) {
+        dsl.deleteFrom(FINANCIAL_TRANSACTION)
+                .where(FINANCIAL_TRANSACTION.USER_ID.eq(userId))
+                .execute();
     }
 
     public int upsertAll(List<TransactionCsvRow> rows, UUID userId) {

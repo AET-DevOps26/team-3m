@@ -8,9 +8,9 @@ import type { CsvImportResult } from "../generated"
 import {
   csvImportApiResponseSchema,
   csvImportResultSchema,
-  type financialTransactionResponseSchema,
+  financialTransactionResponseSchema,
   listTransactionsApiResponseSchema,
-  type transactionCursorSchema,
+  transactionCursorSchema,
   transactionPageSchema,
 } from "../generated/zod.gen"
 
@@ -18,14 +18,27 @@ const BASE_PATH = "/api/v1/financial-transactions"
 const IMPORT_PATH = `${BASE_PATH}/import`
 const PAGE_SIZE = 200
 
+// z.iso.datetime() in Zod v4 only accepts Z suffix, but Java/Jackson serialises
+// OffsetDateTime with +HH:MM offsets (e.g. +00:00). Use the offset-aware variant.
+const datetimeWithOffset = z.string().datetime({ offset: true })
+
+const transactionSchema = financialTransactionResponseSchema.extend({
+  datetime: datetimeWithOffset,
+})
+
 const transactionEnvelopeSchema = listTransactionsApiResponseSchema.extend({
   success: z.literal(true),
-  data: transactionPageSchema,
+  data: transactionPageSchema.extend({
+    items: z.array(transactionSchema),
+    nextCursor: transactionCursorSchema
+      .extend({ afterDatetime: datetimeWithOffset })
+      .nullish(),
+  }),
 })
 
 type TransactionCursorParams = z.infer<typeof transactionCursorSchema>
 
-export type Transaction = z.infer<typeof financialTransactionResponseSchema>
+export type Transaction = z.infer<typeof transactionSchema>
 
 /**
  * Fetches all transactions via keyset-paginated pages and returns the full flat
@@ -58,7 +71,15 @@ export function useTransactions() {
           },
         },
       )
-      return transactionEnvelopeSchema.parse(raw).data
+      const result = transactionEnvelopeSchema.safeParse(raw)
+      if (!result.success) {
+        throw new APIError({
+          code: "parse",
+          message: "Unexpected response from server",
+          details: raw,
+        })
+      }
+      return result.data.data
     },
     initialPageParam: null as TransactionCursorParams | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor,

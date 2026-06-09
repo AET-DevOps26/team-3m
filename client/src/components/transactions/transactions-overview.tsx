@@ -7,6 +7,7 @@ import {
   INITIAL_FILTERS,
 } from "@/lib/transaction-filters"
 import { useTransactions } from "@/network/endpoints/transactions"
+import { APIError } from "@/network/errors"
 import { FiltersBar } from "./filters-bar"
 import {
   normalizeType,
@@ -107,7 +108,11 @@ export function TransactionsOverviewBlock() {
       <Alert variant="destructive">
         <AlertCircle />
         <AlertTitle>Failed to load transactions</AlertTitle>
-        <AlertDescription>{error?.message}</AlertDescription>
+        <AlertDescription>
+          {error instanceof APIError
+            ? error.message
+            : "Something went wrong. Please try again."}
+        </AlertDescription>
       </Alert>
     )
   }

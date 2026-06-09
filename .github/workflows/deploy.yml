@@ -99,7 +99,7 @@ jobs:
             --set-string postgres.password="$POSTGRES_PASSWORD" \
             --set-string keycloak.admin.password="$KEYCLOAK_ADMIN_PASSWORD" \
             --set-string keycloak.db.password="$KEYCLOAK_DB_PASSWORD" \
-            --rollback-on-failure --wait --timeout 10m
+            --rollback-on-failure --force-conflicts --wait --timeout 10m
 
       - name: Helm deploy (preview)
         if: inputs.action == 'deploy' && inputs.environment == 'k8s-preview'
@@ -119,7 +119,7 @@ jobs:
             --set-string client.image.tag='${{ inputs.image-tag }}' \
             --set-string postgres.password="$POSTGRES_PASSWORD" \
             --set-string keycloak.admin.password="$KEYCLOAK_ADMIN_PASSWORD" \
-            --rollback-on-failure --wait --timeout 10m
+            --rollback-on-failure --force-conflicts --wait --timeout 10m
 
       - name: Helm teardown
         if: inputs.action == 'teardown'

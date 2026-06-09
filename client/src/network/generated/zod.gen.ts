@@ -40,6 +40,30 @@ export const apiResponsePortfolioPerformanceSchema = z.object({
   details: z.array(z.unknown()).nullish(),
 })
 
+export const portfolioHoldingSchema = z.object({
+  symbol: z.string().optional(),
+  name: z.string().optional(),
+  assetClass: z.string().optional(),
+  currency: z.string().optional(),
+  shares: z.number().optional(),
+  lastPrice: z.number().optional(),
+  currentValue: z.number().optional(),
+})
+
+export const portfolioOverviewSchema = z.object({
+  holdings: z.array(portfolioHoldingSchema).optional(),
+  cashBalance: z.number().optional(),
+  currency: z.string().optional(),
+  totalValue: z.number().optional(),
+})
+
+export const apiResponsePortfolioOverviewSchema = z.object({
+  success: z.boolean(),
+  data: portfolioOverviewSchema.optional(),
+  error: z.string().nullish(),
+  details: z.array(z.unknown()).nullish(),
+})
+
 export const financialTransactionResponseSchema = z.object({
   id: z.uuid(),
   datetime: z.iso.datetime(),
@@ -65,30 +89,6 @@ export const financialTransactionResponseSchema = z.object({
   counterpartyIban: z.string().nullish(),
   paymentReference: z.string().nullish(),
   mccCode: z.string().nullish(),
-})
-
-export const portfolioHoldingSchema = z.object({
-  symbol: z.string().optional(),
-  name: z.string().optional(),
-  assetClass: z.string().optional(),
-  currency: z.string().optional(),
-  shares: z.number().optional(),
-  lastPrice: z.number().optional(),
-  currentValue: z.number().optional(),
-})
-
-export const portfolioOverviewSchema = z.object({
-  holdings: z.array(portfolioHoldingSchema).optional(),
-  cashBalance: z.number().optional(),
-  currency: z.string().optional(),
-  totalValue: z.number().optional(),
-})
-
-export const apiResponsePortfolioOverviewSchema = z.object({
-  success: z.boolean(),
-  data: portfolioOverviewSchema.optional(),
-  error: z.string().nullish(),
-  details: z.array(z.unknown()).nullish(),
 })
 
 export const transactionCursorSchema = z.object({

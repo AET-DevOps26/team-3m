@@ -238,6 +238,36 @@ components:
           items: {}
       required:
       - success
+    PortfolioHolding:
+      type: object
+      properties:
+        symbol:
+          type: string
+        name:
+          type: string
+        assetClass:
+          type: string
+        currency:
+          type: string
+        shares:
+          type: number
+        lastPrice:
+          type: number
+        currentValue:
+          type: number
+    PortfolioOverview:
+      type: object
+      properties:
+        holdings:
+          type: array
+          items:
+            $ref: "#/components/schemas/PortfolioHolding"
+        cashBalance:
+          type: number
+        currency:
+          type: string
+        totalValue:
+          type: number
     FinancialTransactionResponse:
       type: object
       properties:
@@ -352,36 +382,6 @@ components:
           items: {}
       required:
       - success
-    PortfolioHolding:
-      type: object
-      properties:
-        symbol:
-          type: string
-        name:
-          type: string
-        assetClass:
-          type: string
-        currency:
-          type: string
-        shares:
-          type: number
-        lastPrice:
-          type: number
-        currentValue:
-          type: number
-    PortfolioOverview:
-      type: object
-      properties:
-        holdings:
-          type: array
-          items:
-            $ref: "#/components/schemas/PortfolioHolding"
-        cashBalance:
-          type: number
-        currency:
-          type: string
-        totalValue:
-          type: number
     TransactionCursor:
       type: object
       properties:

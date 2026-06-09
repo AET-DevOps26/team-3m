@@ -47,6 +47,23 @@ export type ApiResponsePortfolioOverview = {
   details?: Array<unknown> | null
 }
 
+export type PortfolioHolding = {
+  symbol?: string
+  name?: string
+  assetClass?: string
+  currency?: string
+  shares?: number
+  lastPrice?: number
+  currentValue?: number
+}
+
+export type PortfolioOverview = {
+  holdings?: Array<PortfolioHolding>
+  cashBalance?: number
+  currency?: string
+  totalValue?: number
+}
+
 export type FinancialTransactionResponse = {
   id: string
   datetime: string
@@ -79,23 +96,6 @@ export type ListTransactionsApiResponse = {
   data?: TransactionPage
   error?: string | null
   details?: Array<unknown> | null
-}
-
-export type PortfolioHolding = {
-  symbol?: string
-  name?: string
-  assetClass?: string
-  currency?: string
-  shares?: number
-  lastPrice?: number
-  currentValue?: number
-}
-
-export type PortfolioOverview = {
-  holdings?: Array<PortfolioHolding>
-  cashBalance?: number
-  currency?: string
-  totalValue?: number
 }
 
 export type TransactionCursor = {

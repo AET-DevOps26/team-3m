@@ -1,19 +1,14 @@
 from fastapi import APIRouter
-from pydantic import BaseModel
-
-
-class HealthStatus(BaseModel):
-    status: str
-
+from fastapi.responses import PlainTextResponse
 
 router = APIRouter()
 
 
-@router.get("/health/liveness", response_model=HealthStatus)
-def liveness() -> HealthStatus:
-    return HealthStatus(status="up")
+@router.get("/health/liveness", response_class=PlainTextResponse)
+def liveness() -> str:
+    return "up"
 
 
-@router.get("/health/readiness", response_model=HealthStatus)
-def readiness() -> HealthStatus:
-    return HealthStatus(status="up")
+@router.get("/health/readiness", response_class=PlainTextResponse)
+def readiness() -> str:
+    return "up"

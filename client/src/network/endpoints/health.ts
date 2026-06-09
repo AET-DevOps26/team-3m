@@ -2,7 +2,7 @@ import { useMutation } from "@tanstack/react-query"
 import { apiClient } from "../api-client"
 import { APIError, RecoverableError } from "../errors"
 
-export type HealthEndpoint = "server" | "database"
+export type HealthEndpoint = "server" | "database" | "ai"
 
 export interface HealthCheckResult {
   message: string
@@ -16,11 +16,13 @@ export interface UseHealthCheckOptions {
 const HEALTH_PATHS = {
   server: "/api/v1/health/server",
   database: "/api/v1/health/database",
+  ai: "/ai/health/readiness",
 } as const satisfies Record<HealthEndpoint, string>
 
 const ERROR_TITLES: Record<HealthEndpoint, string> = {
   server: "Server connection failed",
   database: "Database connection failed",
+  ai: "AI service connection failed",
 }
 
 export function useHealthCheck(

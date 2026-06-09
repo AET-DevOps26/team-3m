@@ -155,6 +155,22 @@ services:
       start_period: 10s
     restart: unless-stopped
 
+  ai:
+    image: ghcr.io/aet-devops26/team-3m/kontor-ai:latest
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ai.rule=Host(`${DOMAIN}`) && PathPrefix(`/ai`)"
+      - "traefik.http.routers.ai.entrypoints=websecure"
+      - "traefik.http.routers.ai.tls.certresolver=le"
+      - "traefik.http.services.ai.loadbalancer.server.port=8000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8000/ai/health/readiness >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   keycloak_postgres_data:

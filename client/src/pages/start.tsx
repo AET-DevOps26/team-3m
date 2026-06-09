@@ -1,4 +1,5 @@
 import {
+  Brain,
   Code,
   Database,
   FileSpreadsheet,
@@ -49,6 +50,7 @@ const techStack = [
 export function StartPage() {
   const serverCheck = useHealthCheck("server")
   const databaseCheck = useHealthCheck("database")
+  const aiCheck = useHealthCheck("ai")
 
   return (
     <div className="flex min-h-svh items-center justify-center bg-background p-4 sm:p-6">
@@ -166,6 +168,19 @@ export function StartPage() {
                 )}
                 {databaseCheck.isPending ? "Connecting..." : "Test Database"}
               </Button>
+
+              <Button
+                variant="outline"
+                onClick={() => aiCheck.mutate()}
+                disabled={aiCheck.isPending}
+              >
+                {aiCheck.isPending ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <Brain />
+                )}
+                {aiCheck.isPending ? "Connecting..." : "Test AI"}
+              </Button>
             </div>
 
             {serverCheck.isSuccess && (
@@ -196,6 +211,21 @@ export function StartPage() {
                 variant="error"
                 label="Database"
                 message={databaseCheck.error.message}
+              />
+            )}
+            {aiCheck.isSuccess && (
+              <ConnectionStatusBanner
+                variant="success"
+                label="AI"
+                message={aiCheck.data.message}
+                caption={`200 OK · ${aiCheck.data.latencyMs}ms`}
+              />
+            )}
+            {aiCheck.isError && (
+              <ConnectionStatusBanner
+                variant="error"
+                label="AI"
+                message={aiCheck.error.message}
               />
             )}
           </CardContent>

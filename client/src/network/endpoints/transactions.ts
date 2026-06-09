@@ -13,7 +13,6 @@ import {
   transactionCursorSchema,
   transactionPageSchema,
 } from "../generated/zod.gen"
-import { OVERVIEW_QUERY_KEY, PERFORMANCE_QUERY_KEY } from "./portfolio"
 
 const BASE_PATH = "/api/v1/financial-transactions"
 const IMPORT_PATH = `${BASE_PATH}/import`
@@ -139,8 +138,7 @@ export function useImportTransactionsCsv(
   return useFileUpload<ImportTransactionsCsvResult>({
     path: IMPORT_PATH,
     onSuccess: (result, file) => {
-      void queryClient.resetQueries({ queryKey: OVERVIEW_QUERY_KEY })
-      void queryClient.resetQueries({ queryKey: PERFORMANCE_QUERY_KEY })
+      void queryClient.resetQueries({ queryKey: ["portfolio"] })
       void queryClient.resetQueries({ queryKey: ["transactions"] })
       options.onSuccess?.(result, file)
     },

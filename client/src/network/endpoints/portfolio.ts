@@ -1,5 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { apiClient } from "../api-client"
+import { APIError } from "../errors"
 import type {
   PortfolioHolding,
   PortfolioOverview,
@@ -30,7 +31,10 @@ export function usePortfolioOverview() {
       })
       const envelope = apiResponsePortfolioOverviewSchema.parse(raw)
       if (!envelope.data)
-        throw new Error("portfolio overview: missing data in response")
+        throw new APIError({
+          code: "parse",
+          message: "portfolio overview: missing data in response",
+        })
       return envelope.data
     },
   })
@@ -46,7 +50,10 @@ export function usePortfolioPerformance() {
       )
       const envelope = apiResponsePortfolioPerformanceSchema.parse(raw)
       if (!envelope.data)
-        throw new Error("portfolio performance: missing data in response")
+        throw new APIError({
+          code: "parse",
+          message: "portfolio performance: missing data in response",
+        })
       return envelope.data
     },
   })

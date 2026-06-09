@@ -18,15 +18,15 @@ import {
   usePortfolioOverview,
 } from "@/network/endpoints/portfolio"
 
-interface PortfolioErrorBoundaryState {
+interface ErrorBoundaryState {
   error: Error | null
 }
 
-class PortfolioErrorBoundary extends Component<
+class ErrorBoundary extends Component<
   { children: ReactNode },
-  PortfolioErrorBoundaryState
+  ErrorBoundaryState
 > {
-  state: PortfolioErrorBoundaryState = { error: null }
+  state: ErrorBoundaryState = { error: null }
 
   static getDerivedStateFromError(error: Error) {
     return { error }
@@ -44,6 +44,45 @@ class PortfolioErrorBoundary extends Component<
   }
 }
 
+function Loading() {
+  return (
+    <div className="flex w-full max-w-4xl animate-pulse flex-col gap-6">
+      <div className="grid gap-4 sm:grid-cols-3">
+        {[0, 1, 2].map((i) => (
+          <Card key={i}>
+            <CardHeader className="pb-2">
+              <div className="h-4 w-24 rounded bg-muted" />
+              <div className="mt-2 h-8 w-32 rounded bg-muted" />
+            </CardHeader>
+          </Card>
+        ))}
+      </div>
+      <Card>
+        <CardHeader>
+          <div className="h-5 w-24 rounded bg-muted" />
+          <div className="h-4 w-48 rounded bg-muted" />
+        </CardHeader>
+        <CardContent>
+          <div className="h-40 w-full rounded bg-muted" />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <div className="h-5 w-24 rounded bg-muted" />
+          <div className="h-4 w-64 rounded bg-muted" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="h-10 w-full rounded bg-muted" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
 function groupByAssetClass(holdings: PortfolioHolding[]): Map<string, number> {
   const groups = new Map<string, number>()
   for (const h of holdings) {
@@ -55,7 +94,6 @@ function groupByAssetClass(holdings: PortfolioHolding[]): Map<string, number> {
 
 function PortfolioContent() {
   const { data: overview } = usePortfolioOverview()
-
   const holdingsValue = (overview.totalValue ?? 0) - (overview.cashBalance ?? 0)
   const byClass = groupByAssetClass(overview.holdings ?? [])
 
@@ -139,45 +177,6 @@ function PortfolioContent() {
   )
 }
 
-function PortfolioSkeleton() {
-  return (
-    <div className="flex w-full max-w-4xl animate-pulse flex-col gap-6">
-      <div className="grid gap-4 sm:grid-cols-3">
-        {[0, 1, 2].map((i) => (
-          <Card key={i}>
-            <CardHeader className="pb-2">
-              <div className="h-4 w-24 rounded bg-muted" />
-              <div className="mt-2 h-8 w-32 rounded bg-muted" />
-            </CardHeader>
-          </Card>
-        ))}
-      </div>
-      <Card>
-        <CardHeader>
-          <div className="h-5 w-24 rounded bg-muted" />
-          <div className="h-4 w-48 rounded bg-muted" />
-        </CardHeader>
-        <CardContent>
-          <div className="h-40 w-full rounded bg-muted" />
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <div className="h-5 w-24 rounded bg-muted" />
-          <div className="h-4 w-64 rounded bg-muted" />
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="h-10 w-full rounded bg-muted" />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
-
 export function PortfolioOverviewPage() {
   return (
     <div className="flex min-h-svh flex-col items-center bg-background p-4 sm:p-6">
@@ -193,11 +192,11 @@ export function PortfolioOverviewPage() {
           <h1 className="text-xl font-semibold">Portfolio Overview</h1>
         </div>
 
-        <PortfolioErrorBoundary>
-          <Suspense fallback={<PortfolioSkeleton />}>
+        <ErrorBoundary>
+          <Suspense fallback={<Loading />}>
             <PortfolioContent />
           </Suspense>
-        </PortfolioErrorBoundary>
+        </ErrorBoundary>
       </div>
     </div>
   )

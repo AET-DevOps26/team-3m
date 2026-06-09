@@ -14,6 +14,13 @@
 deploy/helm/**/secrets.yaml
 !deploy/helm/**/secrets.example.yaml
 
+# Python
+__pycache__/
+*.pyc
+ai/.venv/
+ai/.pytest_cache/
+ai/.ruff_cache/
+
 # Playwright
 test-results/
 playwright-report/

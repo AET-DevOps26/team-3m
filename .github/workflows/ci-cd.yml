@@ -24,6 +24,9 @@ jobs:
     with:
       working-directory: core
 
+  ai-quality:
+    uses: ./.github/workflows/ai-quality.yml
+
   changes:
     name: Detect changes
     runs-on: ubuntu-latest
@@ -59,10 +62,11 @@ jobs:
 
   release:
     name: Semantic Release
-    needs: [client-quality, server-quality, changes, helm-quality, openapi-sync]
+    needs: [client-quality, server-quality, ai-quality, changes, helm-quality, openapi-sync]
     if: ${{ !cancelled()
       && needs.client-quality.result == 'success'
       && needs.server-quality.result == 'success'
+      && needs.ai-quality.result == 'success'
       && needs.openapi-sync.result == 'success'
       && needs.helm-quality.result != 'failure' }}
     runs-on: ubuntu-latest
@@ -128,8 +132,18 @@ jobs:
       released: ${{ needs.release.outputs.released == 'true' }}
       ref: ${{ needs.release.outputs.sha }}
 
+  ai-docker:
+    needs: release
+    uses: ./.github/workflows/docker-build-push.yml
+    with:
+      context: ai
+      image-name: kontor-ai
+      version: ${{ needs.release.outputs.version }}
+      released: ${{ needs.release.outputs.released == 'true' }}
+      ref: ${{ needs.release.outputs.sha }}
+
   deploy-prod:
-    needs: [release, client-docker, server-docker]
+    needs: [release, client-docker, server-docker, ai-docker]
     if: ${{ needs.release.outputs.released == 'true' || github.event_name == 'workflow_dispatch' }}
     uses: ./.github/workflows/deploy.yml
     secrets: inherit

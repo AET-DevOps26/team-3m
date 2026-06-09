@@ -101,6 +101,10 @@ Usage: include "kontor.image" (dict "root" . "component" .Values.core)
 {{/*
 Keycloak component-scoped resource names.
 */}}
+{{- define "kontor.ai.fullname" -}}
+{{- printf "%s-ai" (include "kontor.fullname" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
 {{- define "kontor.keycloak.fullname" -}}
 {{- printf "%s-keycloak" (include "kontor.fullname" .) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}

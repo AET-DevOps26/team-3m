@@ -1,6 +1,7 @@
 import { ArrowDownLeft, ArrowUpRight } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import { cn } from "@/lib/utils"
 import type { Transaction } from "@/network/endpoints/transactions"
 
 // ---------------------------------------------------------------------------
@@ -122,11 +123,12 @@ export function TransactionRow({ tx }: TransactionRowProps) {
   return (
     <div className="flex items-center gap-3 py-2">
       <div
-        className={`flex size-8 shrink-0 items-center justify-center rounded-full ${
+        className={cn(
+          "flex size-8 shrink-0 items-center justify-center rounded-full",
           isPositive
             ? "bg-success/15 text-success"
-            : "bg-destructive/15 text-destructive"
-        }`}
+            : "bg-destructive/15 text-destructive",
+        )}
       >
         {isPositive ? (
           <ArrowDownLeft className="size-4" />
@@ -147,9 +149,10 @@ export function TransactionRow({ tx }: TransactionRowProps) {
 
       <div className="text-right">
         <p
-          className={`text-sm font-medium tabular-nums ${
-            isPositive ? "text-success" : "text-destructive"
-          }`}
+          className={cn(
+            "text-sm font-medium tabular-nums",
+            isPositive ? "text-success" : "text-destructive",
+          )}
         >
           {isPositive ? "+" : ""}
           {formatAmount(tx.amount, tx.currency)}

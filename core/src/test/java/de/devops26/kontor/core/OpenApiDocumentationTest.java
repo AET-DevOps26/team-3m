@@ -52,7 +52,9 @@ class OpenApiDocumentationTest {
                         "bearerAuth",
                         "type: http",
                         "scheme: bearer",
-                        "\"401\"");
+                        "\"401\"",
+                        "listTransactions",
+                        "/api/v1/financial-transactions");
 
         if (Boolean.getBoolean("openapi.write")) {
             Files.createDirectories(OUTPUT.getParent());

@@ -4,6 +4,7 @@ import {
   Database,
   FileSpreadsheet,
   Layers,
+  List,
   Loader2,
   Rocket,
   Server,
@@ -11,6 +12,7 @@ import {
 } from "lucide-react"
 import { Link } from "react-router-dom"
 import { ConnectionStatusBanner } from "@/components/connection-status-banner"
+import { TransactionsOverviewBlock } from "@/components/transactions/transactions-overview"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -237,6 +239,19 @@ export function StartPage() {
                 Import CSV
               </Link>
             </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <List className="size-4" />
+              Transactions
+            </CardTitle>
+            <CardDescription>All your financial transactions</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <TransactionsOverviewBlock />
           </CardContent>
         </Card>
       </div>

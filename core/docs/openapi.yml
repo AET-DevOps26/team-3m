@@ -99,6 +99,43 @@ paths:
             '*/*':
               schema:
                 type: string
+  /api/v1/financial-transactions:
+    get:
+      tags:
+      - financial-transaction-controller
+      operationId: listTransactions
+      parameters:
+      - name: pageSize
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 200
+      - name: afterDatetime
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: afterId
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: Transaction page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListTransactionsApiResponse"
+        "400":
+          description: Invalid cursor parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
 components:
   schemas:
     CsvImportApiResponse:
@@ -201,6 +238,120 @@ components:
           items: {}
       required:
       - success
+    FinancialTransactionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        datetime:
+          type: string
+          format: date-time
+        date:
+          type: string
+          format: date
+        accountType:
+          type: string
+        category:
+          type: string
+        type:
+          type: string
+        assetClass:
+          type:
+          - string
+          - "null"
+        name:
+          type:
+          - string
+          - "null"
+        symbol:
+          type:
+          - string
+          - "null"
+        shares:
+          type:
+          - number
+          - "null"
+        price:
+          type:
+          - number
+          - "null"
+        amount:
+          type: number
+        fee:
+          type:
+          - number
+          - "null"
+        tax:
+          type:
+          - number
+          - "null"
+        currency:
+          type: string
+        originalAmount:
+          type:
+          - number
+          - "null"
+        originalCurrency:
+          type:
+          - string
+          - "null"
+        fxRate:
+          type:
+          - number
+          - "null"
+        description:
+          type:
+          - string
+          - "null"
+        externalTransactionId:
+          type:
+          - string
+          - "null"
+          format: uuid
+        counterpartyName:
+          type:
+          - string
+          - "null"
+        counterpartyIban:
+          type:
+          - string
+          - "null"
+        paymentReference:
+          type:
+          - string
+          - "null"
+        mccCode:
+          type:
+          - string
+          - "null"
+      required:
+      - accountType
+      - amount
+      - category
+      - currency
+      - date
+      - datetime
+      - id
+      - type
+    ListTransactionsApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/TransactionPage"
+        error:
+          type:
+          - string
+          - "null"
+        details:
+          type:
+          - array
+          - "null"
+          items: {}
+      required:
+      - success
     PortfolioHolding:
       type: object
       properties:
@@ -231,6 +382,32 @@ components:
           type: string
         totalValue:
           type: number
+    TransactionCursor:
+      type: object
+      properties:
+        afterDatetime:
+          type: string
+          format: date-time
+        afterId:
+          type: string
+          format: uuid
+      required:
+      - afterDatetime
+      - afterId
+    TransactionPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/FinancialTransactionResponse"
+        nextCursor:
+          $ref: "#/components/schemas/TransactionCursor"
+          anyOf:
+          - $ref: "#/components/schemas/TransactionCursor"
+          - {}
+      required:
+      - items
   securitySchemes:
     bearerAuth:
       type: http

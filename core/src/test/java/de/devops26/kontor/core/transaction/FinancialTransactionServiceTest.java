@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -56,6 +57,7 @@ class FinancialTransactionServiceTest {
         var result = service.importCsv(toStream(csv), USER_ID);
 
         assertThat(result.importedCount()).isEqualTo(1);
+        verify(repository).deleteAllForUser(USER_ID);
         verify(repository).upsertAll(rowsCaptor.capture(), eq(USER_ID));
         var rows = rowsCaptor.getValue();
         assertThat(rows).hasSize(1);
@@ -93,6 +95,7 @@ class FinancialTransactionServiceTest {
                     assertThat(errors.getFirst().field()).isEqualTo("amount");
                     assertThat(errors.getFirst().row()).isEqualTo(2);
                 });
+        verify(repository, never()).deleteAllForUser(any());
     }
 
     @Test
@@ -111,6 +114,7 @@ class FinancialTransactionServiceTest {
                     assertThat(errors).hasSize(1);
                     assertThat(errors.getFirst().field()).isEqualTo("transaction_id");
                 });
+        verify(repository, never()).deleteAllForUser(any());
     }
 
     @Test
@@ -121,6 +125,7 @@ class FinancialTransactionServiceTest {
         assertThatThrownBy(() -> service.importCsv(toStream(csv), USER_ID))
                 .isInstanceOf(CsvParsingException.class)
                 .hasMessageContaining("no data rows");
+        verify(repository, never()).deleteAllForUser(any());
     }
 
     @Test
@@ -136,6 +141,7 @@ class FinancialTransactionServiceTest {
 
         service.importCsv(toStream(csv), USER_ID);
 
+        verify(repository).deleteAllForUser(USER_ID);
         verify(repository).upsertAll(rowsCaptor.capture(), eq(USER_ID));
         var row = rowsCaptor.getValue().getFirst();
         assertThat(row.shares()).isEqualByComparingTo(new BigDecimal("5.0000000000"));

@@ -76,6 +76,12 @@ public class FinancialTransactionService {
         this.repository = repository;
     }
 
+    @Transactional(readOnly = true)
+    public TransactionPage listTransactions(UUID userId, int pageSize, TransactionCursor cursor) {
+        var clampedPageSize = Math.min(Math.max(pageSize, 1), 500);
+        return repository.findPage(userId, clampedPageSize, cursor);
+    }
+
     @Transactional
     public CsvImportResult importCsv(InputStream input, UUID userId) throws IOException {
         var format = CSVFormat.DEFAULT
@@ -120,6 +126,7 @@ public class FinancialTransactionService {
             throw new CsvParsingException("CSV file contained no data rows", List.of());
         }
 
+        repository.deleteAllForUser(userId);
         int count = repository.upsertAll(rows, userId);
         return new CsvImportResult(count, "Successfully imported " + count + " transaction(s)");
     }

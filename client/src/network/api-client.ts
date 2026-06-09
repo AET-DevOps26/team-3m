@@ -5,6 +5,7 @@ import { APIError } from "./errors"
 import type {
   ApiResponsePortfolioOverview,
   ApiResponsePortfolioPerformance,
+  ListTransactionsApiResponse,
 } from "./generated"
 
 interface TextResponseOperation {
@@ -39,6 +40,24 @@ interface ApiPaths {
   }
   "/api/v1/portfolio/performance": {
     get: JsonGetOperation<ApiResponsePortfolioPerformance>
+  }
+  "/api/v1/financial-transactions": {
+    get: {
+      parameters: {
+        query?: {
+          pageSize?: number
+          afterDatetime?: string
+          afterId?: string
+        }
+      }
+      responses: {
+        200: {
+          content: {
+            "application/json": ListTransactionsApiResponse
+          }
+        }
+      }
+    }
   }
 }
 
@@ -90,6 +109,15 @@ const httpErrorMiddleware: Middleware = {
     }
     const text = await response.clone().text()
     const body = safeParse(text)
+    if (response.status === 401) {
+      triggerSigninRedirect()
+      throw new APIError({
+        code: "unauthenticated",
+        status: 401,
+        message: extractErrorMessage(body, response),
+        details: body,
+      })
+    }
     throw new APIError({
       code: response.status === 400 ? "validation" : "http",
       status: response.status,

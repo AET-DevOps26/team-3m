@@ -1,19 +1,19 @@
 [project]
 name = "kontor-ai"
 version = "0.8.0"
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 dependencies = [
-    "fastapi>=0.115",
-    "uvicorn[standard]>=0.34",
-    "pydantic>=2.0",
+    "fastapi>=0.136",
+    "uvicorn[standard]>=0.49",
+    "pydantic>=2.13",
 ]
 
 [dependency-groups]
 dev = [
     "httpx>=0.28",
-    "pytest>=8",
-    "pytest-asyncio>=0.25",
-    "ruff>=0.9",
+    "pytest>=9",
+    "pytest-asyncio>=1.4",
+    "ruff>=0.15",
 ]
 
 [build-system]
@@ -25,7 +25,7 @@ packages = ["src/ai"]
 
 [tool.ruff]
 line-length = 120
-target-version = "py313"
+target-version = "py314"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]

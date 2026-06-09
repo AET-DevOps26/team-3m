@@ -6,14 +6,14 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "npm --no-git-tag-version --prefix client version ${nextRelease.version} && sed -i \"s/^version = .*/version = '${nextRelease.version}'/\" core/build.gradle && sed -i \"s/^appVersion: .*/appVersion: \\\"${nextRelease.version}\\\"/\" deploy/helm/kontor/Chart.yaml && sed -i \"s/^version = .*/version = \\\"${nextRelease.version}\\\"/\" ai/pyproject.toml"
+        "prepareCmd": "npm --no-git-tag-version --prefix client version ${nextRelease.version} && sed -i \"s/^version = .*/version = '${nextRelease.version}'/\" core/build.gradle && sed -i \"s/^appVersion: .*/appVersion: \\\"${nextRelease.version}\\\"/\" deploy/helm/kontor/Chart.yaml && sed -i \"s/^version = .*/version = \\\"${nextRelease.version}\\\"/\" ai/pyproject.toml && cd ai && uv sync"
       }
     ],
     "@semantic-release/github",
     [
       "@semantic-release/git",
       {
-        "assets": ["client/package.json", "client/package-lock.json", "core/build.gradle", "deploy/helm/kontor/Chart.yaml", "ai/pyproject.toml"],
+        "assets": ["client/package.json", "client/package-lock.json", "core/build.gradle", "deploy/helm/kontor/Chart.yaml", "ai/pyproject.toml", "ai/uv.lock"],
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }
     ]

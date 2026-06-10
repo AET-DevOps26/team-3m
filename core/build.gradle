@@ -11,6 +11,8 @@ plugins {
 group = 'de.devops26.kontor'
 version = '0.10.1'
 
+ext['jooq.version'] = '3.21.4'
+
 java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(25)

@@ -3,7 +3,7 @@ import { useAuth } from "react-oidc-context"
 
 const MAX_SIGNIN_ATTEMPTS = 3
 const RETRY_DELAY_MS = 300
-const SIGNIN_TIMEOUT_MS = 3000
+const SIGNIN_TIMEOUT_MS = 5000
 
 export type AuthGuardStatus =
   | "initializing"

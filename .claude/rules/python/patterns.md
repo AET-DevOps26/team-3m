@@ -10,7 +10,7 @@ paths:
 
 ```text
 ai/
-  src/ai/
+  advisor/
     main.py        # FastAPI app, router registration
     <domain>.py    # one module per feature/domain
   tests/

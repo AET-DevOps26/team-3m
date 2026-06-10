@@ -17,7 +17,7 @@ paths:
 ```python
 import pytest
 from httpx import ASGITransport, AsyncClient
-from ai.main import app
+from advisor.main import app
 
 @pytest.fixture
 def transport() -> ASGITransport:

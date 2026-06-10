@@ -140,15 +140,21 @@ jobs:
               SEED_DEV_USER=\$(grep -E '^KEYCLOAK_SEED_DEV_USER=' \"\$REPO_DIR/.env\" | cut -d= -f2- || true)
               if [ \"\$SEED_DEV_USER\" = true ]; then
                 echo 'Seeding example transactions for the demo dev user...'
+                seeded=false
                 for i in \$(seq 1 60); do
                   if docker compose -f docker-compose.azure.yml exec -T db \
                        sh -c 'psql -v ON_ERROR_STOP=1 -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\"' \
                        < \"\$REPO_DIR/infra/db/seed/azure-example-transactions.sql\"; then
                     echo 'Example transactions seeded.'
+                    seeded=true
                     break
                   fi
                   echo \"Schema not ready yet (attempt \$i/60); retrying in 5s...\"
                   sleep 5
                 done
+                if [ \"\$seeded\" != true ]; then
+                  echo 'ERROR: Example transaction seeding failed after 60 attempts.' >&2
+                  exit 1
+                fi
               fi
             "

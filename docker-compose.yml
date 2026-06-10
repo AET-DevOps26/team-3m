@@ -112,6 +112,18 @@ services:
       retries: 5
       start_period: 10s
 
+  ai:
+    build:
+      context: ./ai
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8000/ai/health/readiness >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
 volumes:
   postgres_data:
   keycloak_postgres_data:

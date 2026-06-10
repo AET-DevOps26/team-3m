@@ -39,6 +39,13 @@ spec:
                 name: {{ include "kontor.core.fullname" $ }}
                 port:
                   number: {{ $.Values.core.service.port }}
+          - path: /ai
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "kontor.ai.fullname" $ }}
+                port:
+                  number: {{ $.Values.ai.service.port }}
           - path: /
             pathType: Prefix
             backend:

@@ -3,13 +3,15 @@ plugins {
 	id 'checkstyle'
 	id 'org.springframework.boot' version '4.0.6'
 	id 'io.spring.dependency-management' version '1.1.7'
-	id 'com.diffplug.spotless' version '8.5.1'
+	id 'com.diffplug.spotless' version '8.6.0'
 	id 'net.ltgt.errorprone' version '5.1.0'
-	id 'org.jooq.jooq-codegen-gradle' version '3.19.32'
+	id 'org.jooq.jooq-codegen-gradle' version '3.21.4'
 }
 
 group = 'de.devops26.kontor'
-version = '0.10.1'
+version = '0.10.2'
+
+ext['jooq.version'] = '3.21.4'
 
 java {
 	toolchain {
@@ -36,7 +38,7 @@ dependencies {
 	implementation 'org.apache.commons:commons-csv:1.14.1'
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
 	runtimeOnly 'org.postgresql:postgresql'
-	jooqCodegen 'org.jooq:jooq-meta-extensions:3.19.32'
+	jooqCodegen 'org.jooq:jooq-meta-extensions:3.21.4'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
@@ -137,7 +139,7 @@ spotless {
 }
 
 checkstyle {
-	toolVersion = '13.4.2'
+	toolVersion = '13.5.0'
 	configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
 	maxWarnings = 0
 }

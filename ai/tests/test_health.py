@@ -13,11 +13,11 @@ async def test_liveness(transport: ASGITransport) -> None:
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.get("/ai/health/liveness")
     assert response.status_code == 200
-    assert response.json() == {"status": "up"}
+    assert response.text == "up"
 
 
 async def test_readiness(transport: ASGITransport) -> None:
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.get("/ai/health/readiness")
     assert response.status_code == 200
-    assert response.json() == {"status": "up"}
+    assert response.text == "up"

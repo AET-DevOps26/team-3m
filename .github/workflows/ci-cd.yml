@@ -24,34 +24,7 @@ jobs:
     with:
       working-directory: core
 
-  changes:
-    name: Detect changes
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-    permissions:
-      contents: read
-      pull-requests: read
-    outputs:
-      deploy: ${{ steps.filter.outputs.deploy }}
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-          fetch-depth: 0
-      - uses: dorny/paths-filter@v4.0.1
-        id: filter
-        with:
-          base: ${{ github.ref_name }}
-          filters: |
-            deploy:
-              - 'deploy/**'
-              - '.github/workflows/helm-quality.yml'
-              - '.github/workflows/ci-cd.yml'
-              - '.trivyignore.yaml'
-
   helm-quality:
-    needs: changes
-    if: ${{ needs.changes.outputs.deploy == 'true' }}
     uses: ./.github/workflows/helm-quality.yml
 
   openapi-sync:
@@ -59,12 +32,7 @@ jobs:
 
   release:
     name: Semantic Release
-    needs: [client-quality, server-quality, changes, helm-quality, openapi-sync]
-    if: ${{ !cancelled()
-      && needs.client-quality.result == 'success'
-      && needs.server-quality.result == 'success'
-      && needs.openapi-sync.result == 'success'
-      && needs.helm-quality.result != 'failure' }}
+    needs: [client-quality, server-quality, helm-quality, openapi-sync]
     runs-on: ubuntu-latest
     timeout-minutes: 3
     outputs:
@@ -110,7 +78,6 @@ jobs:
 
   client-docker:
     needs: release
-    if: ${{ !cancelled() && needs.release.result == 'success' }}
     uses: ./.github/workflows/docker-build-push.yml
     with:
       context: client
@@ -121,7 +88,6 @@ jobs:
 
   server-docker:
     needs: release
-    if: ${{ !cancelled() && needs.release.result == 'success' }}
     uses: ./.github/workflows/docker-build-push.yml
     with:
       context: core
@@ -132,11 +98,7 @@ jobs:
 
   deploy-prod:
     needs: [release, client-docker, server-docker]
-    if: ${{ !cancelled()
-      && needs.release.result == 'success'
-      && needs.client-docker.result == 'success'
-      && needs.server-docker.result == 'success'
-      && (needs.release.outputs.released == 'true' || github.event_name == 'workflow_dispatch') }}
+    if: ${{ needs.release.outputs.released == 'true' || github.event_name == 'workflow_dispatch' }}
     uses: ./.github/workflows/deploy.yml
     secrets: inherit
     with:

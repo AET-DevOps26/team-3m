@@ -156,7 +156,11 @@ services:
     restart: unless-stopped
 
   ai:
-    image: ghcr.io/aet-devops26/team-3m/kontor-ai:latest
+    # No kontor-ai:latest is published yet (no release has been cut since the AI
+    # service was added), so the tag is overridable. Defaults to latest so it
+    # self-heals once a release publishes that tag; the Azure deploy currently
+    # pins KONTOR_AI_IMAGE_TAG to the last built image.
+    image: ghcr.io/aet-devops26/team-3m/kontor-ai:${KONTOR_AI_IMAGE_TAG:-latest}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.ai.rule=Host(`${DOMAIN}`) && PathPrefix(`/ai`)"

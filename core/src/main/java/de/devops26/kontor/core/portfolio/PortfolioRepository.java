@@ -75,11 +75,12 @@ public class PortfolioRepository {
 
     public List<TransactionRow> findTransactionsForPerformance(UUID userId) {
         var ft = FINANCIAL_TRANSACTION;
-        return dsl.select(ft.DATE, ft.TYPE, ft.SYMBOL, ft.SHARES, ft.PRICE, ft.AMOUNT)
+        return dsl.select(ft.DATETIME, ft.DATE, ft.TYPE, ft.SYMBOL, ft.SHARES, ft.PRICE, ft.AMOUNT)
                 .from(ft)
                 .where(ft.USER_ID.eq(userId))
                 .orderBy(ft.DATETIME.asc())
                 .fetch(record -> new TransactionRow(
+                        record.get(ft.DATETIME),
                         record.get(ft.DATE),
                         record.get(ft.TYPE),
                         record.get(ft.SYMBOL),

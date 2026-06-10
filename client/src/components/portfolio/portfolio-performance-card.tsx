@@ -1,5 +1,5 @@
 import { Suspense, useMemo, useState } from "react"
-import { Area, AreaChart, Label, XAxis } from "recharts"
+import { Area, AreaChart, XAxis } from "recharts"
 import {
   Card,
   CardContent,
@@ -45,30 +45,39 @@ export function filterByRange(
   )
   return cutoff === null
     ? snapshots
-    : snapshots.filter((s) => s.date != null && s.date >= cutoff)
+    : snapshots.filter((s) => s.datetime != null && s.datetime >= cutoff)
 }
 
-function formatAxisDate(dateStr: string, range: TimeRange): string {
+function formatAxisDate(datetimeStr: string, range: TimeRange): string {
+  const d = new Date(datetimeStr)
   if (range === "1D") {
     return new Intl.DateTimeFormat("en", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    }).format(new Date(dateStr))
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(d)
   }
   const showDay = range === "1W" || range === "1M"
   return new Intl.DateTimeFormat("en", {
     month: "short",
     ...(showDay ? { day: "numeric" } : { year: "numeric" }),
-  }).format(new Date(dateStr))
+  }).format(d)
 }
 
-function formatTooltipDate(dateStr: string): string {
+function formatTooltipDate(datetimeStr: string, range: TimeRange): string {
+  const d = new Date(datetimeStr)
+  if (range === "1D") {
+    return new Intl.DateTimeFormat("en", {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(d)
+  }
   return new Intl.DateTimeFormat("en", {
     month: "short",
     day: "numeric",
     year: "numeric",
-  }).format(new Date(dateStr))
+  }).format(d)
 }
 
 interface RangeSelectorProps {
@@ -99,7 +108,7 @@ function RangeSelector({ selected, onSelect }: RangeSelectorProps) {
 }
 
 const chartConfig = {
-  value: { label: "" },
+  investmentValue: { label: "" },
 } satisfies ChartConfig
 
 interface PerformanceChartProps {
@@ -122,11 +131,11 @@ function PerformanceChart({
   }
 
   const data = snapshots.map((s) => ({
-    date: s.date ?? "",
-    value: s.value ?? 0,
+    datetime: s.datetime ?? "",
+    investmentValue: s.investmentValue ?? 0,
   }))
-  const first = snapshots[0].value ?? 0
-  const last = snapshots[snapshots.length - 1].value ?? 0
+  const first = snapshots[0].investmentValue ?? 0
+  const last = snapshots[snapshots.length - 1].investmentValue ?? 0
   const isPositive = last >= first
 
   return (
@@ -150,35 +159,18 @@ function PerformanceChart({
             />
           </linearGradient>
         </defs>
-        {range === "1D" ? (
-          <XAxis tick={false} tickLine={false} axisLine={false} height={28}>
-            <Label
-              value={
-                data.length > 0
-                  ? formatAxisDate(
-                      data[Math.floor(data.length / 2)].date,
-                      range,
-                    )
-                  : ""
-              }
-              position="center"
-              style={{ fontSize: "11px", fill: "currentColor", opacity: 0.6 }}
-            />
-          </XAxis>
-        ) : (
-          <XAxis
-            dataKey="date"
-            tickLine={false}
-            axisLine={false}
-            tickMargin={8}
-            tickFormatter={(d) => formatAxisDate(d, range)}
-            tick={{ fontSize: 11 }}
-            minTickGap={60}
-          />
-        )}
+        <XAxis
+          dataKey="datetime"
+          tickLine={false}
+          axisLine={false}
+          tickMargin={8}
+          tickFormatter={(d) => formatAxisDate(d, range)}
+          tick={{ fontSize: 11 }}
+          minTickGap={range === "1D" ? 40 : 60}
+        />
         <Area
           type="monotone"
-          dataKey="value"
+          dataKey="investmentValue"
           stroke={
             isPositive ? "var(--color-primary)" : "var(--color-destructive)"
           }
@@ -191,8 +183,11 @@ function PerformanceChart({
           content={
             <ChartTooltipContent
               labelFormatter={(_label, payload) =>
-                payload?.[0]?.payload?.date
-                  ? formatTooltipDate(payload[0].payload.date as string)
+                payload?.[0]?.payload?.datetime
+                  ? formatTooltipDate(
+                      payload[0].payload.datetime as string,
+                      range,
+                    )
                   : ""
               }
               formatter={(value) => [

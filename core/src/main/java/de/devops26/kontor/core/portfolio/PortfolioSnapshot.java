@@ -1,6 +1,7 @@
 package de.devops26.kontor.core.portfolio;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 
-public record PortfolioSnapshot(LocalDate date, BigDecimal value) {}
+public record PortfolioSnapshot(
+        OffsetDateTime datetime, BigDecimal value, BigDecimal cashValue, BigDecimal investmentValue) {}

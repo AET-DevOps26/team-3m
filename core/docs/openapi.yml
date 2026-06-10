@@ -215,10 +215,14 @@ components:
     PortfolioSnapshot:
       type: object
       properties:
-        date:
+        datetime:
           type: string
-          format: date
+          format: date-time
         value:
+          type: number
+        cashValue:
+          type: number
+        investmentValue:
           type: number
     ApiResponsePortfolioOverview:
       type: object

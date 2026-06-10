@@ -24,8 +24,10 @@ export const apiResponseSchema = z.object({
 })
 
 export const portfolioSnapshotSchema = z.object({
-  date: z.iso.date().optional(),
+  datetime: z.iso.datetime().optional(),
   value: z.number().optional(),
+  cashValue: z.number().optional(),
+  investmentValue: z.number().optional(),
 })
 
 export const portfolioPerformanceSchema = z.object({

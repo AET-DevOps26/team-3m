@@ -36,8 +36,10 @@ export type PortfolioPerformance = {
 }
 
 export type PortfolioSnapshot = {
-  date?: string
+  datetime?: string
   value?: number
+  cashValue?: number
+  investmentValue?: number
 }
 
 export type ApiResponsePortfolioOverview = {

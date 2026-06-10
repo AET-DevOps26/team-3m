@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
-import { useEffect } from "react"
-import { useAuth } from "react-oidc-context"
+import { AuthError } from "@/auth/auth-error"
+import { useAuthGuard } from "@/auth/use-auth-guard"
 import { RouteFallback } from "@/components/route-fallback"
 
 interface ProtectedRouteProps {
@@ -8,29 +8,17 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const auth = useAuth()
+  const guard = useAuthGuard()
 
-  useEffect(() => {
-    if (
-      auth.isLoading ||
-      auth.activeNavigator !== undefined ||
-      auth.isAuthenticated
-    ) {
-      return
-    }
-    auth.signinRedirect().catch((cause) => {
-      console.error("Failed to start OIDC sign-in", cause)
-    })
-  }, [
-    auth.isLoading,
-    auth.isAuthenticated,
-    auth.activeNavigator,
-    auth.signinRedirect,
-  ])
-
-  if (auth.isAuthenticated) {
+  if (guard.status === "authenticated") {
     return <>{children}</>
   }
 
-  return <RouteFallback />
+  if (guard.status === "failed") {
+    return <AuthError cause={guard.cause} onRetry={guard.retry} />
+  }
+
+  const message = guard.isRetrying ? "Retrying sign-in…" : "Signing you in…"
+
+  return <RouteFallback message={message} />
 }

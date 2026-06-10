@@ -1,6 +1,7 @@
 import { ArrowDownLeft, ArrowUpRight } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import { formatCurrency } from "@/lib/format"
 import { cn } from "@/lib/utils"
 import type { Transaction } from "@/network/endpoints/transactions"
 
@@ -36,22 +37,6 @@ const INLINE_IBAN =
 /** Strips boilerplate transfer prefixes and any embedded IBANs from a display value. */
 function cleanTitle(value: string): string {
   return value.replace(TRANSFER_PREFIX, "").replace(INLINE_IBAN, " ").trim()
-}
-
-export function formatAmount(amount: number, currency: string): string {
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount)
-  } catch {
-    return new Intl.NumberFormat(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount)
-  }
 }
 
 // Known overrides for type values that don't format well generically.
@@ -155,7 +140,7 @@ export function TransactionRow({ tx }: TransactionRowProps) {
           )}
         >
           {isPositive ? "+" : ""}
-          {formatAmount(tx.amount, tx.currency)}
+          {formatCurrency(tx.amount, tx.currency)}
         </p>
         <Badge variant="outline" className="text-xs">
           {tx.category}

@@ -211,6 +211,26 @@ class FinancialTransactionServiceTest {
                 .hasMessageContaining("maximum supported row count");
     }
 
+    @Test
+    @DisplayName("importCsv accepts price and shares values with trailing zeros beyond max scale")
+    void importCsv_trailingZeroPrice_acceptedAndParsed() throws IOException {
+        when(repository.upsertAll(anyList(), any(UUID.class))).thenReturn(1);
+
+        // price has 10 decimal places (trailing zeros), which exceeds MAX_SCALE_AMOUNT=6
+        var csv = csvWithRow("\"2026-04-03T14:22:33.412Z\",\"2026-04-03\",\"DEFAULT\",\"TRADING\","
+                + "\"BUY\",\"STOCK\",\"Apple\",\"US0378331005\","
+                + "\"5.0000000000\",\"264.8000000000\",\"-1324.00\",\"-1.00\",\"\","
+                + "\"EUR\",\"\",\"\",\"\",\"\","
+                + "\"b2c3d4e5-f6a7-8901-bcde-f12345678901\",\"\",\"\",\"\",\"\"");
+
+        service.importCsv(toStream(csv), USER_ID);
+
+        verify(repository).upsertAll(rowsCaptor.capture(), eq(USER_ID));
+        var row = rowsCaptor.getValue().getFirst();
+        assertThat(row.price()).isEqualByComparingTo(new BigDecimal("264.8"));
+        assertThat(row.shares()).isEqualByComparingTo(new BigDecimal("5"));
+    }
+
     private static final String HEADER = "\"datetime\",\"date\",\"account_type\",\"category\",\"type\","
             + "\"asset_class\",\"name\",\"symbol\",\"shares\",\"price\","
             + "\"amount\",\"fee\",\"tax\",\"currency\",\"original_amount\","

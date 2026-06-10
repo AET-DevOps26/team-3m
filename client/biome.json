@@ -31,6 +31,24 @@
       "semicolons": "asNeeded"
     }
   },
+  "overrides": [
+    {
+      "includes": ["src/components/ui/**"],
+      "linter": {
+        "rules": {
+          "suspicious": { "noArrayIndexKey": "off" }
+        }
+      }
+    },
+    {
+      "includes": ["src/components/ui/chart.tsx"],
+      "linter": {
+        "rules": {
+          "security": { "noDangerouslySetInnerHtml": "off" }
+        }
+      }
+    }
+  ],
   "assist": {
     "enabled": true,
     "actions": {

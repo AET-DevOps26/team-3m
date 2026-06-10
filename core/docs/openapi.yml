@@ -35,6 +35,34 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiResponse"
+  /api/v1/portfolio/performance:
+    get:
+      tags:
+      - portfolio-controller
+      operationId: getPerformance
+      responses:
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePortfolioPerformance"
+      security:
+      - bearerAuth: []
+  /api/v1/portfolio/overview:
+    get:
+      tags:
+      - portfolio-controller
+      operationId: getOverview
+      responses:
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponsePortfolioOverview"
+      security:
+      - bearerAuth: []
   /api/v1/health/server:
     get:
       tags:
@@ -157,6 +185,93 @@ components:
           items: {}
       required:
       - success
+    ApiResponsePortfolioPerformance:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/PortfolioPerformance"
+        error:
+          type:
+          - string
+          - "null"
+        details:
+          type:
+          - array
+          - "null"
+          items: {}
+      required:
+      - success
+    PortfolioPerformance:
+      type: object
+      properties:
+        snapshots:
+          type: array
+          items:
+            $ref: "#/components/schemas/PortfolioSnapshot"
+        currency:
+          type: string
+    PortfolioSnapshot:
+      type: object
+      properties:
+        datetime:
+          type: string
+          format: date-time
+        value:
+          type: number
+        cashValue:
+          type: number
+        investmentValue:
+          type: number
+    ApiResponsePortfolioOverview:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/PortfolioOverview"
+        error:
+          type:
+          - string
+          - "null"
+        details:
+          type:
+          - array
+          - "null"
+          items: {}
+      required:
+      - success
+    PortfolioHolding:
+      type: object
+      properties:
+        symbol:
+          type: string
+        name:
+          type: string
+        assetClass:
+          type: string
+        currency:
+          type: string
+        shares:
+          type: number
+        lastPrice:
+          type: number
+        currentValue:
+          type: number
+    PortfolioOverview:
+      type: object
+      properties:
+        holdings:
+          type: array
+          items:
+            $ref: "#/components/schemas/PortfolioHolding"
+        cashBalance:
+          type: number
+        currency:
+          type: string
+        totalValue:
+          type: number
     FinancialTransactionResponse:
       type: object
       properties:
@@ -297,3 +412,8 @@ components:
           - {}
       required:
       - items
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

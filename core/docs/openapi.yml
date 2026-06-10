@@ -6,6 +6,45 @@ servers:
 - url: http://localhost
   description: Generated server url
 paths:
+  /api/v1/profile:
+    get:
+      tags:
+      - user-profile-controller
+      operationId: getProfile
+      responses:
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseUserProfileResponse"
+      security:
+      - bearerAuth: []
+    put:
+      tags:
+      - user-profile-controller
+      operationId: updateProfile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRiskToleranceRequest"
+        required: true
+      responses:
+        "400":
+          description: Invalid request body
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseUserProfileResponse"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseUserProfileResponse"
+      security:
+      - bearerAuth: []
   /api/v1/financial-transactions/import:
     post:
       tags:
@@ -138,6 +177,53 @@ paths:
                 $ref: "#/components/schemas/ApiResponse"
 components:
   schemas:
+    UpdateRiskToleranceRequest:
+      type: object
+      properties:
+        riskTolerance:
+          type: string
+          enum:
+          - CONSERVATIVE
+          - MODERATE
+          - AGGRESSIVE
+      required:
+      - riskTolerance
+    ApiResponseUserProfileResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/UserProfileResponse"
+        error:
+          type:
+          - string
+          - "null"
+        details:
+          type:
+          - array
+          - "null"
+          items: {}
+      required:
+      - success
+    UserProfileResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        preferredUsername:
+          type: string
+        riskTolerance:
+          type: string
+          enum:
+          - CONSERVATIVE
+          - MODERATE
+          - AGGRESSIVE
+      required:
+      - id
     CsvImportApiResponse:
       type: object
       properties:

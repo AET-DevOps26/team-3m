@@ -1,5 +1,6 @@
 import { LogOut, User } from "lucide-react"
 import { useAuth } from "react-oidc-context"
+import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 
 /**
@@ -24,10 +25,15 @@ export function AuthHeader() {
 
   return (
     <header className="flex items-center justify-end gap-3 border-b border-border bg-background/80 px-4 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <span className="flex items-center gap-2 text-sm text-muted-foreground">
-        <User className="size-4" />
-        {displayName}
-      </span>
+      <Button asChild size="sm" variant="ghost">
+        <Link
+          to="/profile"
+          className="flex items-center gap-2 text-muted-foreground"
+        >
+          <User className="size-4" />
+          {displayName}
+        </Link>
+      </Button>
       <Button
         size="sm"
         variant="ghost"

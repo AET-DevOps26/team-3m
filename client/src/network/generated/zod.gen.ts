@@ -2,6 +2,24 @@
 
 import * as z from "zod"
 
+export const updateRiskToleranceRequestSchema = z.object({
+  riskTolerance: z.enum(["CONSERVATIVE", "MODERATE", "AGGRESSIVE"]),
+})
+
+export const userProfileResponseSchema = z.object({
+  id: z.uuid(),
+  email: z.string().optional(),
+  preferredUsername: z.string().optional(),
+  riskTolerance: z.enum(["CONSERVATIVE", "MODERATE", "AGGRESSIVE"]).optional(),
+})
+
+export const apiResponseUserProfileResponseSchema = z.object({
+  success: z.boolean(),
+  data: userProfileResponseSchema.optional(),
+  error: z.string().nullish(),
+  details: z.array(z.unknown()).nullish(),
+})
+
 export const csvImportResultSchema = z.object({
   importedCount: z.int().gte(0).max(2147483647, {
     error: "Invalid value: Expected int32 to be <= 2147483647",
@@ -109,6 +127,8 @@ export const listTransactionsApiResponseSchema = z.object({
   error: z.string().nullish(),
   details: z.array(z.unknown()).nullish(),
 })
+
+export const zUpdateProfileBody = updateRiskToleranceRequestSchema
 
 export const zImportCsvBody = z.object({
   file: z.string(),

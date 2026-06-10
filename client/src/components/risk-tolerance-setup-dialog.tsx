@@ -6,7 +6,6 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogMedia,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
@@ -64,10 +63,10 @@ function RiskToleranceSetupDialogInner() {
     <AlertDialog open={open} onOpenChange={() => {}}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogMedia>
-            <ShieldCheck />
-          </AlertDialogMedia>
-          <AlertDialogTitle>Set your risk tolerance</AlertDialogTitle>
+          <AlertDialogTitle className="flex items-center gap-2">
+            <ShieldCheck className="size-5 shrink-0" />
+            Set your risk tolerance
+          </AlertDialogTitle>
           <AlertDialogDescription>
             This helps personalise your portfolio recommendations. You can
             change it any time from your profile.
@@ -100,7 +99,7 @@ function RiskToleranceSetupDialogInner() {
           <Button
             onClick={handleSave}
             disabled={!selected || updateMutation.isPending}
-            className="w-full sm:w-auto"
+            className="w-full"
           >
             {updateMutation.isPending ? "Saving…" : "Get started"}
           </Button>

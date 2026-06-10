@@ -5,7 +5,7 @@ FROM ghcr.io/astral-sh/uv:python3.14-alpine AS build
 WORKDIR /workspace
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
-COPY src/ ./src/
+COPY advisor/ ./advisor/
 RUN uv sync --frozen --no-dev
 
 FROM python:3.14-alpine
@@ -16,7 +16,7 @@ RUN apk add --no-cache wget && \
     addgroup -S app && adduser -S app -G app
 
 COPY --from=build --chown=app:app /workspace/.venv ./.venv
-COPY --from=build --chown=app:app /workspace/src ./src
+COPY --from=build --chown=app:app /workspace/advisor ./advisor
 
 USER app
 
@@ -26,4 +26,4 @@ ENV PATH="/app/.venv/bin:$PATH" \
 
 EXPOSE 8000
 
-CMD ["uvicorn", "ai.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "advisor.main:app", "--host", "0.0.0.0", "--port", "8000"]

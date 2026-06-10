@@ -84,7 +84,7 @@ function RiskToleranceSetupDialogInner() {
               <SelectPrimitive.Item
                 key={value}
                 value={value}
-                className="relative flex w-full cursor-default rounded-md py-2 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50"
+                className="relative flex w-full cursor-default rounded-md py-3 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50"
               >
                 <span className="pointer-events-none absolute right-2 top-2 flex size-4 items-center justify-center">
                   <SelectPrimitive.ItemIndicator>

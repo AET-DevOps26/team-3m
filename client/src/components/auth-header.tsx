@@ -37,7 +37,7 @@ function RiskToleranceItems() {
       onValueChange={(v) => updateMutation.mutate(v as RiskTolerance)}
     >
       {RISK_TOLERANCE_OPTIONS.map(({ value, label }) => (
-        <DropdownMenuRadioItem key={value} value={value}>
+        <DropdownMenuRadioItem key={value} value={value} className="py-2">
           {label}
         </DropdownMenuRadioItem>
       ))}

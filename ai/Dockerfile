@@ -2,7 +2,7 @@
 
 FROM ghcr.io/astral-sh/uv:python3.14-alpine AS build
 
-WORKDIR /workspace
+WORKDIR /app
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 COPY advisor/ ./advisor/
@@ -15,8 +15,8 @@ WORKDIR /app
 RUN apk add --no-cache wget && \
     addgroup -S app && adduser -S app -G app
 
-COPY --from=build --chown=app:app /workspace/.venv ./.venv
-COPY --from=build --chown=app:app /workspace/advisor ./advisor
+COPY --from=build --chown=app:app /app/.venv ./.venv
+COPY --from=build --chown=app:app /app/advisor ./advisor
 
 USER app
 

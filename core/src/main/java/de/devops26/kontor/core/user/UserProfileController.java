@@ -24,6 +24,15 @@ public class UserProfileController {
     }
 
     @GetMapping
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "OK",
+            content =
+                    @io.swagger.v3.oas.annotations.media.Content(
+                            mediaType = "application/json",
+                            schema =
+                                    @io.swagger.v3.oas.annotations.media.Schema(
+                                            implementation = UserProfileResponse.class)))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     public ResponseEntity<ApiResponse<UserProfileResponse>> getProfile(
             @Parameter(hidden = true) @AuthenticatedUser AppUser user) {
@@ -31,6 +40,15 @@ public class UserProfileController {
     }
 
     @PutMapping
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "OK",
+            content =
+                    @io.swagger.v3.oas.annotations.media.Content(
+                            mediaType = "application/json",
+                            schema =
+                                    @io.swagger.v3.oas.annotations.media.Schema(
+                                            implementation = UserProfileResponse.class)))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request body")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     public ResponseEntity<ApiResponse<UserProfileResponse>> updateProfile(

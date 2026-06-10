@@ -23,6 +23,8 @@ export type {
   GetProfileData,
   GetProfileError,
   GetProfileErrors,
+  GetProfileResponse,
+  GetProfileResponses,
   ImportCsvData,
   ImportCsvError,
   ImportCsvErrors,
@@ -48,6 +50,8 @@ export type {
   UpdateProfileData,
   UpdateProfileError,
   UpdateProfileErrors,
+  UpdateProfileResponse,
+  UpdateProfileResponses,
   UpdateRiskToleranceRequest,
   UserProfileResponse,
 } from "./types.gen"

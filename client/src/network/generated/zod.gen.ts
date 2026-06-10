@@ -128,7 +128,17 @@ export const listTransactionsApiResponseSchema = z.object({
   details: z.array(z.unknown()).nullish(),
 })
 
+/**
+ * OK
+ */
+export const getProfileResponseSchema = userProfileResponseSchema
+
 export const zUpdateProfileBody = updateRiskToleranceRequestSchema
+
+/**
+ * OK
+ */
+export const updateProfileResponseSchema = userProfileResponseSchema
 
 export const zImportCsvBody = z.object({
   file: z.string(),

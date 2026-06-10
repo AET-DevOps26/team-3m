@@ -8,18 +8,18 @@ export type UpdateRiskToleranceRequest = {
   riskTolerance: "CONSERVATIVE" | "MODERATE" | "AGGRESSIVE"
 }
 
-export type ApiResponseUserProfileResponse = {
-  success: boolean
-  data?: UserProfileResponse
-  error?: string | null
-  details?: Array<unknown> | null
-}
-
 export type UserProfileResponse = {
   id: string
   email?: string
   preferredUsername?: string
   riskTolerance?: "CONSERVATIVE" | "MODERATE" | "AGGRESSIVE"
+}
+
+export type ApiResponseUserProfileResponse = {
+  success: boolean
+  data?: UserProfileResponse
+  error?: string | null
+  details?: Array<unknown> | null
 }
 
 export type CsvImportApiResponse = {
@@ -144,6 +144,15 @@ export type GetProfileErrors = {
 
 export type GetProfileError = GetProfileErrors[keyof GetProfileErrors]
 
+export type GetProfileResponses = {
+  /**
+   * OK
+   */
+  200: UserProfileResponse
+}
+
+export type GetProfileResponse = GetProfileResponses[keyof GetProfileResponses]
+
 export type UpdateProfileData = {
   body: UpdateRiskToleranceRequest
   path?: never
@@ -163,6 +172,16 @@ export type UpdateProfileErrors = {
 }
 
 export type UpdateProfileError = UpdateProfileErrors[keyof UpdateProfileErrors]
+
+export type UpdateProfileResponses = {
+  /**
+   * OK
+   */
+  200: UserProfileResponse
+}
+
+export type UpdateProfileResponse =
+  UpdateProfileResponses[keyof UpdateProfileResponses]
 
 export type ImportCsvData = {
   body?: {

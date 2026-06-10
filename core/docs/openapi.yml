@@ -12,6 +12,12 @@ paths:
       - user-profile-controller
       operationId: getProfile
       responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfileResponse"
         "401":
           description: Unauthorized
           content:
@@ -31,6 +37,12 @@ paths:
               $ref: "#/components/schemas/UpdateRiskToleranceRequest"
         required: true
       responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfileResponse"
         "400":
           description: Invalid request body
           content:
@@ -188,24 +200,6 @@ components:
           - AGGRESSIVE
       required:
       - riskTolerance
-    ApiResponseUserProfileResponse:
-      type: object
-      properties:
-        success:
-          type: boolean
-        data:
-          $ref: "#/components/schemas/UserProfileResponse"
-        error:
-          type:
-          - string
-          - "null"
-        details:
-          type:
-          - array
-          - "null"
-          items: {}
-      required:
-      - success
     UserProfileResponse:
       type: object
       properties:
@@ -224,6 +218,24 @@ components:
           - AGGRESSIVE
       required:
       - id
+    ApiResponseUserProfileResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/UserProfileResponse"
+        error:
+          type:
+          - string
+          - "null"
+        details:
+          type:
+          - array
+          - "null"
+          items: {}
+      required:
+      - success
     CsvImportApiResponse:
       type: object
       properties:

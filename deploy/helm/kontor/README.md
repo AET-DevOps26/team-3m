@@ -112,8 +112,6 @@ derived as `https://<first keycloak.hostname>/realms/<oidc.realm>`.
 | `client.apiBaseUrl` | `VITE_API_BASE_URL` | **Required.** Public base URL, e.g. `https://kontor.example.com` (no `/api`) |
 | `oidc.issuerUrl` | `VITE_OIDC_AUTHORITY` | OIDC issuer URL. Auto-derived from `keycloak.hostnames[0]` + `oidc.realm` when empty and Keycloak is deployed. |
 | `oidc.clientId` | `VITE_OIDC_CLIENT_ID` | OIDC client ID for the SPA (default `kontor-spa`) |
-| `oidc.redirectUri` | `VITE_OIDC_REDIRECT_URI` | OIDC redirect URI |
-| `oidc.postLogoutRedirectUri` | `VITE_OIDC_POST_LOGOUT_REDIRECT_URI` | OIDC post-logout redirect URI |
 | `oidc.audience` | `VITE_OIDC_AUDIENCE` | OIDC audience for issued tokens (default `kontor-api`) |
 
 ```bash

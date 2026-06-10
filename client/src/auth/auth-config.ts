@@ -30,3 +30,17 @@ export const authConfig: AuthProviderProps = {
     window.history.replaceState({}, document.title, window.location.pathname)
   },
 }
+
+function safeOrigin(value: string): string | null {
+  try {
+    const url = new URL(value)
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      return null
+    }
+    return url.origin
+  } catch {
+    return null
+  }
+}
+
+export const authorityOrigin = safeOrigin(authority)

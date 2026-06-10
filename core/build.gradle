@@ -9,7 +9,7 @@ plugins {
 }
 
 group = 'de.devops26.kontor'
-version = '0.10.0'
+version = '0.10.1'
 
 java {
 	toolchain {

@@ -1,6 +1,6 @@
-import { useEffect } from "react"
 import { useAuth } from "react-oidc-context"
 import { Navigate } from "react-router-dom"
+import { AuthError } from "@/auth/auth-error"
 import { RouteFallback } from "@/components/route-fallback"
 
 /**
@@ -12,19 +12,20 @@ import { RouteFallback } from "@/components/route-fallback"
 export function AuthCallback() {
   const auth = useAuth()
 
-  useEffect(() => {
-    if (auth.error) {
-      console.error("OIDC sign-in failed", auth.error)
-    }
-  }, [auth.error])
-
-  if (auth.error) {
-    return <Navigate to="/" replace />
-  }
-
   if (auth.isAuthenticated) {
     return <Navigate to="/" replace />
   }
 
-  return <RouteFallback />
+  if (auth.error) {
+    return (
+      <AuthError
+        cause={auth.error}
+        onRetry={() => {
+          void auth.signinRedirect()
+        }}
+      />
+    )
+  }
+
+  return <RouteFallback message="Completing sign-in…" />
 }

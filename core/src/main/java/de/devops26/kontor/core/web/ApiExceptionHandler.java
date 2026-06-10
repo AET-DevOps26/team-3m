@@ -53,4 +53,10 @@ public class ApiExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error("A database error occurred"));
     }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIllegalState(IllegalStateException ex) {
+        log.warn("Portfolio validation error", ex);
+        return ResponseEntity.unprocessableEntity().body(ApiResponse.error(ex.getMessage()));
+    }
 }

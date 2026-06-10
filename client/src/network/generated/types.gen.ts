@@ -23,6 +23,49 @@ export type ApiResponse = {
   details?: Array<unknown> | null
 }
 
+export type ApiResponsePortfolioPerformance = {
+  success: boolean
+  data?: PortfolioPerformance
+  error?: string | null
+  details?: Array<unknown> | null
+}
+
+export type PortfolioPerformance = {
+  snapshots?: Array<PortfolioSnapshot>
+  currency?: string
+}
+
+export type PortfolioSnapshot = {
+  datetime?: string
+  value?: number
+  cashValue?: number
+  investmentValue?: number
+}
+
+export type ApiResponsePortfolioOverview = {
+  success: boolean
+  data?: PortfolioOverview
+  error?: string | null
+  details?: Array<unknown> | null
+}
+
+export type PortfolioHolding = {
+  symbol?: string
+  name?: string
+  assetClass?: string
+  currency?: string
+  shares?: number
+  lastPrice?: number
+  currentValue?: number
+}
+
+export type PortfolioOverview = {
+  holdings?: Array<PortfolioHolding>
+  cashBalance?: number
+  currency?: string
+  totalValue?: number
+}
+
 export type FinancialTransactionResponse = {
   id: string
   datetime: string
@@ -93,6 +136,39 @@ export type ImportCsvResponses = {
 }
 
 export type ImportCsvResponse = ImportCsvResponses[keyof ImportCsvResponses]
+
+export type GetPerformanceData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/api/v1/portfolio/performance"
+}
+
+export type GetPerformanceErrors = {
+  /**
+   * Unauthorized
+   */
+  401: ApiResponsePortfolioPerformance
+}
+
+export type GetPerformanceError =
+  GetPerformanceErrors[keyof GetPerformanceErrors]
+
+export type GetOverviewData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/api/v1/portfolio/overview"
+}
+
+export type GetOverviewErrors = {
+  /**
+   * Unauthorized
+   */
+  401: ApiResponsePortfolioOverview
+}
+
+export type GetOverviewError = GetOverviewErrors[keyof GetOverviewErrors]
 
 export type ServerData = {
   body?: never

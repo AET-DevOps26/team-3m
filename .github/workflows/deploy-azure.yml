@@ -96,7 +96,7 @@ jobs:
             KEYCLOAK_ADMIN_PASSWORD=${{ secrets.AZURE_KEYCLOAK_ADMIN_PASSWORD }}
             KEYCLOAK_SEED_DEV_USER=${{ vars.AZURE_KEYCLOAK_SEED_DEV_USER }}
             KEYCLOAK_DEV_PASSWORD=${{ secrets.AZURE_KEYCLOAK_DEV_PASSWORD }}
-            KONTOR_AI_IMAGE_TAG=${{ vars.AZURE_AI_IMAGE_TAG || 'pr-114' }}
+            KONTOR_AI_IMAGE_TAG=${{ vars.AZURE_AI_IMAGE_TAG || 'latest' }}
           DEPLOY_REF: ${{ github.ref }}
         run: |
           az login --service-principal \

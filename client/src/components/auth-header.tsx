@@ -1,4 +1,4 @@
-import { LogOut, ShieldCheck, User } from "lucide-react"
+import { LogOut, User } from "lucide-react"
 import { Suspense } from "react"
 import { useAuth } from "react-oidc-context"
 import { Button } from "@/components/ui/button"
@@ -75,22 +75,28 @@ export function AuthHeader() {
             {displayName}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <div className="px-2 py-1.5">
-            <p className="text-sm font-medium">{displayName}</p>
-            {email && <p className="text-xs text-muted-foreground">{email}</p>}
+        <DropdownMenuContent align="end" className="w-64">
+          <div className="flex items-center gap-3 px-3 py-3">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold uppercase text-muted-foreground">
+              {displayName[0]}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium">{displayName}</p>
+              {email && (
+                <p className="truncate text-xs text-muted-foreground">
+                  {email}
+                </p>
+              )}
+            </div>
           </div>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            <DropdownMenuLabel className="flex items-center gap-2">
-              <ShieldCheck data-icon="inline-start" />
-              Risk Tolerance
-            </DropdownMenuLabel>
+            <DropdownMenuLabel>Risk tolerance</DropdownMenuLabel>
             <Suspense
               fallback={
                 <div className="flex flex-col gap-1 px-2 py-1">
                   {[0, 1, 2].map((i) => (
-                    <Skeleton key={i} className="h-6 w-full" />
+                    <Skeleton key={i} className="h-7 w-full" />
                   ))}
                 </div>
               }

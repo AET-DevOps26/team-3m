@@ -76,6 +76,16 @@ prod, even when semantic-release produces no new version — in that case it
 redeploys the latest existing version tag. This is the supported way to
 re-run a prod deploy (e.g. after a failed rollout) without a code change.
 
+### Keycloak login theme
+
+Keycloak runs as a custom image (`kontor-keycloak`) with the Kontor login theme
+baked in. The theme is a minimal vendored [Keycloakify](https://keycloakify.dev/)
+project at `infra/keycloak/theme/`; its multi-stage Dockerfile builds the theme
+jar (Node + Maven) and copies it into `/opt/keycloak/providers/`. Compose builds
+it locally; CI builds and pushes it (`keycloak-docker` job in `pr.yml` /
+`ci-cd.yml`). The realm selects it via `loginTheme: kontor`. To change the theme,
+edit the vendored source — see `infra/keycloak/theme/README.md`.
+
 ## Rules
 
 - Do not manually fix formatting or linting errors — run the formatter/linter instead

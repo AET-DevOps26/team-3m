@@ -1,73 +1,52 @@
-# React + TypeScript + Vite
+# Kontor Keycloak login theme
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A [Keycloakify](https://keycloakify.dev/) login theme that gives Keycloak the
+Kontor look (zinc/neutral shadcn palette, Roboto, Kontor logo + favicon). The
+`Dockerfile` here builds a custom Keycloak image with the theme jar baked into
+`/opt/keycloak/providers/`, so the realm can select it via `loginTheme: kontor`.
 
-Currently, two official plugins are available:
+## How it is used
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Compose** — `docker-compose.yml` builds this directory (`image:
+  kontor-keycloak:dev`) so local Keycloak ships the theme.
+- **CI** — the `keycloak-docker` job (`.github/workflows/pr.yml` and
+  `ci-cd.yml`) builds and pushes
+  `ghcr.io/aet-devops26/team-3m/kontor-keycloak`; the Helm chart deploys it
+  (`keycloak.image.repository` in `deploy/helm/kontor/values.yaml`).
 
-## React Compiler
+## This is a minimal vendor
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Only the customized/owned files plus config are committed. The full source of
+truth is the standalone `keycloak-theme` repo; this is a trimmed copy so the
+monorepo builds self-contained. `npm ci` runs Keycloakify's `postinstall`
+(`keycloakify sync-extensions`), which regenerates the rest of the theme from
+the pinned `@keycloakify/*` packages. Owned customizations are listed in
+`src/.gitignore` and preserved across sync.
 
-## Expanding the ESLint configuration
+The build deletes the regenerated Storybook stories (`*.stories.tsx`): they are
+a dev-only artifact, never part of the jar, and the generator currently emits
+one with a syntax error.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Editing the theme
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Prefer editing the standalone `keycloak-theme` repo (it has Storybook, a Vite
+dev server, and the full file tree), then re-vendor the changed files here.
+Customizing extension-managed files requires claiming ownership first
+(`keycloakify own --path <file>`), which moves them into the "Owned files"
+section of `src/.gitignore` so they survive `sync-extensions`.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Theme configuration (name, colors, radius, font, logo, app name) is driven by
+`SHADCN_THEME_*` env vars in `vite.config.ts`.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Building locally
+
+```sh
+# Just the theme jar (needs Node + Maven):
+npm ci && npm run build-keycloak-theme   # -> dist_keycloak/kontor-theme.jar
+
+# The full Keycloak image:
+docker build -t ghcr.io/aet-devops26/team-3m/kontor-keycloak:dev .
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Keep the `KC` arg in the `Dockerfile` in sync with the Keycloak version used by
+the Helm chart and Compose.

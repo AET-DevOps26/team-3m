@@ -10,7 +10,8 @@
 | ------------------ | ------------------------------------------------------------ |
 | Client             | React 19, TypeScript 5.9, Vite 7, Tailwind CSS 4, shadcn/ui  |
 | Server             | Java 25, Spring Boot 4, Gradle                               |
-| Linting/Formatting | Biome (client), Spotless + Checkstyle + Error Prone (server) |
+| AI Service         | Python 3.14, FastAPI, uv                                     |
+| Linting/Formatting | Biome (client), Spotless + Checkstyle + Error Prone (server), Ruff (AI) |
 
 ---
 
@@ -63,6 +64,27 @@ cd core
 | Format check  | `./gradlew spotlessCheck`                 |
 | Format fix    | `./gradlew spotlessApply`                 |
 | Lint          | `./gradlew checkstyleMain checkstyleTest` |
+
+#### AI Service (`ai/`)
+
+Requires [uv](https://docs.astral.sh/uv/getting-started/installation/).
+
+```sh
+cd ai
+uv sync
+uv run uvicorn ai.main:app --reload
+```
+
+| Task             | Command                        |
+| ---------------- | ------------------------------ |
+| Install deps     | `uv sync`                      |
+| Dev server       | `uv run uvicorn ai.main:app --reload` |
+| Test             | `uv run pytest`                |
+| Type check       | `uv run ty check`              |
+| Format check     | `uv run ruff format --check .` |
+| Format fix       | `uv run ruff format .`         |
+| Lint             | `uv run ruff check .`          |
+| Lint (autofix)   | `uv run ruff check --fix .`    |
 
 ---
 

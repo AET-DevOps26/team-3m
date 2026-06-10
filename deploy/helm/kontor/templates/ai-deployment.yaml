@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kontor.ai.fullname" . }}
+  labels:
+    {{- include "kontor.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ai
+spec:
+  replicas: {{ .Values.ai.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "kontor.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: ai
+  template:
+    metadata:
+      labels:
+        {{- include "kontor.labels" . | nindent 8 }}
+        app.kubernetes.io/component: ai
+    spec:
+      securityContext:
+        {{- toYaml .Values.ai.podSecurityContext | nindent 8 }}
+      containers:
+        - name: ai
+          image: {{ include "kontor.image" (dict "root" . "component" .Values.ai) | quote }}
+          imagePullPolicy: {{ include "kontor.imagePullPolicy" (dict "root" . "component" .Values.ai) }}
+          securityContext:
+            {{- toYaml .Values.ai.containerSecurityContext | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          {{- if .Values.ai.env }}
+          env:
+            {{- range $key, $value := .Values.ai.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          {{- end }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.ai.probes.readinessPath }}
+              port: http
+            initialDelaySeconds: {{ .Values.ai.probes.initialDelaySeconds }}
+            periodSeconds: {{ .Values.ai.probes.periodSeconds }}
+            timeoutSeconds: {{ .Values.ai.probes.timeoutSeconds }}
+            failureThreshold: {{ .Values.ai.probes.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.ai.probes.livenessPath }}
+              port: http
+            initialDelaySeconds: {{ .Values.ai.probes.initialDelaySeconds }}
+            periodSeconds: {{ .Values.ai.probes.periodSeconds }}
+            timeoutSeconds: {{ .Values.ai.probes.timeoutSeconds }}
+            failureThreshold: {{ .Values.ai.probes.failureThreshold }}
+          resources:
+            {{- toYaml .Values.ai.resources | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      {{- with .Values.ai.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ai.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ai.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

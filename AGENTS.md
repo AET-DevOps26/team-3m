@@ -8,7 +8,8 @@ _Kontor_ is a Progressive Web App (mobile and desktop) that consolidates persona
 |-------|-----------|
 | Frontend | React 19, TypeScript 5.9, Vite 7, Tailwind CSS 4, shadcn/ui, Radix UI |
 | Backend | Java 25, Spring Boot 4, Gradle (microservices) |
-| Linting/Formatting | Biome (frontend), Spotless (Palantir Java Format) + Checkstyle + Error Prone (backend) |
+| AI Service | Python 3.14, FastAPI, uv |
+| Linting/Formatting | Biome (frontend), Spotless (Palantir Java Format) + Checkstyle + Error Prone (backend), Ruff (AI) |
 
 ## Commands
 
@@ -40,6 +41,19 @@ Each microservice lives in its own directory with a Gradle wrapper.
 | Format fix | `./gradlew spotlessApply` |
 | Lint | `./gradlew checkstyleMain checkstyleTest` |
 | Regenerate OpenAPI spec | `./gradlew generateOpenApiDocs` |
+
+### AI Service (`ai/`)
+
+| Task | Command |
+|------|---------|
+| Install dependencies | `uv sync` |
+| Dev server | `uv run uvicorn advisor.main:app --reload` |
+| Test | `uv run pytest` |
+| Type check | `uv run ty check` |
+| Format check | `uv run ruff format --check .` |
+| Format fix | `uv run ruff format .` |
+| Lint | `uv run ruff check .` |
+| Lint (autofix) | `uv run ruff check --fix .` |
 
 ## OpenAPI
 

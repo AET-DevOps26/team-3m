@@ -56,6 +56,11 @@ jobs:
     with:
       working-directory: core
 
+  ai-quality:
+    needs: preview-gate
+    if: ${{ needs.preview-gate.outputs.teardown != 'true' }}
+    uses: ./.github/workflows/ai-quality.yml
+
   changes:
     name: Detect changes
     needs: preview-gate
@@ -106,14 +111,22 @@ jobs:
       context: core
       image-name: kontor-core
 
+  ai-docker:
+    needs: [ai-quality]
+    uses: ./.github/workflows/docker-build-push.yml
+    with:
+      context: ai
+      image-name: kontor-ai
+
   deploy-preview:
-    needs: [preview-gate, helm-quality, client-docker, server-docker]
+    needs: [preview-gate, helm-quality, client-docker, server-docker, ai-docker]
     if: >-
       ${{ !cancelled()
           && needs.preview-gate.outputs.deploy == 'true'
           && needs.helm-quality.result != 'failure'
           && needs.client-docker.result == 'success'
-          && needs.server-docker.result == 'success' }}
+          && needs.server-docker.result == 'success'
+          && needs.ai-docker.result == 'success' }}
     uses: ./.github/workflows/deploy.yml
     secrets: inherit
     with:

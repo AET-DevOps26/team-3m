@@ -45,6 +45,14 @@ class OpenApiDocumentationTest {
                         "CsvImportApiResponse",
                         "/api/v1/health/server",
                         "/api/v1/health/database",
+                        "getOverview",
+                        "getPerformance",
+                        "/api/v1/portfolio/overview",
+                        "/api/v1/portfolio/performance",
+                        "bearerAuth",
+                        "type: http",
+                        "scheme: bearer",
+                        "\"401\"",
                         "listTransactions",
                         "/api/v1/financial-transactions");
 

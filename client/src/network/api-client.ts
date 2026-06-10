@@ -2,13 +2,27 @@ import createClient, { type Middleware } from "openapi-fetch"
 import { getAuthToken, triggerSigninRedirect } from "./auth-token"
 import { API_BASE_URL } from "./config"
 import { APIError } from "./errors"
-import type { ListTransactionsApiResponse } from "./generated"
+import type {
+  ApiResponsePortfolioOverview,
+  ApiResponsePortfolioPerformance,
+  ListTransactionsApiResponse,
+} from "./generated"
 
 interface TextResponseOperation {
   responses: {
     200: {
       content: {
         "*/*": string
+      }
+    }
+  }
+}
+
+interface JsonGetOperation<T> {
+  responses: {
+    200: {
+      content: {
+        "*/*": T
       }
     }
   }
@@ -23,6 +37,12 @@ interface ApiPaths {
   }
   "/ai/health/readiness": {
     get: TextResponseOperation
+  }
+  "/api/v1/portfolio/overview": {
+    get: JsonGetOperation<ApiResponsePortfolioOverview>
+  }
+  "/api/v1/portfolio/performance": {
+    get: JsonGetOperation<ApiResponsePortfolioPerformance>
   }
   "/api/v1/financial-transactions": {
     get: {
@@ -79,6 +99,17 @@ const authMiddleware: Middleware = {
 const httpErrorMiddleware: Middleware = {
   async onResponse({ response }) {
     if (response.ok) return
+    if (response.status === 401) {
+      triggerSigninRedirect()
+      const text = await response.clone().text()
+      const body = safeParse(text)
+      throw new APIError({
+        code: "unauthenticated",
+        status: 401,
+        message: extractErrorMessage(body, response),
+        details: body,
+      })
+    }
     const text = await response.clone().text()
     const body = safeParse(text)
     if (response.status === 401) {

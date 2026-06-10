@@ -21,11 +21,6 @@ const PortfolioOverviewPage = lazy(() =>
     default: module.PortfolioOverviewPage,
   })),
 )
-const ProfilePage = lazy(() =>
-  import("@/pages/profile").then((module) => ({
-    default: module.ProfilePage,
-  })),
-)
 
 function ProtectedLayout({ children }: { children: ReactNode }) {
   return (
@@ -64,14 +59,6 @@ export function App() {
             element={
               <ProtectedLayout>
                 <PortfolioOverviewPage />
-              </ProtectedLayout>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedLayout>
-                <ProfilePage />
               </ProtectedLayout>
             }
           />

@@ -1,4 +1,5 @@
-import { ShieldCheck } from "lucide-react"
+import { CheckIcon, ShieldCheck } from "lucide-react"
+import { Select as SelectPrimitive } from "radix-ui"
 import { Suspense, useState } from "react"
 import {
   AlertDialog,
@@ -10,9 +11,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import {
-  Select,
   SelectContent,
-  SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
@@ -73,21 +72,37 @@ function RiskToleranceSetupDialogInner() {
           </AlertDialogDescription>
         </AlertDialogHeader>
 
-        <Select
+        <SelectPrimitive.Root
           value={selected}
           onValueChange={(v) => setSelected(v as RiskTolerance)}
         >
-          <SelectTrigger>
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Choose your risk tolerance" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent position="popper">
             {RISK_TOLERANCE_OPTIONS.map(({ value, label, description }) => (
-              <SelectItem key={value} value={value}>
-                <span className="font-medium">{label}:</span> {description}
-              </SelectItem>
+              <SelectPrimitive.Item
+                key={value}
+                value={value}
+                className="relative flex w-full cursor-default rounded-md py-2 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50"
+              >
+                <span className="pointer-events-none absolute right-2 top-2 flex size-4 items-center justify-center">
+                  <SelectPrimitive.ItemIndicator>
+                    <CheckIcon className="size-4" />
+                  </SelectPrimitive.ItemIndicator>
+                </span>
+                <div className="flex flex-col">
+                  <SelectPrimitive.ItemText>
+                    <span className="font-medium">{label}</span>
+                  </SelectPrimitive.ItemText>
+                  <span className="text-xs text-muted-foreground">
+                    {description}
+                  </span>
+                </div>
+              </SelectPrimitive.Item>
             ))}
           </SelectContent>
-        </Select>
+        </SelectPrimitive.Root>
 
         {updateMutation.isError && (
           <p className="text-sm text-destructive">

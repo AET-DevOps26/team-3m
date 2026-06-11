@@ -9,7 +9,7 @@ plugins {
 }
 
 group = 'de.devops26.kontor'
-version = '0.10.2'
+version = '0.11.0'
 
 ext['jooq.version'] = '3.21.4'
 

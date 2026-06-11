@@ -31,10 +31,13 @@ services:
       retries: 5
       start_period: 10s
 
-  # Local development only: this service uses start-dev and imports the realm
-  # into a persistent local Keycloak Postgres database.
   keycloak:
-    image: quay.io/keycloak/keycloak:26.0
+    # Built from the vendored Keycloakify theme so the Kontor login theme is
+    # baked in (no stock image + sibling-repo jar). First `up` builds the image,
+    # then it is cached. `start-dev` runs the provider build and loads the theme.
+    build:
+      context: ./infra/keycloak/theme
+    image: kontor-keycloak:dev
     command: ["start-dev", "--import-realm"]
     depends_on:
       keycloak-db:

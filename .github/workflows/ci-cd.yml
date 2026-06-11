@@ -89,6 +89,10 @@ jobs:
         with:
           token: ${{ steps.app-token.outputs.token }}
 
+      - uses: astral-sh/setup-uv@v8.2.0
+        with:
+          working-directory: ai
+
       - name: Semantic Release
         id: semantic
         uses: cycjimmy/semantic-release-action@v6

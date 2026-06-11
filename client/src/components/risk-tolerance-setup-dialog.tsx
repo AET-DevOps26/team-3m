@@ -91,7 +91,7 @@ function RiskToleranceSetupDialogInner() {
                     <CheckIcon className="size-4" />
                   </SelectPrimitive.ItemIndicator>
                 </span>
-                <div className="flex flex-col">
+                <div className="flex flex-col gap-0.5">
                   <SelectPrimitive.ItemText>
                     <span className="font-medium">{label}</span>
                   </SelectPrimitive.ItemText>

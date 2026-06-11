@@ -178,9 +178,10 @@ export function TemplateContent(props: TemplateContentProps) {
                                         href="#"
                                         id="try-another-way"
                                         onClick={event => {
-                                            document.forms[
-                                                "kc-select-try-another-way-form" as never
-                                            ].submit();
+                                            const form = document.getElementById(
+                                                "kc-select-try-another-way-form"
+                                            ) as HTMLFormElement | null;
+                                            form?.submit();
                                             event.preventDefault();
                                             return false;
                                         }}

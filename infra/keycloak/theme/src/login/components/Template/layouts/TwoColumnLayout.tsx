@@ -29,7 +29,7 @@ export function TwoColumnLayout(props: { content: ReactNode; logoUrl: string }) 
                 </div>
             </div>
 
-            <div className="bg-slate-950  relative hidden h-full overflow-hidden lg:block dark:bg-card">
+            <div className="bg-slate-950 relative hidden h-full overflow-hidden lg:block dark:bg-card">
                 <div className="flex h-full items-center justify-center pt-20">
                     <div className="absolute right-0 top-0 w-full max-w-62.5 xl:max-w-112.5">
                         <img src={shape} alt="" />

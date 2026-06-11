@@ -11,7 +11,7 @@ plugins {
 group = 'de.devops26.kontor'
 version = '0.10.2'
 
-ext['jooq.version'] = '3.21.4'
+ext['jooq.version'] = '3.21.5'
 
 java {
 	toolchain {

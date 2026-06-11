@@ -1,6 +1,7 @@
 {
   "realm": "kontor",
   "enabled": true,
+  "loginTheme": "kontor",
   "sslRequired": "none",
   "registrationAllowed": false,
   "loginWithEmailAllowed": true,

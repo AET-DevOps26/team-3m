@@ -81,18 +81,20 @@ public class FinancialTransactionRepository {
         Condition condition = DSL.trueCondition();
 
         if (filter.search() != null && !filter.search().isBlank()) {
-            var term = "%" + filter.search().toLowerCase(Locale.ROOT) + "%";
+            var escaped = escapeLike(filter.search().toLowerCase(Locale.ROOT));
+            var term = "%" + escaped + "%";
             condition = condition.and(DSL.lower(table.NAME)
-                    .like(term)
-                    .or(DSL.lower(table.COUNTERPARTY_NAME).like(term))
-                    .or(DSL.lower(table.DESCRIPTION).like(term)));
+                    .like(term, '\\')
+                    .or(DSL.lower(table.COUNTERPARTY_NAME).like(term, '\\'))
+                    .or(DSL.lower(table.DESCRIPTION).like(term, '\\')));
         }
         if (filter.category() != null && !filter.category().isBlank()) {
             condition = condition.and(table.CATEGORY.eq(filter.category()));
         }
         if (filter.type() != null && !filter.type().isBlank()) {
+            var escapedType = escapeLike(filter.type().toLowerCase(Locale.ROOT));
             var normalizedType = DSL.lower(DSL.replace(table.TYPE, "_", " "));
-            condition = condition.and(normalizedType.like(filter.type().toLowerCase(Locale.ROOT) + "%"));
+            condition = condition.and(normalizedType.like(escapedType + "%", '\\'));
         }
         if (filter.dateFrom() != null) {
             condition = condition.and(table.DATE.ge(filter.dateFrom()));
@@ -102,6 +104,10 @@ public class FinancialTransactionRepository {
         }
 
         return condition;
+    }
+
+    private static String escapeLike(String value) {
+        return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }
 
     public void deleteAllForUser(UUID userId) {

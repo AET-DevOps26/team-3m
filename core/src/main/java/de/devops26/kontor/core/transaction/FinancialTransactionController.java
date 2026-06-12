@@ -75,6 +75,11 @@ public class FinancialTransactionController {
                                 ApiResponse.error("Invalid afterDatetime format; expected ISO-8601 with offset")));
             }
         }
+        if (dateFrom != null && dateTo != null && dateFrom.isAfter(dateTo)) {
+            return ResponseEntity.badRequest()
+                    .body(ListTransactionsApiResponse.from(
+                            ApiResponse.error("dateFrom must be before or equal to dateTo")));
+        }
         var filter = new TransactionFilter(search, category, type, dateFrom, dateTo);
         var page = service.listTransactions(user.id(), pageSize, cursor, filter);
         return ResponseEntity.ok(ListTransactionsApiResponse.from(ApiResponse.ok(page)));

@@ -84,12 +84,21 @@ export function TransactionsOverviewBlock() {
 
   if (isPending) {
     return (
-      <div className="divide-y">
-        {Array.from({ length: 5 }).map((_, i) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: skeleton rows have no meaningful key
-          <TransactionRowSkeleton key={i} />
-        ))}
-      </div>
+      <>
+        <FiltersBar
+          filters={filters}
+          categories={[]}
+          types={[]}
+          onChange={patchFilters}
+          onReset={resetFilters}
+        />
+        <div className="divide-y">
+          {Array.from({ length: 5 }).map((_, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: skeleton rows have no meaningful key
+            <TransactionRowSkeleton key={i} />
+          ))}
+        </div>
+      </>
     )
   }
 

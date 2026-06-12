@@ -154,7 +154,16 @@ function PerformanceChart({
   currency,
   range,
 }: PerformanceChartProps) {
-  if (snapshots.length < 2) {
+  const data = snapshots
+    .map((s) => ({
+      t: new Date(s.datetime ?? "").getTime(),
+      investmentValue: s.investmentValue ?? 0,
+      cashValue: s.cashValue ?? 0,
+    }))
+    .filter((d) => Number.isFinite(d.t))
+    .sort((a, b) => a.t - b.t)
+
+  if (data.length < 2) {
     return (
       <p className="py-8 text-center text-sm text-muted-foreground">
         Import more transactions to see performance over time.
@@ -162,18 +171,12 @@ function PerformanceChart({
     )
   }
 
-  const data = snapshots.map((s) => ({
-    t: new Date(s.datetime ?? "").getTime(),
-    investmentValue: s.investmentValue ?? 0,
-    cashValue: s.cashValue ?? 0,
-  }))
-
   const minMs = data[0].t
   const maxMs = data[data.length - 1].t
   const ticks = computeEquidistantTicks(minMs, maxMs, range)
 
-  const first = snapshots[0].investmentValue ?? 0
-  const last = snapshots[snapshots.length - 1].investmentValue ?? 0
+  const first = data[0].investmentValue
+  const last = data[data.length - 1].investmentValue
   const isPositive = last >= first
 
   const investmentColor = isPositive

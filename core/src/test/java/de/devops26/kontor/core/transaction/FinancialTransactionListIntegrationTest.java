@@ -2,6 +2,11 @@ package de.devops26.kontor.core.transaction;
 
 import static de.devops26.kontor.core.generated.tables.AppUser.APP_USER;
 import static de.devops26.kontor.core.generated.tables.FinancialTransaction.FINANCIAL_TRANSACTION;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -171,7 +176,8 @@ class FinancialTransactionListIntegrationTest {
                         .with(jwtFor(USER_ALICE_SUB, "alice-list")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.items.length()").value(3));
+                .andExpect(jsonPath("$.data.items.length()").value(3))
+                .andExpect(jsonPath("$.data.items[*].category", everyItem(equalTo("CASH"))));
     }
 
     @Test
@@ -188,7 +194,8 @@ class FinancialTransactionListIntegrationTest {
                         .with(jwtFor(USER_ALICE_SUB, "alice-list")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.items.length()").value(3));
+                .andExpect(jsonPath("$.data.items.length()").value(3))
+                .andExpect(jsonPath("$.data.items[*].type", everyItem(startsWith("BUY"))));
     }
 
     @Test
@@ -205,7 +212,8 @@ class FinancialTransactionListIntegrationTest {
                         .with(jwtFor(USER_ALICE_SUB, "alice-list")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.items.length()").value(4));
+                .andExpect(jsonPath("$.data.items.length()").value(4))
+                .andExpect(jsonPath("$.data.items[*].date", everyItem(greaterThanOrEqualTo("2026-04-10"))));
     }
 
     @Test
@@ -223,7 +231,38 @@ class FinancialTransactionListIntegrationTest {
                         .with(jwtFor(USER_ALICE_SUB, "alice-list")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.items.length()").value(3));
+                .andExpect(jsonPath("$.data.items.length()").value(3))
+                .andExpect(jsonPath("$.data.items[*].category", everyItem(equalTo("TRADING"))))
+                .andExpect(jsonPath("$.data.items[*].type", everyItem(startsWith("BUY"))));
+    }
+
+    @Test
+    @DisplayName("GET /financial-transactions with dateTo filter returns transactions up to that date")
+    void listWithDateToFilter_returnsTransactionsUpToDate() throws Exception {
+        var csvBytes = new ClassPathResource("csv/valid-transactions.csv").getContentAsByteArray();
+        mockMvc.perform(multipart("/api/v1/financial-transactions/import")
+                        .file(new MockMultipartFile("file", "transactions.csv", "text/csv", csvBytes))
+                        .with(jwtFor(USER_ALICE_SUB, "alice-list")))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/financial-transactions")
+                        .param("dateTo", "2026-04-08")
+                        .with(jwtFor(USER_ALICE_SUB, "alice-list")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.items.length()").value(4))
+                .andExpect(jsonPath("$.data.items[*].date", everyItem(lessThanOrEqualTo("2026-04-08"))));
+    }
+
+    @Test
+    @DisplayName("GET /financial-transactions with dateFrom after dateTo returns 400")
+    void listWithReversedDateRange_returns400() throws Exception {
+        mockMvc.perform(get("/api/v1/financial-transactions")
+                        .param("dateFrom", "2026-04-15")
+                        .param("dateTo", "2026-04-01")
+                        .with(jwtFor(USER_ALICE_SUB, "alice-list")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
     }
 
     private static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors

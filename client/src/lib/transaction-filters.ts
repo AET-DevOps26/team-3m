@@ -41,11 +41,18 @@ export function filtersToApiParams(filters: Filters): {
   }
 }
 
+function toLocalDateString(d: Date): string {
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, "0")
+  const dd = String(d.getDate()).padStart(2, "0")
+  return `${yyyy}-${mm}-${dd}`
+}
+
 function resolveDateFrom(filters: Filters): string | null {
   if (filters.datePreset === "30d") {
     const d = new Date()
     d.setDate(d.getDate() - 30)
-    return d.toISOString().slice(0, 10)
+    return toLocalDateString(d)
   }
   if (filters.datePreset === "3m") {
     const d = new Date()
@@ -54,7 +61,7 @@ function resolveDateFrom(filters: Filters): string | null {
     d.setMonth(d.getMonth() - 3)
     const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()
     d.setDate(Math.min(day, daysInMonth))
-    return d.toISOString().slice(0, 10)
+    return toLocalDateString(d)
   }
   if (filters.datePreset === "custom" && filters.customFrom)
     return filters.customFrom

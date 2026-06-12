@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { cn } from "@/lib/utils"
 
 const teamMembers = [
   { name: "Mathilde", role: "UI/UX Expert", github: "mathildeshagl" },
@@ -75,7 +76,7 @@ export function AboutPage() {
         <Separator />
 
         <div className="grid w-full gap-4 sm:grid-cols-3">
-          <SpotlightCard className={`${entranceClass} delay-150`}>
+          <SpotlightCard className={cn(entranceClass, "delay-150")}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="size-4" />
@@ -115,7 +116,7 @@ export function AboutPage() {
             </CardContent>
           </SpotlightCard>
 
-          <SpotlightCard className={`${entranceClass} delay-300`}>
+          <SpotlightCard className={cn(entranceClass, "delay-300")}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Code className="size-4" />
@@ -141,7 +142,7 @@ export function AboutPage() {
             </CardContent>
           </SpotlightCard>
 
-          <SpotlightCard className={`${entranceClass} delay-500`}>
+          <SpotlightCard className={cn(entranceClass, "delay-500")}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Layers className="size-4" />

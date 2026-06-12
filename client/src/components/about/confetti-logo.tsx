@@ -14,6 +14,8 @@ export function ConfettiLogo({ className }: ConfettiLogoProps) {
   const [isSpinning, setIsSpinning] = useState(false)
 
   function celebrate(event: MouseEvent<HTMLButtonElement>) {
+    if (isSpinning) return
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
     const rect = event.currentTarget.getBoundingClientRect()
     setIsSpinning(true)
     void confetti({

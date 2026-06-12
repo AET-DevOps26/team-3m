@@ -92,8 +92,17 @@ jobs:
       context: ai
       image-name: kontor-ai
 
+  # Keycloak image with the Kontor login theme baked in.
+  keycloak-docker:
+    needs: preview-gate
+    if: ${{ needs.preview-gate.outputs.deploy == 'true' }}
+    uses: ./.github/workflows/docker-build-push.yml
+    with:
+      context: infra/keycloak/theme
+      image-name: kontor-keycloak
+
   deploy-preview:
-    needs: [preview-gate, helm-quality, client-docker, server-docker, ai-docker]
+    needs: [preview-gate, helm-quality, client-docker, server-docker, ai-docker, keycloak-docker]
     if: ${{ needs.preview-gate.outputs.deploy == 'true' }}
     uses: ./.github/workflows/deploy.yml
     secrets: inherit

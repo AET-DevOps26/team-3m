@@ -19,7 +19,7 @@
 
 The repository includes a root `.env.example` and a local `.env` with the default compose values. Update `.env` if you want to change the Postgres credentials, Keycloak database credentials, or shared local Keycloak dev-user password.
 
-The Compose Keycloak service is for local development only. It runs `start-dev`, imports `infra/keycloak/realms/kontor-realm.json`, and stores Keycloak state in the `keycloak_postgres_data` Docker volume. The realm import is skipped once the realm already exists, so delete that volume if you need to re-apply the import from scratch.
+The Compose Keycloak service is for local development only. It builds the custom Keycloak image from `infra/keycloak/theme/` (Keycloak with the Kontor login theme baked in), runs `start-dev`, imports `infra/keycloak/realms/kontor-realm.json`, and stores Keycloak state in the `keycloak_postgres_data` Docker volume. The realm import is skipped once the realm already exists, so delete that volume if you need to re-apply the import from scratch. The first `docker compose up --build` builds the theme image (Node + Maven), which takes a few minutes; subsequent runs use the cached layer.
 
 Local Keycloak users live in `infra/keycloak/realms/kontor-users-0.json`. Add another object to the `users` array to create more local accounts with their own `realmRoles` and `attributes`. The sample users share the `KEYCLOAK_DEV_USERS_PASSWORD` environment placeholder so adding users does not require more Compose variables.
 
@@ -103,6 +103,16 @@ helm upgrade --install kontor ./deploy/helm/kontor \
   -f deploy/helm/kontor/values-prod.yaml \
   -f deploy/helm/kontor/secrets.yaml
 ```
+
+### Keycloak Login Theme
+
+Keycloak ships as a custom image with the Kontor login theme baked in, rather
+than stock Keycloak plus a sibling jar. The theme source is vendored under
+[`infra/keycloak/theme/`](infra/keycloak/theme/README.md) — a minimal
+[Keycloakify](https://keycloakify.dev/) project whose Docker build assembles the
+theme jar and copies it into `/opt/keycloak/providers/`. CI builds and pushes it
+to `ghcr.io/aet-devops26/team-3m/kontor-keycloak`; the realm selects it via
+`loginTheme: kontor`. See the vendored README for how to edit the theme.
 
 ---
 

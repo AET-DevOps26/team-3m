@@ -227,6 +227,11 @@ export type ListTransactionsData = {
     pageSize?: number
     afterDatetime?: string
     afterId?: string
+    search?: string
+    category?: string
+    type?: string
+    dateFrom?: string
+    dateTo?: string
   }
   url: "/api/v1/financial-transactions"
 }

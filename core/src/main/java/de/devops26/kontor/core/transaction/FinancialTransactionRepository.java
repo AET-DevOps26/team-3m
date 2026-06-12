@@ -6,7 +6,9 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
+import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Query;
 import org.jooq.impl.DSL;
@@ -23,13 +25,16 @@ public class FinancialTransactionRepository {
     }
 
     @Transactional(readOnly = true)
-    public TransactionPage findPage(UUID userId, int pageSize, TransactionCursor cursor) {
+    public TransactionPage findPage(UUID userId, int pageSize, TransactionCursor cursor, TransactionFilter filter) {
         var table = FINANCIAL_TRANSACTION;
         var condition = table.USER_ID.eq(userId);
         if (cursor != null) {
             condition = condition.and(table.DATETIME
                     .lessThan(cursor.afterDatetime())
                     .or(table.DATETIME.eq(cursor.afterDatetime()).and(table.ID.lessThan(cursor.afterId()))));
+        }
+        if (filter != null) {
+            condition = condition.and(buildFilterCondition(filter));
         }
         // Fetch one extra row to detect whether a next page exists without a COUNT query.
         var probe = dsl.selectFrom(table)
@@ -69,6 +74,34 @@ public class FinancialTransactionRepository {
                         items.get(items.size() - 1).id())
                 : null;
         return new TransactionPage(items, nextCursor);
+    }
+
+    private Condition buildFilterCondition(TransactionFilter filter) {
+        var table = FINANCIAL_TRANSACTION;
+        Condition condition = DSL.trueCondition();
+
+        if (filter.search() != null && !filter.search().isBlank()) {
+            var term = "%" + filter.search().toLowerCase(Locale.ROOT) + "%";
+            condition = condition.and(DSL.lower(table.NAME)
+                    .like(term)
+                    .or(DSL.lower(table.COUNTERPARTY_NAME).like(term))
+                    .or(DSL.lower(table.DESCRIPTION).like(term)));
+        }
+        if (filter.category() != null && !filter.category().isBlank()) {
+            condition = condition.and(table.CATEGORY.eq(filter.category()));
+        }
+        if (filter.type() != null && !filter.type().isBlank()) {
+            var normalizedType = DSL.lower(DSL.replace(table.TYPE, "_", " "));
+            condition = condition.and(normalizedType.like(filter.type().toLowerCase(Locale.ROOT) + "%"));
+        }
+        if (filter.dateFrom() != null) {
+            condition = condition.and(table.DATE.ge(filter.dateFrom()));
+        }
+        if (filter.dateTo() != null) {
+            condition = condition.and(table.DATE.le(filter.dateTo()));
+        }
+
+        return condition;
     }
 
     public void deleteAllForUser(UUID userId) {

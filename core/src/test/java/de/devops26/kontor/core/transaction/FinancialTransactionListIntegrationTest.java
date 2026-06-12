@@ -139,6 +139,93 @@ class FinancialTransactionListIntegrationTest {
                 .andExpect(jsonPath("$.data.items").isArray());
     }
 
+    @Test
+    @DisplayName("GET /financial-transactions with search filter returns matching transactions")
+    void listWithSearchFilter_returnsMatchingTransactions() throws Exception {
+        var csvBytes = new ClassPathResource("csv/valid-transactions.csv").getContentAsByteArray();
+        mockMvc.perform(multipart("/api/v1/financial-transactions/import")
+                        .file(new MockMultipartFile("file", "transactions.csv", "text/csv", csvBytes))
+                        .with(jwtFor(USER_ALICE_SUB, "alice-list")))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/financial-transactions")
+                        .param("search", "apple")
+                        .with(jwtFor(USER_ALICE_SUB, "alice-list")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.items").isArray())
+                .andExpect(jsonPath("$.data.items.length()").value(3));
+    }
+
+    @Test
+    @DisplayName("GET /financial-transactions with category filter returns only matching category")
+    void listWithCategoryFilter_returnsOnlyMatchingCategory() throws Exception {
+        var csvBytes = new ClassPathResource("csv/valid-transactions.csv").getContentAsByteArray();
+        mockMvc.perform(multipart("/api/v1/financial-transactions/import")
+                        .file(new MockMultipartFile("file", "transactions.csv", "text/csv", csvBytes))
+                        .with(jwtFor(USER_ALICE_SUB, "alice-list")))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/financial-transactions")
+                        .param("category", "CASH")
+                        .with(jwtFor(USER_ALICE_SUB, "alice-list")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.items.length()").value(3));
+    }
+
+    @Test
+    @DisplayName("GET /financial-transactions with type filter returns matching transactions")
+    void listWithTypeFilter_returnsMatchingTransactions() throws Exception {
+        var csvBytes = new ClassPathResource("csv/valid-transactions.csv").getContentAsByteArray();
+        mockMvc.perform(multipart("/api/v1/financial-transactions/import")
+                        .file(new MockMultipartFile("file", "transactions.csv", "text/csv", csvBytes))
+                        .with(jwtFor(USER_ALICE_SUB, "alice-list")))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/financial-transactions")
+                        .param("type", "buy")
+                        .with(jwtFor(USER_ALICE_SUB, "alice-list")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.items.length()").value(3));
+    }
+
+    @Test
+    @DisplayName("GET /financial-transactions with dateFrom filter returns transactions from that date")
+    void listWithDateFromFilter_returnsTransactionsFromDate() throws Exception {
+        var csvBytes = new ClassPathResource("csv/valid-transactions.csv").getContentAsByteArray();
+        mockMvc.perform(multipart("/api/v1/financial-transactions/import")
+                        .file(new MockMultipartFile("file", "transactions.csv", "text/csv", csvBytes))
+                        .with(jwtFor(USER_ALICE_SUB, "alice-list")))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/financial-transactions")
+                        .param("dateFrom", "2026-04-10")
+                        .with(jwtFor(USER_ALICE_SUB, "alice-list")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.items.length()").value(4));
+    }
+
+    @Test
+    @DisplayName("GET /financial-transactions with combined filters returns intersecting matches")
+    void listWithCombinedFilters_returnsIntersection() throws Exception {
+        var csvBytes = new ClassPathResource("csv/valid-transactions.csv").getContentAsByteArray();
+        mockMvc.perform(multipart("/api/v1/financial-transactions/import")
+                        .file(new MockMultipartFile("file", "transactions.csv", "text/csv", csvBytes))
+                        .with(jwtFor(USER_ALICE_SUB, "alice-list")))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/financial-transactions")
+                        .param("category", "TRADING")
+                        .param("type", "buy")
+                        .with(jwtFor(USER_ALICE_SUB, "alice-list")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.items.length()").value(3));
+    }
+
     private static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
                     .JwtRequestPostProcessor
             jwtFor(String sub, String preferredUsername) {

@@ -1,6 +1,3 @@
-import { normalizeType } from "@/components/transactions/transaction-row"
-import type { Transaction } from "@/network/endpoints/transactions"
-
 export type DatePreset = "all" | "30d" | "3m" | "custom"
 
 export interface Filters {
@@ -28,13 +25,29 @@ export const DATE_PRESETS: { label: string; value: DatePreset }[] = [
   { label: "Custom", value: "custom" },
 ]
 
-function getFromDate(preset: DatePreset, customFrom: string): string | null {
-  if (preset === "30d") {
+export function filtersToApiParams(filters: Filters): {
+  search?: string
+  category?: string
+  type?: string
+  dateFrom?: string
+  dateTo?: string
+} {
+  return {
+    search: filters.search || undefined,
+    category: filters.category || undefined,
+    type: filters.type || undefined,
+    dateFrom: resolveDateFrom(filters) ?? undefined,
+    dateTo: resolveDateTo(filters) ?? undefined,
+  }
+}
+
+function resolveDateFrom(filters: Filters): string | null {
+  if (filters.datePreset === "30d") {
     const d = new Date()
     d.setDate(d.getDate() - 30)
     return d.toISOString().slice(0, 10)
   }
-  if (preset === "3m") {
+  if (filters.datePreset === "3m") {
     const d = new Date()
     const day = d.getDate()
     d.setDate(1)
@@ -43,33 +56,15 @@ function getFromDate(preset: DatePreset, customFrom: string): string | null {
     d.setDate(Math.min(day, daysInMonth))
     return d.toISOString().slice(0, 10)
   }
-  if (preset === "custom" && customFrom) return customFrom
+  if (filters.datePreset === "custom" && filters.customFrom)
+    return filters.customFrom
   return null
 }
 
-export function applyFilters(
-  transactions: Transaction[],
-  filters: Filters,
-): Transaction[] {
-  const { search, category, type, datePreset, customFrom, customTo } = filters
-  const searchLower = search.toLowerCase()
-  const fromDate = getFromDate(datePreset, customFrom)
-  const toDate = datePreset === "custom" && customTo ? customTo : null
-
-  return transactions.filter((tx) => {
-    if (search) {
-      const haystack = [tx.name, tx.counterpartyName, tx.description]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase()
-      if (!haystack.includes(searchLower)) return false
-    }
-    if (category && tx.category !== category) return false
-    if (type && normalizeType(tx.type) !== type) return false
-    if (fromDate && tx.date < fromDate) return false
-    if (toDate && tx.date > toDate) return false
-    return true
-  })
+function resolveDateTo(filters: Filters): string | null {
+  if (filters.datePreset === "custom" && filters.customTo)
+    return filters.customTo
+  return null
 }
 
 export function hasActiveFilters(filters: Filters): boolean {

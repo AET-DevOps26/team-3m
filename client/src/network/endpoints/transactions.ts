@@ -1,6 +1,8 @@
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query"
-import { useEffect, useMemo } from "react"
+import { useMemo } from "react"
 import { z } from "zod"
+import type { Filters } from "@/lib/transaction-filters"
+import { filtersToApiParams } from "@/lib/transaction-filters"
 import { apiClient } from "../api-client"
 import { APIError } from "../errors"
 import { useFileUpload } from "../file-upload/use-file-upload"
@@ -16,7 +18,7 @@ import {
 
 const BASE_PATH = "/api/v1/financial-transactions"
 const IMPORT_PATH = `${BASE_PATH}/import`
-const PAGE_SIZE = 200
+const PAGE_SIZE = 50
 
 // z.iso.datetime() in Zod v4 only accepts Z suffix, but Java/Jackson serialises
 // OffsetDateTime with +HH:MM offsets (e.g. +00:00). Use the offset-aware variant.
@@ -40,11 +42,9 @@ type TransactionCursorParams = z.infer<typeof transactionCursorSchema>
 
 export type Transaction = z.infer<typeof transactionSchema>
 
-/**
- * Fetches all transactions via keyset-paginated pages and returns the full flat
- * list. Client-side filters in the UI are applied over the accumulated result.
- */
-export function useTransactions() {
+export function useTransactions(filters: Filters) {
+  const apiParams = filtersToApiParams(filters)
+
   const {
     data,
     isPending,
@@ -54,7 +54,7 @@ export function useTransactions() {
     isFetchingNextPage,
     fetchNextPage,
   } = useInfiniteQuery({
-    queryKey: ["transactions"],
+    queryKey: ["transactions", apiParams],
     queryFn: async ({
       pageParam,
     }: {
@@ -66,6 +66,7 @@ export function useTransactions() {
           params: {
             query: {
               pageSize: PAGE_SIZE,
+              ...apiParams,
               ...pageParam,
             },
           },
@@ -85,20 +86,20 @@ export function useTransactions() {
     getNextPageParam: (lastPage) => lastPage.nextCursor,
   })
 
-  // Auto-fetch remaining pages so all client-side filters work on complete data
-  useEffect(() => {
-    if (hasNextPage && !isFetchingNextPage) {
-      void fetchNextPage()
-    }
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
-
   const transactions = useMemo(
     () => data?.pages.flatMap((p) => p.items) ?? [],
     [data],
   )
 
-  const isLoadingAll = isPending || hasNextPage || isFetchingNextPage
-  return { data: transactions, isPending: isLoadingAll, isError, error }
+  return {
+    data: transactions,
+    isPending,
+    isError,
+    error,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  }
 }
 
 export type ImportTransactionsCsvResult = CsvImportResult

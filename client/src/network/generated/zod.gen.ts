@@ -142,6 +142,11 @@ export const zListTransactionsQuery = z.object({
     .default(200),
   afterDatetime: z.string().optional(),
   afterId: z.uuid().optional(),
+  search: z.string().optional(),
+  category: z.string().optional(),
+  type: z.string().optional(),
+  dateFrom: z.iso.date().optional(),
+  dateTo: z.iso.date().optional(),
 })
 
 /**

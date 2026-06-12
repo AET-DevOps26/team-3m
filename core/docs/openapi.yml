@@ -123,6 +123,33 @@ paths:
         schema:
           type: string
           format: uuid
+      - name: search
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: category
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: type
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: dateFrom
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: dateTo
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
       responses:
         "200":
           description: Transaction page

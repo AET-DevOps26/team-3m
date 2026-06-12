@@ -37,6 +37,9 @@ interface ApiPaths {
   "/api/v1/health/database": {
     get: TextResponseOperation
   }
+  "/ai/health/readiness": {
+    get: TextResponseOperation
+  }
   "/api/v1/portfolio/overview": {
     get: JsonGetOperation<ApiResponsePortfolioOverview>
   }

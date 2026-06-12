@@ -1,0 +1,38 @@
+name: AI Quality
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  quality:
+    name: Lint & Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: ai
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@v8.2.0
+        with:
+          python-version: "3.14"
+
+      - name: Install dependencies
+        run: uv sync --locked --group ci
+
+      - name: Check Formatting (ruff)
+        run: uv run ruff format --check .
+
+      - name: Run Linter (ruff)
+        run: uv run ruff check .
+
+      - name: Type Check (ty)
+        run: uv run ty check
+
+      - name: Run Tests (pytest)
+        run: uv run pytest

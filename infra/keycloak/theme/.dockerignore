@@ -1,0 +1,7 @@
+# Deps and build artifacts are produced inside the image build.
+node_modules
+dist
+dist_keycloak
+.git
+Dockerfile
+.dockerignore

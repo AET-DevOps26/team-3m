@@ -39,8 +39,6 @@ postgres:
 oidc:
   # issuerUrl is left empty: it defaults to the first keycloak hostname + realm,
   # i.e. https://auth.pr-${PR_NUMBER}.${BASE_DOMAIN}/realms/kontor
-  redirectUri: https://pr-${PR_NUMBER}.${BASE_DOMAIN}/
-  postLogoutRedirectUri: https://pr-${PR_NUMBER}.${BASE_DOMAIN}/
   # Ingress serves a Let's Encrypt staging cert the core JVM won't trust, so
   # fetch JWKS from the in-cluster Keycloak Service over HTTP instead.
   internalJwks: true

@@ -40,14 +40,6 @@ spec:
             - name: VITE_OIDC_CLIENT_ID
               value: {{ . | quote }}
             {{- end }}
-            {{- with .Values.oidc.redirectUri }}
-            - name: VITE_OIDC_REDIRECT_URI
-              value: {{ . | quote }}
-            {{- end }}
-            {{- with .Values.oidc.postLogoutRedirectUri }}
-            - name: VITE_OIDC_POST_LOGOUT_REDIRECT_URI
-              value: {{ . | quote }}
-            {{- end }}
             {{- with .Values.oidc.audience }}
             - name: VITE_OIDC_AUDIENCE
               value: {{ . | quote }}

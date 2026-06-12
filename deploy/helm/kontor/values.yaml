@@ -82,6 +82,46 @@ core:
   tolerations: []
   affinity: {}
 
+# Python/FastAPI AI service.
+ai:
+  image:
+    repository: aet-devops26/team-3m/kontor-ai
+    tag: ""
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8000
+  env: {}
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+  probes:
+    livenessPath: /ai/health/liveness
+    readinessPath: /ai/health/readiness
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 6
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop: ["ALL"]
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
 # React/nginx client.
 client:
   image:
@@ -187,9 +227,13 @@ keycloak:
   #   dev-mem   — in-memory H2, ephemeral, no Postgres/PVC (use for short-lived
   #               PR preview environments that get their own throwaway Keycloak).
   database: postgres
+  # Custom Keycloak image with the Kontor login theme baked in (built in CI from
+  # infra/keycloak/theme). Must carry the theme named in keycloak.realm.loginTheme.
+  # Swap back to quay.io/keycloak/keycloak to run stock Keycloak (then also set
+  # keycloak.realm.loginTheme: "").
   image:
-    repository: quay.io/keycloak/keycloak
-    tag: "26.6"
+    repository: ghcr.io/aet-devops26/team-3m/kontor-keycloak
+    tag: ""
     pullPolicy: ""
   replicaCount: 1
   # First-boot bootstrap admin. Create a real admin and disable this account after
@@ -264,6 +308,9 @@ keycloak:
   # is imported only if absent (persists); with dev-mem it is re-imported fresh on
   # every start (fine for throwaway PR envs).
   realm:
+    # -- Login theme for the realm. Must match a theme baked into the Keycloak
+    # image (see keycloak.image). Empty keeps Keycloak's built-in theme.
+    loginTheme: kontor
     # -- Valid redirect URIs for the SPA client (this env's hosts).
     redirectUris: []
     # -- Web origins (CORS) for the SPA client.

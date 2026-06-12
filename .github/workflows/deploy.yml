@@ -16,7 +16,7 @@ on:
         required: true
         type: string
       image-tag:
-        description: "Tag pinned for core+client (semver for prod, sha-<short> for preview)"
+        description: "Tag pinned (semver for prod, sha-<short> for preview)"
         required: false
         type: string
         default: ""
@@ -121,6 +121,8 @@ jobs:
             -f "$CHART/values-prod.yaml" \
             --set-string core.image.tag='${{ inputs.image-tag }}' \
             --set-string client.image.tag='${{ inputs.image-tag }}' \
+            --set-string ai.image.tag='${{ inputs.image-tag }}' \
+            --set-string keycloak.image.tag='${{ inputs.image-tag }}' \
             --set-string postgres.password="$POSTGRES_PASSWORD" \
             --set-string keycloak.admin.password="$KEYCLOAK_ADMIN_PASSWORD" \
             --set-string keycloak.db.password="$KEYCLOAK_DB_PASSWORD" \
@@ -142,6 +144,8 @@ jobs:
             -f /tmp/values-pr.yaml \
             --set-string core.image.tag='${{ inputs.image-tag }}' \
             --set-string client.image.tag='${{ inputs.image-tag }}' \
+            --set-string ai.image.tag='${{ inputs.image-tag }}' \
+            --set-string keycloak.image.tag='${{ inputs.image-tag }}' \
             --set-string postgres.password="$POSTGRES_PASSWORD" \
             --set-string keycloak.admin.password="$KEYCLOAK_ADMIN_PASSWORD" \
             --rollback-on-failure --force-conflicts --wait --timeout 4m

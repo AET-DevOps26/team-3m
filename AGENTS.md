@@ -8,7 +8,8 @@ _Kontor_ is a Progressive Web App (mobile and desktop) that consolidates persona
 |-------|-----------|
 | Frontend | React 19, TypeScript 5.9, Vite 7, Tailwind CSS 4, shadcn/ui, Radix UI |
 | Backend | Java 25, Spring Boot 4, Gradle (microservices) |
-| Linting/Formatting | Biome (frontend), Spotless (Palantir Java Format) + Checkstyle + Error Prone (backend) |
+| AI Service | Python 3.14, FastAPI, uv |
+| Linting/Formatting | Biome (frontend), Spotless (Palantir Java Format) + Checkstyle + Error Prone (backend), Ruff (AI) |
 
 ## Commands
 
@@ -41,6 +42,19 @@ Each microservice lives in its own directory with a Gradle wrapper.
 | Lint | `./gradlew checkstyleMain checkstyleTest` |
 | Regenerate OpenAPI spec | `./gradlew generateOpenApiDocs` |
 
+### AI Service (`ai/`)
+
+| Task | Command |
+|------|---------|
+| Install dependencies | `uv sync` |
+| Dev server | `uv run uvicorn advisor.main:app --reload` |
+| Test | `uv run pytest` |
+| Type check | `uv run ty check` |
+| Format check | `uv run ruff format --check .` |
+| Format fix | `uv run ruff format .` |
+| Lint | `uv run ruff check .` |
+| Lint (autofix) | `uv run ruff check --fix .` |
+
 ## OpenAPI
 
 The TypeScript client (`client/src/network/generated/`) is generated from the
@@ -61,6 +75,16 @@ Manually triggering the `CI/CD` workflow (`workflow_dispatch`) always deploys
 prod, even when semantic-release produces no new version — in that case it
 redeploys the latest existing version tag. This is the supported way to
 re-run a prod deploy (e.g. after a failed rollout) without a code change.
+
+### Keycloak login theme
+
+Keycloak runs as a custom image (`kontor-keycloak`) with the Kontor login theme
+baked in. The theme is a minimal vendored [Keycloakify](https://keycloakify.dev/)
+project at `infra/keycloak/theme/`; its multi-stage Dockerfile builds the theme
+jar (Node + Maven) and copies it into `/opt/keycloak/providers/`. Compose builds
+it locally; CI builds and pushes it (`keycloak-docker` job in `pr.yml` /
+`ci-cd.yml`). The realm selects it via `loginTheme: kontor`. To change the theme,
+edit the vendored source — see `infra/keycloak/theme/README.md`.
 
 ## Rules
 

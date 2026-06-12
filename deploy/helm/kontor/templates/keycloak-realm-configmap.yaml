@@ -12,6 +12,9 @@ data:
     {
       "realm": {{ $realm | quote }},
       "enabled": true,
+      {{- with .Values.keycloak.realm.loginTheme }}
+      "loginTheme": {{ . | quote }},
+      {{- end }}
       "sslRequired": {{ .Values.keycloak.realm.sslRequired | quote }},
       "registrationAllowed": {{ .Values.keycloak.realm.registrationAllowed }},
       "loginWithEmailAllowed": true,

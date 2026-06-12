@@ -47,3 +47,21 @@ repos:
         language: system
         files: ^core/(src/main/java/.*\.java|docs/openapi\.yml)$
         pass_filenames: false
+      - id: ty-check
+        name: Ty Type Check
+        entry: bash -c 'cd ai && uv run ty check'
+        language: system
+        files: ^ai/.*\.py$
+        pass_filenames: false
+      - id: ruff-format
+        name: Ruff Format
+        entry: bash -c 'cd ai && uv run ruff format .'
+        language: system
+        files: ^ai/.*\.py$
+        pass_filenames: false
+      - id: ruff-lint
+        name: Ruff Lint
+        entry: bash -c 'cd ai && uv run ruff check --fix .'
+        language: system
+        files: ^ai/.*\.py$
+        pass_filenames: false

@@ -69,6 +69,9 @@ function resolveDateFrom(filters: Filters): string | null {
 }
 
 function resolveDateTo(filters: Filters): string | null {
+  if (filters.datePreset === "30d" || filters.datePreset === "3m") {
+    return toLocalDateString(new Date())
+  }
   if (filters.datePreset === "custom" && filters.customTo)
     return filters.customTo
   return null

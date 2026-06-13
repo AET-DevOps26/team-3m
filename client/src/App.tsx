@@ -1,8 +1,9 @@
-import { lazy, Suspense } from "react"
+import { lazy, type ReactNode, Suspense } from "react"
 import { BrowserRouter, Route, Routes } from "react-router-dom"
 import { AuthCallback } from "@/auth/auth-callback"
 import { ProtectedRoute } from "@/auth/protected-route"
 import { AuthHeader } from "@/components/auth-header"
+import { RiskToleranceSetupDialog } from "@/components/risk-tolerance-setup-dialog"
 import { RouteFallback } from "@/components/route-fallback"
 
 const StartPage = lazy(() =>
@@ -21,6 +22,16 @@ const PortfolioOverviewPage = lazy(() =>
   })),
 )
 
+function ProtectedLayout({ children }: { children: ReactNode }) {
+  return (
+    <ProtectedRoute>
+      <AuthHeader />
+      <RiskToleranceSetupDialog />
+      {children}
+    </ProtectedRoute>
+  )
+}
+
 export function App() {
   return (
     <BrowserRouter>
@@ -30,28 +41,25 @@ export function App() {
           <Route
             path="/"
             element={
-              <ProtectedRoute>
-                <AuthHeader />
+              <ProtectedLayout>
                 <StartPage />
-              </ProtectedRoute>
+              </ProtectedLayout>
             }
           />
           <Route
             path="/import"
             element={
-              <ProtectedRoute>
-                <AuthHeader />
+              <ProtectedLayout>
                 <ImportTransactionsPage />
-              </ProtectedRoute>
+              </ProtectedLayout>
             }
           />
           <Route
             path="/portfolio"
             element={
-              <ProtectedRoute>
-                <AuthHeader />
+              <ProtectedLayout>
                 <PortfolioOverviewPage />
-              </ProtectedRoute>
+              </ProtectedLayout>
             }
           />
         </Routes>

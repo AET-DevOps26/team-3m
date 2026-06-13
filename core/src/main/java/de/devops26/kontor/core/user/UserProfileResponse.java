@@ -8,7 +8,7 @@ public record UserProfileResponse(
         @Schema(requiredMode = RequiredMode.REQUIRED) UUID id,
         @Schema String email,
         @Schema String preferredUsername,
-        @Schema RiskTolerance riskTolerance) {
+        @Schema(nullable = true) RiskTolerance riskTolerance) {
 
     public static UserProfileResponse from(AppUser user) {
         return new UserProfileResponse(user.id(), user.email(), user.preferredUsername(), user.riskTolerance());

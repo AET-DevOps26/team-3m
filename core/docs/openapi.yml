@@ -211,7 +211,9 @@ components:
         preferredUsername:
           type: string
         riskTolerance:
-          type: string
+          type:
+          - string
+          - "null"
           enum:
           - CONSERVATIVE
           - MODERATE

@@ -29,7 +29,7 @@ const RISK_TOLERANCE_OPTIONS: {
   {
     value: "CONSERVATIVE",
     label: "Conservative",
-    description: "Prioritise capital preservation, minimal risk",
+    description: "Prioritize capital preservation, minimal risk",
   },
   {
     value: "MODERATE",
@@ -39,7 +39,7 @@ const RISK_TOLERANCE_OPTIONS: {
   {
     value: "AGGRESSIVE",
     label: "Aggressive",
-    description: "Maximise growth, accept higher volatility",
+    description: "Maximize growth, accept higher volatility",
   },
 ]
 

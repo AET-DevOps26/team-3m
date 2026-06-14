@@ -110,6 +110,22 @@ public class FinancialTransactionRepository {
         return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }
 
+    @Transactional(readOnly = true)
+    public TransactionMetadata findMetadata(UUID userId) {
+        var table = FINANCIAL_TRANSACTION;
+        var categories = dsl.selectDistinct(table.CATEGORY)
+                .from(table)
+                .where(table.USER_ID.eq(userId).and(table.CATEGORY.isNotNull()))
+                .orderBy(table.CATEGORY.asc())
+                .fetch(table.CATEGORY);
+        var types = dsl.selectDistinct(table.TYPE)
+                .from(table)
+                .where(table.USER_ID.eq(userId).and(table.TYPE.isNotNull()))
+                .orderBy(table.TYPE.asc())
+                .fetch(table.TYPE);
+        return new TransactionMetadata(categories, types);
+    }
+
     public void deleteAllForUser(UUID userId) {
         dsl.deleteFrom(FINANCIAL_TRANSACTION)
                 .where(FINANCIAL_TRANSACTION.USER_ID.eq(userId))

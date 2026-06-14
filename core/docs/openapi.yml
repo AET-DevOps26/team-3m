@@ -163,6 +163,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiResponse"
+  /api/v1/financial-transactions/metadata:
+    get:
+      tags:
+      - financial-transaction-controller
+      operationId: getMetadata
+      responses:
+        "200":
+          description: Distinct categories and types for the authenticated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransactionMetadataApiResponse"
 components:
   schemas:
     CsvImportApiResponse:
@@ -439,6 +451,35 @@ components:
           - {}
       required:
       - items
+    TransactionMetadata:
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            type: string
+        types:
+          type: array
+          items:
+            type: string
+    TransactionMetadataApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/TransactionMetadata"
+        error:
+          type:
+          - string
+          - "null"
+        details:
+          type:
+          - array
+          - "null"
+          items: {}
+      required:
+      - success
   securitySchemes:
     bearerAuth:
       type: http

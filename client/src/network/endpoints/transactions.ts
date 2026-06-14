@@ -1,4 +1,8 @@
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
 import { useMemo } from "react"
 import { z } from "zod"
 import type { Filters } from "@/lib/transaction-filters"
@@ -13,6 +17,7 @@ import {
   financialTransactionResponseSchema,
   listTransactionsApiResponseSchema,
   transactionCursorSchema,
+  transactionMetadataApiResponseSchema,
   transactionPageSchema,
 } from "../generated/zod.gen"
 
@@ -102,6 +107,43 @@ export function useTransactions(filters: Filters) {
   }
 }
 
+export interface TransactionMetadata {
+  categories: string[]
+  types: string[]
+}
+
+const metadataEnvelopeSchema = transactionMetadataApiResponseSchema.extend({
+  success: z.literal(true),
+  data: z.object({
+    categories: z.array(z.string()),
+    types: z.array(z.string()),
+  }),
+})
+
+export function useTransactionMetadata() {
+  return useQuery({
+    queryKey: ["transaction-metadata"],
+    queryFn: async (): Promise<TransactionMetadata> => {
+      const { data: raw } = await apiClient.GET(
+        "/api/v1/financial-transactions/metadata",
+        {},
+      )
+      const result = metadataEnvelopeSchema.safeParse(raw)
+      if (!result.success) {
+        throw new APIError({
+          code: "parse",
+          message: "Unexpected response from server",
+          details: raw,
+        })
+      }
+      return {
+        categories: result.data.data.categories,
+        types: result.data.data.types,
+      }
+    },
+  })
+}
+
 export type ImportTransactionsCsvResult = CsvImportResult
 
 const csvRowValidationErrorSchema = z.object({
@@ -141,6 +183,7 @@ export function useImportTransactionsCsv(
     onSuccess: (result, file) => {
       void queryClient.invalidateQueries({ queryKey: ["portfolio"] })
       void queryClient.invalidateQueries({ queryKey: ["transactions"] })
+      void queryClient.invalidateQueries({ queryKey: ["transaction-metadata"] })
       options.onSuccess?.(result, file)
     },
     silent: true,

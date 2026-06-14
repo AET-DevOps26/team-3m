@@ -13,6 +13,9 @@ export type {
   DatabaseResponse,
   DatabaseResponses,
   FinancialTransactionResponse,
+  GetMetadataData,
+  GetMetadataResponse,
+  GetMetadataResponses,
   GetOverviewData,
   GetOverviewError,
   GetOverviewErrors,
@@ -40,5 +43,7 @@ export type {
   ServerResponse,
   ServerResponses,
   TransactionCursor,
+  TransactionMetadata,
+  TransactionMetadataApiResponse,
   TransactionPage,
 } from "./types.gen"

@@ -110,6 +110,18 @@ export const listTransactionsApiResponseSchema = z.object({
   details: z.array(z.unknown()).nullish(),
 })
 
+export const transactionMetadataSchema = z.object({
+  categories: z.array(z.string()).optional(),
+  types: z.array(z.string()).optional(),
+})
+
+export const transactionMetadataApiResponseSchema = z.object({
+  success: z.boolean(),
+  data: transactionMetadataSchema.optional(),
+  error: z.string().nullish(),
+  details: z.array(z.unknown()).nullish(),
+})
+
 export const zImportCsvBody = z.object({
   file: z.string(),
 })
@@ -153,3 +165,8 @@ export const zListTransactionsQuery = z.object({
  * Transaction page
  */
 export const listTransactionsResponseSchema = listTransactionsApiResponseSchema
+
+/**
+ * Distinct categories and types for the authenticated user
+ */
+export const getMetadataResponseSchema = transactionMetadataApiResponseSchema

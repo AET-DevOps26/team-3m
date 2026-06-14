@@ -85,6 +85,22 @@ public class FinancialTransactionController {
         return ResponseEntity.ok(ListTransactionsApiResponse.from(ApiResponse.ok(page)));
     }
 
+    @GetMapping(path = "/metadata", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "Distinct categories and types for the authenticated user",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = TransactionMetadataApiResponse.class)))
+    })
+    public ResponseEntity<TransactionMetadataApiResponse> getMetadata(
+            @Parameter(hidden = true) @AuthenticatedUser AppUser user) {
+        var metadata = service.getMetadata(user.id());
+        return ResponseEntity.ok(TransactionMetadataApiResponse.from(ApiResponse.ok(metadata)));
+    }
+
     @PostMapping(
             path = "/import",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,

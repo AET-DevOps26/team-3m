@@ -48,8 +48,8 @@ export function filterByRange(
     : snapshots.filter((s) => s.datetime != null && s.datetime >= cutoff)
 }
 
-function formatAxisDate(datetimeStr: string, range: TimeRange): string {
-  const d = new Date(datetimeStr)
+function formatAxisDate(timestampMs: number, range: TimeRange): string {
+  const d = new Date(timestampMs)
   if (range === "1D") {
     return new Intl.DateTimeFormat("en", {
       hour: "numeric",
@@ -63,8 +63,8 @@ function formatAxisDate(datetimeStr: string, range: TimeRange): string {
   }).format(d)
 }
 
-function formatTooltipDate(datetimeStr: string, range: TimeRange): string {
-  const d = new Date(datetimeStr)
+function formatTooltipDate(timestampMs: number, range: TimeRange): string {
+  const d = new Date(timestampMs)
   if (range === "1D") {
     return new Intl.DateTimeFormat("en", {
       month: "short",
@@ -78,6 +78,37 @@ function formatTooltipDate(datetimeStr: string, range: TimeRange): string {
     day: "numeric",
     year: "numeric",
   }).format(d)
+}
+
+const STEP_MS: Record<TimeRange, number> = {
+  "1D": 4 * 60 * 60 * 1000,
+  "1W": 24 * 60 * 60 * 1000,
+  "1M": 7 * 24 * 60 * 60 * 1000,
+  "1Y": 30 * 24 * 60 * 60 * 1000,
+  MAX: 90 * 24 * 60 * 60 * 1000,
+}
+
+function computeEquidistantTicks(
+  minMs: number,
+  maxMs: number,
+  range: TimeRange,
+): number[] {
+  let stepMs = STEP_MS[range]
+
+  if (range === "MAX") {
+    const durationDays = (maxMs - minMs) / (24 * 60 * 60 * 1000)
+    if (durationDays <= 30) stepMs = 7 * 24 * 60 * 60 * 1000
+    else if (durationDays <= 90) stepMs = 14 * 24 * 60 * 60 * 1000
+    else if (durationDays <= 365) stepMs = 30 * 24 * 60 * 60 * 1000
+    else stepMs = 90 * 24 * 60 * 60 * 1000
+  }
+
+  const firstTick = Math.ceil(minMs / stepMs) * stepMs
+  const ticks: number[] = []
+  for (let t = firstTick; t <= maxMs; t += stepMs) {
+    ticks.push(t)
+  }
+  return ticks
 }
 
 interface RangeSelectorProps {
@@ -108,7 +139,8 @@ function RangeSelector({ selected, onSelect }: RangeSelectorProps) {
 }
 
 const chartConfig = {
-  investmentValue: { label: "" },
+  investmentValue: { label: "Investments" },
+  cashValue: { label: "Cash" },
 } satisfies ChartConfig
 
 interface PerformanceChartProps {
@@ -122,7 +154,16 @@ function PerformanceChart({
   currency,
   range,
 }: PerformanceChartProps) {
-  if (snapshots.length < 2) {
+  const data = snapshots
+    .map((s) => ({
+      t: new Date(s.datetime ?? "").getTime(),
+      investmentValue: s.investmentValue ?? 0,
+      cashValue: s.cashValue ?? 0,
+    }))
+    .filter((d) => Number.isFinite(d.t))
+    .sort((a, b) => a.t - b.t)
+
+  if (data.length < 2) {
     return (
       <p className="py-8 text-center text-sm text-muted-foreground">
         Import more transactions to see performance over time.
@@ -130,69 +171,66 @@ function PerformanceChart({
     )
   }
 
-  const data = snapshots.map((s) => ({
-    datetime: s.datetime ?? "",
-    investmentValue: s.investmentValue ?? 0,
-  }))
-  const first = snapshots[0].investmentValue ?? 0
-  const last = snapshots[snapshots.length - 1].investmentValue ?? 0
+  const minMs = data[0].t
+  const maxMs = data[data.length - 1].t
+  const ticks = computeEquidistantTicks(minMs, maxMs, range)
+
+  const first = data[0].investmentValue
+  const last = data[data.length - 1].investmentValue
   const isPositive = last >= first
+
+  const investmentColor = isPositive
+    ? "var(--color-primary)"
+    : "var(--color-destructive)"
 
   return (
     <ChartContainer config={chartConfig} className="h-40 w-full">
       <AreaChart data={data} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
         <defs>
-          <linearGradient id="perfGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop
-              offset="5%"
-              stopColor={
-                isPositive ? "var(--color-primary)" : "var(--color-destructive)"
-              }
-              stopOpacity={0.25}
-            />
-            <stop
-              offset="95%"
-              stopColor={
-                isPositive ? "var(--color-primary)" : "var(--color-destructive)"
-              }
-              stopOpacity={0}
-            />
+          <linearGradient id="investGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor={investmentColor} stopOpacity={0.25} />
+            <stop offset="95%" stopColor={investmentColor} stopOpacity={0} />
           </linearGradient>
         </defs>
         <XAxis
-          dataKey="datetime"
+          dataKey="t"
+          type="number"
+          domain={[minMs, maxMs]}
+          ticks={ticks}
           tickLine={false}
           axisLine={false}
           tickMargin={8}
-          tickFormatter={(d) => formatAxisDate(d, range)}
+          tickFormatter={(v) => formatAxisDate(v as number, range)}
           tick={{ fontSize: 11 }}
-          minTickGap={range === "1D" ? 40 : 60}
         />
         <Area
           type="monotone"
           dataKey="investmentValue"
-          stroke={
-            isPositive ? "var(--color-primary)" : "var(--color-destructive)"
-          }
+          stroke={investmentColor}
           strokeWidth={2}
-          fill="url(#perfGradient)"
+          fill="url(#investGradient)"
           dot={false}
           activeDot={{ r: 4, strokeWidth: 0 }}
+        />
+        <Area
+          type="monotone"
+          dataKey="cashValue"
+          stroke="var(--color-chart-1)"
+          strokeWidth={1.5}
+          fill="none"
+          dot={false}
+          activeDot={{ r: 3, strokeWidth: 0 }}
         />
         <ChartTooltip
           content={
             <ChartTooltipContent
-              labelFormatter={(_label, payload) =>
-                payload?.[0]?.payload?.datetime
-                  ? formatTooltipDate(
-                      payload[0].payload.datetime as string,
-                      range,
-                    )
-                  : ""
-              }
-              formatter={(value) => [
+              labelFormatter={(_label, payload) => {
+                const t = payload?.[0]?.payload?.t
+                return typeof t === "number" ? formatTooltipDate(t, range) : ""
+              }}
+              formatter={(value, name) => [
                 formatCurrency(Number(value), currency),
-                "",
+                name === "investmentValue" ? "Investments" : "Cash",
               ]}
             />
           }

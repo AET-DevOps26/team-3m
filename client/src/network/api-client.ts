@@ -6,6 +6,7 @@ import type {
   ApiResponsePortfolioOverview,
   ApiResponsePortfolioPerformance,
   ListTransactionsApiResponse,
+  TransactionMetadataApiResponse,
 } from "./generated"
 
 interface TextResponseOperation {
@@ -51,6 +52,11 @@ interface ApiPaths {
           pageSize?: number
           afterDatetime?: string
           afterId?: string
+          search?: string
+          category?: string
+          type?: string
+          dateFrom?: string
+          dateTo?: string
         }
       }
       responses: {
@@ -61,6 +67,9 @@ interface ApiPaths {
         }
       }
     }
+  }
+  "/api/v1/financial-transactions/metadata": {
+    get: JsonGetOperation<TransactionMetadataApiResponse>
   }
 }
 

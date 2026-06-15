@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -52,7 +53,12 @@ public class FinancialTransactionController {
             @Parameter(hidden = true) @AuthenticatedUser AppUser user,
             @RequestParam(defaultValue = "200") int pageSize,
             @RequestParam(required = false) String afterDatetime,
-            @RequestParam(required = false) UUID afterId) {
+            @RequestParam(required = false) UUID afterId,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) LocalDate dateFrom,
+            @RequestParam(required = false) LocalDate dateTo) {
         if ((afterDatetime == null) != (afterId == null)) {
             return ResponseEntity.badRequest()
                     .body(ListTransactionsApiResponse.from(
@@ -69,8 +75,30 @@ public class FinancialTransactionController {
                                 ApiResponse.error("Invalid afterDatetime format; expected ISO-8601 with offset")));
             }
         }
-        var page = service.listTransactions(user.id(), pageSize, cursor);
+        if (dateFrom != null && dateTo != null && dateFrom.isAfter(dateTo)) {
+            return ResponseEntity.badRequest()
+                    .body(ListTransactionsApiResponse.from(
+                            ApiResponse.error("dateFrom must be before or equal to dateTo")));
+        }
+        var filter = new TransactionFilter(search, category, type, dateFrom, dateTo);
+        var page = service.listTransactions(user.id(), pageSize, cursor, filter);
         return ResponseEntity.ok(ListTransactionsApiResponse.from(ApiResponse.ok(page)));
+    }
+
+    @GetMapping(path = "/metadata", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "Distinct categories and types for the authenticated user",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = TransactionMetadataApiResponse.class)))
+    })
+    public ResponseEntity<TransactionMetadataApiResponse> getMetadata(
+            @Parameter(hidden = true) @AuthenticatedUser AppUser user) {
+        var metadata = service.getMetadata(user.id());
+        return ResponseEntity.ok(TransactionMetadataApiResponse.from(ApiResponse.ok(metadata)));
     }
 
     @PostMapping(

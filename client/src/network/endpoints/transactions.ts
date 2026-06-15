@@ -1,6 +1,12 @@
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query"
-import { useEffect, useMemo } from "react"
+import {
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
+import { useMemo } from "react"
 import { z } from "zod"
+import type { Filters } from "@/lib/transaction-filters"
+import { filtersToApiParams } from "@/lib/transaction-filters"
 import { apiClient } from "../api-client"
 import { APIError } from "../errors"
 import { useFileUpload } from "../file-upload/use-file-upload"
@@ -11,12 +17,13 @@ import {
   financialTransactionResponseSchema,
   listTransactionsApiResponseSchema,
   transactionCursorSchema,
+  transactionMetadataApiResponseSchema,
   transactionPageSchema,
 } from "../generated/zod.gen"
 
 const BASE_PATH = "/api/v1/financial-transactions"
 const IMPORT_PATH = `${BASE_PATH}/import`
-const PAGE_SIZE = 200
+const PAGE_SIZE = 50
 
 // z.iso.datetime() in Zod v4 only accepts Z suffix, but Java/Jackson serialises
 // OffsetDateTime with +HH:MM offsets (e.g. +00:00). Use the offset-aware variant.
@@ -40,11 +47,9 @@ type TransactionCursorParams = z.infer<typeof transactionCursorSchema>
 
 export type Transaction = z.infer<typeof transactionSchema>
 
-/**
- * Fetches all transactions via keyset-paginated pages and returns the full flat
- * list. Client-side filters in the UI are applied over the accumulated result.
- */
-export function useTransactions() {
+export function useTransactions(filters: Filters) {
+  const apiParams = filtersToApiParams(filters)
+
   const {
     data,
     isPending,
@@ -54,7 +59,7 @@ export function useTransactions() {
     isFetchingNextPage,
     fetchNextPage,
   } = useInfiniteQuery({
-    queryKey: ["transactions"],
+    queryKey: ["transactions", apiParams],
     queryFn: async ({
       pageParam,
     }: {
@@ -66,6 +71,7 @@ export function useTransactions() {
           params: {
             query: {
               pageSize: PAGE_SIZE,
+              ...apiParams,
               ...pageParam,
             },
           },
@@ -85,20 +91,57 @@ export function useTransactions() {
     getNextPageParam: (lastPage) => lastPage.nextCursor,
   })
 
-  // Auto-fetch remaining pages so all client-side filters work on complete data
-  useEffect(() => {
-    if (hasNextPage && !isFetchingNextPage) {
-      void fetchNextPage()
-    }
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
-
   const transactions = useMemo(
     () => data?.pages.flatMap((p) => p.items) ?? [],
     [data],
   )
 
-  const isLoadingAll = isPending || hasNextPage || isFetchingNextPage
-  return { data: transactions, isPending: isLoadingAll, isError, error }
+  return {
+    data: transactions,
+    isPending,
+    isError,
+    error,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  }
+}
+
+export interface TransactionMetadata {
+  categories: string[]
+  types: string[]
+}
+
+const metadataEnvelopeSchema = transactionMetadataApiResponseSchema.extend({
+  success: z.literal(true),
+  data: z.object({
+    categories: z.array(z.string()),
+    types: z.array(z.string()),
+  }),
+})
+
+export function useTransactionMetadata() {
+  return useQuery({
+    queryKey: ["transaction-metadata"],
+    queryFn: async (): Promise<TransactionMetadata> => {
+      const { data: raw } = await apiClient.GET(
+        "/api/v1/financial-transactions/metadata",
+        {},
+      )
+      const result = metadataEnvelopeSchema.safeParse(raw)
+      if (!result.success) {
+        throw new APIError({
+          code: "parse",
+          message: "Unexpected response from server",
+          details: raw,
+        })
+      }
+      return {
+        categories: result.data.data.categories,
+        types: result.data.data.types,
+      }
+    },
+  })
 }
 
 export type ImportTransactionsCsvResult = CsvImportResult
@@ -140,6 +183,7 @@ export function useImportTransactionsCsv(
     onSuccess: (result, file) => {
       void queryClient.invalidateQueries({ queryKey: ["portfolio"] })
       void queryClient.invalidateQueries({ queryKey: ["transactions"] })
+      void queryClient.invalidateQueries({ queryKey: ["transaction-metadata"] })
       options.onSuccess?.(result, file)
     },
     silent: true,

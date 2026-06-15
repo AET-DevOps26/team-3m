@@ -110,6 +110,18 @@ export type TransactionPage = {
   nextCursor?: TransactionCursor
 }
 
+export type TransactionMetadata = {
+  categories?: Array<string>
+  types?: Array<string>
+}
+
+export type TransactionMetadataApiResponse = {
+  success: boolean
+  data?: TransactionMetadata
+  error?: string | null
+  details?: Array<unknown> | null
+}
+
 export type ImportCsvData = {
   body?: {
     file: Blob | File
@@ -227,6 +239,11 @@ export type ListTransactionsData = {
     pageSize?: number
     afterDatetime?: string
     afterId?: string
+    search?: string
+    category?: string
+    type?: string
+    dateFrom?: string
+    dateTo?: string
   }
   url: "/api/v1/financial-transactions"
 }
@@ -250,3 +267,20 @@ export type ListTransactionsResponses = {
 
 export type ListTransactionsResponse =
   ListTransactionsResponses[keyof ListTransactionsResponses]
+
+export type GetMetadataData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/api/v1/financial-transactions/metadata"
+}
+
+export type GetMetadataResponses = {
+  /**
+   * Distinct categories and types for the authenticated user
+   */
+  200: TransactionMetadataApiResponse
+}
+
+export type GetMetadataResponse =
+  GetMetadataResponses[keyof GetMetadataResponses]

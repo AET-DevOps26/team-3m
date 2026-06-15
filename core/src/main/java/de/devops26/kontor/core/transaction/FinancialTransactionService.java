@@ -77,9 +77,15 @@ public class FinancialTransactionService {
     }
 
     @Transactional(readOnly = true)
-    public TransactionPage listTransactions(UUID userId, int pageSize, TransactionCursor cursor) {
+    public TransactionMetadata getMetadata(UUID userId) {
+        return repository.findMetadata(userId);
+    }
+
+    @Transactional(readOnly = true)
+    public TransactionPage listTransactions(
+            UUID userId, int pageSize, TransactionCursor cursor, TransactionFilter filter) {
         var clampedPageSize = Math.min(Math.max(pageSize, 1), 500);
-        return repository.findPage(userId, clampedPageSize, cursor);
+        return repository.findPage(userId, clampedPageSize, cursor, filter);
     }
 
     @Transactional

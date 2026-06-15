@@ -2,6 +2,7 @@
   "realm": "kontor",
   "users": [
     {
+      "id": "00000000-0000-0000-0000-0000000000de",
       "username": "dev",
       "enabled": true,
       "emailVerified": true,
@@ -16,10 +17,10 @@
         {
           "type": "password",
           "value": "KEYCLOAK_DEV_PASSWORD_PLACEHOLDER",
-          "temporary": true
+          "temporary": false
         }
       ],
-      "requiredActions": ["UPDATE_PASSWORD"],
+      "requiredActions": [],
       "realmRoles": ["kontor-user", "default-roles-kontor"]
     }
   ]

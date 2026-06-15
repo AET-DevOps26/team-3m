@@ -156,10 +156,6 @@ services:
     restart: unless-stopped
 
   ai:
-    # No kontor-ai:latest is published yet (no release has been cut since the AI
-    # service was added), so the tag is overridable via KONTOR_AI_IMAGE_TAG.
-    # Defaults to latest so it self-heals once a release publishes that tag;
-    # until then the Azure deploy sets it (AZURE_AI_IMAGE_TAG) to a PR-built tag.
     image: ghcr.io/aet-devops26/team-3m/kontor-ai:${KONTOR_AI_IMAGE_TAG:-latest}
     labels:
       - "traefik.enable=true"

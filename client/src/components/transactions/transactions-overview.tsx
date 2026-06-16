@@ -17,9 +17,18 @@ import {
 
 const PAGE_SIZE = 25
 
-export function TransactionsOverviewBlock() {
+interface TransactionsOverviewBlockProps {
+  initialFilters?: Partial<Filters>
+}
+
+export function TransactionsOverviewBlock({
+  initialFilters,
+}: TransactionsOverviewBlockProps = {}) {
   const { data: transactions, isPending, isError, error } = useTransactions()
-  const [filters, setFilters] = useState<Filters>(INITIAL_FILTERS)
+  const [filters, setFilters] = useState<Filters>({
+    ...INITIAL_FILTERS,
+    ...initialFilters,
+  })
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const sentinelRef = useRef<HTMLDivElement>(null)
 

@@ -66,6 +66,12 @@
               }
             }
           },
+          "502": {
+            "description": "AI service request failed or returned an unparsable response"
+          },
+          "503": {
+            "description": "AI service is not configured"
+          },
           "422": {
             "description": "Validation Error",
             "content": {

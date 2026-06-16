@@ -25,7 +25,16 @@ function isHoldingUsable(h: PortfolioHolding): h is PortfolioHolding & {
   shares: number
   currentValue: number
 } {
-  return !!(h.symbol && h.name && h.shares && h.currentValue)
+  return (
+    typeof h.symbol === "string" &&
+    h.symbol.trim().length > 0 &&
+    typeof h.name === "string" &&
+    h.name.trim().length > 0 &&
+    typeof h.shares === "number" &&
+    Number.isFinite(h.shares) &&
+    typeof h.currentValue === "number" &&
+    Number.isFinite(h.currentValue)
+  )
 }
 
 function toHoldingInput(

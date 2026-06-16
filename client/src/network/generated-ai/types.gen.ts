@@ -162,6 +162,14 @@ export type GenerateRecommendationAiAdvisorRecommendationPostErrors = {
    * Validation Error
    */
   422: HttpValidationError
+  /**
+   * AI service request failed or returned an unparsable response
+   */
+  502: unknown
+  /**
+   * AI service is not configured
+   */
+  503: unknown
 }
 
 export type GenerateRecommendationAiAdvisorRecommendationPostError =

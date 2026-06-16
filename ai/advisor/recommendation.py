@@ -65,7 +65,14 @@ def _build_prompt(portfolio: PortfolioInput) -> str:
     return "\n".join(lines)
 
 
-@router.post("/advisor/recommendation", response_model=RecommendationResponse)
+@router.post(
+    "/advisor/recommendation",
+    response_model=RecommendationResponse,
+    responses={
+        502: {"description": "AI service request failed or returned an unparsable response"},
+        503: {"description": "AI service is not configured"},
+    },
+)
 async def generate_recommendation(
     portfolio: PortfolioInput,
     settings: Annotated[Settings, Depends(get_settings)],
@@ -77,26 +84,33 @@ async def generate_recommendation(
         )
 
     client = make_logos_client(settings)
-    response = await client.chat.completions.create(
-        model=LOGOS_MODEL,
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "You are a financial advisor assistant. Analyze the user's investment portfolio "
-                    "and respond with a JSON object containing exactly two string fields: "
-                    '"recommendation" (1-2 sentences of actionable advice) and '
-                    '"rationale" (2-3 sentences explaining the reasoning). '
-                    "Tailor your advice to the investor's stated risk tolerance when provided. "
-                    "Be professional and data-driven."
-                ),
-            },
-            {"role": "user", "content": _build_prompt(portfolio)},
-        ],
-        response_format={"type": "json_object"},
-    )
+    try:
+        response = await client.chat.completions.create(
+            model=LOGOS_MODEL,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a financial advisor assistant. Analyze the user's investment portfolio "
+                        "and respond with a JSON object containing exactly two string fields: "
+                        '"recommendation" (1-2 sentences of actionable advice) and '
+                        '"rationale" (2-3 sentences explaining the reasoning). '
+                        "Tailor your advice to the investor's stated risk tolerance when provided. "
+                        "Be professional and data-driven."
+                    ),
+                },
+                {"role": "user", "content": _build_prompt(portfolio)},
+            ],
+            response_format={"type": "json_object"},
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="AI service request failed",
+        ) from exc
 
-    content = response.choices[0].message.content
+    choices = response.choices or []
+    content = choices[0].message.content if choices else None
     if not content:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,

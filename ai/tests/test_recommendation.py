@@ -84,7 +84,7 @@ async def test_recommendation_prompt_contains_portfolio_data(transport: ASGITran
         mock_factory.return_value = mock_logos
 
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            await client.post(
+            response = await client.post(
                 "/ai/advisor/recommendation",
                 json={
                     "holdings": [
@@ -102,6 +102,7 @@ async def test_recommendation_prompt_contains_portfolio_data(transport: ASGITran
                     "currency": "EUR",
                 },
             )
+    assert response.status_code == 200
 
     user_msg = next((m for m in captured if m["role"] == "user"), None)
     assert user_msg is not None, "No user message was sent to the LLM"

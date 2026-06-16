@@ -1,4 +1,5 @@
 import {
+  keepPreviousData,
   useInfiniteQuery,
   useQuery,
   useQueryClient,
@@ -89,6 +90,7 @@ export function useTransactions(filters: Filters) {
     },
     initialPageParam: null as TransactionCursorParams | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
+    placeholderData: keepPreviousData,
   })
 
   const transactions = useMemo(

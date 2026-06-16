@@ -22,10 +22,11 @@ export function TransactionsOverviewBlock() {
 
   const { data: metadata } = useTransactionMetadata()
   const categories = metadata?.categories ?? []
-  const types = (metadata?.types ?? [])
-    .map(normalizeType)
-    .filter((t) => t !== "")
-    .sort()
+  const types = [
+    ...new Set(
+      (metadata?.types ?? []).map(normalizeType).filter((t) => t !== ""),
+    ),
+  ].sort()
 
   const {
     data: transactions,
@@ -56,13 +57,7 @@ export function TransactionsOverviewBlock() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
   function patchFilters(patch: Partial<Filters>) {
-    setFilters((prev) => {
-      const next = { ...prev, ...patch }
-      if (patch.category !== undefined && patch.category !== prev.category) {
-        next.type = ""
-      }
-      return next
-    })
+    setFilters((prev) => ({ ...prev, ...patch }))
   }
 
   function resetFilters() {
@@ -79,56 +74,13 @@ export function TransactionsOverviewBlock() {
     />
   )
 
-  if (isPending) {
-    return (
-      <>
-        {filtersBar}
-        <div className="divide-y">
-          {Array.from({ length: 5 }).map((_, i) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: skeleton rows have no meaningful key
-            <TransactionRowSkeleton key={i} />
-          ))}
-        </div>
-      </>
-    )
-  }
+  const hasFilters =
+    !!debouncedSearch ||
+    !!filters.category ||
+    !!filters.type ||
+    filters.datePreset !== "all"
 
-  if (isError) {
-    return (
-      <>
-        {filtersBar}
-        <Alert variant="destructive" className="mt-4">
-          <AlertCircle />
-          <AlertTitle>Failed to load transactions</AlertTitle>
-          <AlertDescription>
-            {error instanceof APIError
-              ? error.message
-              : "Something went wrong. Please try again."}
-          </AlertDescription>
-        </Alert>
-      </>
-    )
-  }
-
-  if (transactions.length === 0 && !hasNextPage) {
-    const hasFilters =
-      debouncedSearch ||
-      filters.category ||
-      filters.type ||
-      filters.datePreset !== "all"
-
-    if (hasFilters) {
-      return (
-        <>
-          {filtersBar}
-          <div className="flex flex-col items-center gap-2 py-8 text-center text-muted-foreground">
-            <Search className="size-8" />
-            <p className="text-sm">No transactions match your filters.</p>
-          </div>
-        </>
-      )
-    }
-
+  if (!hasFilters && transactions.length === 0 && !hasNextPage && !isPending) {
     return (
       <div className="flex flex-col items-center gap-2 py-8 text-center text-muted-foreground">
         <List className="size-8" />
@@ -143,11 +95,41 @@ export function TransactionsOverviewBlock() {
     <div>
       {filtersBar}
 
-      <div className="divide-y">
-        {transactions.map((tx) => (
-          <TransactionRow key={tx.id} tx={tx} />
-        ))}
-      </div>
+      {isPending && (
+        <div className="divide-y">
+          {Array.from({ length: 5 }).map((_, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: skeleton rows have no meaningful key
+            <TransactionRowSkeleton key={i} />
+          ))}
+        </div>
+      )}
+
+      {isError && (
+        <Alert variant="destructive" className="mt-4">
+          <AlertCircle />
+          <AlertTitle>Failed to load transactions</AlertTitle>
+          <AlertDescription>
+            {error instanceof APIError
+              ? error.message
+              : "Something went wrong. Please try again."}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {!isPending && !isError && transactions.length === 0 && !hasNextPage && (
+        <div className="flex flex-col items-center gap-2 py-8 text-center text-muted-foreground">
+          <Search className="size-8" />
+          <p className="text-sm">No transactions match your filters.</p>
+        </div>
+      )}
+
+      {!isPending && !isError && transactions.length > 0 && (
+        <div className="divide-y">
+          {transactions.map((tx) => (
+            <TransactionRow key={tx.id} tx={tx} />
+          ))}
+        </div>
+      )}
 
       {(hasNextPage || isFetchingNextPage) && (
         <div ref={sentinelRef} className="pt-2">

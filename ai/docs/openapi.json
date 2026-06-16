@@ -153,6 +153,17 @@
           "currency": {
             "type": "string",
             "title": "Currency"
+          },
+          "risk_tolerance": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Tolerance"
           }
         },
         "type": "object",

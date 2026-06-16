@@ -64,6 +64,10 @@ export type PortfolioInput = {
    * Currency
    */
   currency: string
+  /**
+   * Risk Tolerance
+   */
+  risk_tolerance?: string | null
 }
 
 /**

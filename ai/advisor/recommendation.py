@@ -34,6 +34,7 @@ class PortfolioInput(BaseModel):
     cash_balance: float
     total_value: float
     currency: str
+    risk_tolerance: str | None = None
 
 
 class LLMRecommendation(BaseModel):
@@ -53,8 +54,10 @@ def _build_prompt(portfolio: PortfolioInput) -> str:
     lines = [
         f"Total portfolio value: {portfolio.total_value} {portfolio.currency}",
         f"Cash balance: {portfolio.cash_balance} {portfolio.currency}",
-        "Holdings:",
     ]
+    if portfolio.risk_tolerance:
+        lines.append(f"Investor risk tolerance: {portfolio.risk_tolerance}")
+    lines.append("Holdings:")
     for h in portfolio.holdings:
         lines.append(
             f"  - {h.name} ({h.symbol}): {h.shares} shares worth {h.current_value} {h.currency} [{h.asset_class}]"
@@ -84,6 +87,7 @@ async def generate_recommendation(
                     "and respond with a JSON object containing exactly two string fields: "
                     '"recommendation" (1-2 sentences of actionable advice) and '
                     '"rationale" (2-3 sentences explaining the reasoning). '
+                    "Tailor your advice to the investor's stated risk tolerance when provided. "
                     "Be professional and data-driven."
                 ),
             },

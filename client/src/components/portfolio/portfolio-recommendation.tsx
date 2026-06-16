@@ -13,6 +13,7 @@ import {
   useGenerateRecommendation,
 } from "@/network/endpoints/ai-advisor"
 import type { PortfolioOverview } from "@/network/endpoints/portfolio"
+import { useProfile } from "@/network/endpoints/profile"
 
 interface PortfolioRecommendationProps {
   overview: PortfolioOverview
@@ -21,6 +22,7 @@ interface PortfolioRecommendationProps {
 export function PortfolioRecommendation({
   overview,
 }: PortfolioRecommendationProps) {
+  const { data: profile } = useProfile()
   const { mutate, data, isPending, isError, error } =
     useGenerateRecommendation()
 
@@ -35,7 +37,9 @@ export function PortfolioRecommendation({
             </CardDescription>
           </div>
           <Button
-            onClick={() => mutate(overview)}
+            onClick={() =>
+              mutate({ overview, riskTolerance: profile.riskTolerance })
+            }
             disabled={isPending}
             size="sm"
           >

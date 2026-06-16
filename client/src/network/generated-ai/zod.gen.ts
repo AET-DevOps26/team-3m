@@ -22,6 +22,7 @@ export const portfolioInputSchema = z.object({
   cash_balance: z.number(),
   total_value: z.number(),
   currency: z.string(),
+  risk_tolerance: z.string().nullish(),
 })
 
 /**

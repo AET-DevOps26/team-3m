@@ -10,8 +10,14 @@ import type {
   PortfolioInput,
   RecommendationResponse,
 } from "../generated-ai/types.gen"
+import type { RiskTolerance } from "./profile"
 
 export type { RecommendationResponse }
+
+interface GenerateRecommendationParams {
+  overview: PortfolioOverview
+  riskTolerance: RiskTolerance | null | undefined
+}
 
 function isHoldingUsable(h: PortfolioHolding): h is PortfolioHolding & {
   symbol: string
@@ -41,7 +47,10 @@ function toHoldingInput(
   }
 }
 
-function toPortfolioInput(overview: PortfolioOverview): PortfolioInput {
+function toPortfolioInput(
+  overview: PortfolioOverview,
+  riskTolerance: RiskTolerance | null | undefined,
+): PortfolioInput {
   const currency = overview.currency ?? ""
   return {
     holdings: (overview.holdings ?? [])
@@ -50,14 +59,19 @@ function toPortfolioInput(overview: PortfolioOverview): PortfolioInput {
     cash_balance: overview.cashBalance ?? 0,
     total_value: overview.totalValue ?? 0,
     currency,
+    risk_tolerance: riskTolerance ?? null,
   }
 }
 
 export function useGenerateRecommendation() {
-  return useMutation<RecommendationResponse, APIError, PortfolioOverview>({
-    mutationFn: async (overview) => {
+  return useMutation<
+    RecommendationResponse,
+    APIError,
+    GenerateRecommendationParams
+  >({
+    mutationFn: async ({ overview, riskTolerance }) => {
       const { data } = await apiClient.POST("/ai/advisor/recommendation", {
-        body: toPortfolioInput(overview),
+        body: toPortfolioInput(overview, riskTolerance),
       })
       if (!data) {
         throw new APIError({

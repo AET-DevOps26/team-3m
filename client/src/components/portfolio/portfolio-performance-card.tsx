@@ -215,8 +215,25 @@ function PerformanceChart({
           tickLine={false}
           axisLine={false}
           tickMargin={8}
-          tickFormatter={(v) => formatAxisDate(v as number, range)}
-          tick={{ fontSize: 11 }}
+          tick={(props) => {
+            const { x, y, payload, index } = props as {
+              x: number
+              y: number
+              payload: { value: number }
+              index: number
+            }
+            const anchor =
+              index === 0
+                ? "start"
+                : index === ticks.length - 1
+                  ? "end"
+                  : "middle"
+            return (
+              <text x={x} y={y} textAnchor={anchor} fontSize={11}>
+                {formatAxisDate(payload.value, range)}
+              </text>
+            )
+          }}
         />
         <Area
           type="monotone"

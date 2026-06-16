@@ -17,7 +17,6 @@ def main() -> None:
     spec = app.openapi()
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text(json.dumps(spec, indent=2) + "\n")
-    print(f"Wrote OpenAPI spec to {OUTPUT}")
 
 
 if __name__ == "__main__":

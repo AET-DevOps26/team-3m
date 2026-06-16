@@ -17,6 +17,7 @@ client:
       memory: 128Mi
 
 core:
+  springProfilesActive: seed
   corsAllowedOrigins:
     - https://pr-${PR_NUMBER}.${BASE_DOMAIN}
   resources:

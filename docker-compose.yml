@@ -91,6 +91,7 @@ services:
       KEYCLOAK_ISSUER: "http://localhost:${KEYCLOAK_PORT:-8081}/realms/kontor"
       KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/realms/kontor/protocol/openid-connect/certs"
       KEYCLOAK_AUDIENCE: "${KEYCLOAK_AUDIENCE:-kontor-api}"
+      SPRING_PROFILES_ACTIVE: seed
     ports:
       - "8080:8080"
     healthcheck:

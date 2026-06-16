@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/v1/financial-transactions")
 public class FinancialTransactionController {
@@ -93,7 +95,8 @@ public class FinancialTransactionController {
                 content =
                         @Content(
                                 mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                schema = @Schema(implementation = TransactionMetadataApiResponse.class)))
+                                schema = @Schema(implementation = TransactionMetadataApiResponse.class))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     public ResponseEntity<TransactionMetadataApiResponse> getMetadata(
             @Parameter(hidden = true) @AuthenticatedUser AppUser user) {

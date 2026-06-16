@@ -275,6 +275,15 @@ export type GetMetadataData = {
   url: "/api/v1/financial-transactions/metadata"
 }
 
+export type GetMetadataErrors = {
+  /**
+   * Unauthorized
+   */
+  401: TransactionMetadataApiResponse
+}
+
+export type GetMetadataError = GetMetadataErrors[keyof GetMetadataErrors]
+
 export type GetMetadataResponses = {
   /**
    * Distinct categories and types for the authenticated user

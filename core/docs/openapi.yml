@@ -35,6 +35,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiResponse"
+      security:
+      - bearerAuth: []
   /api/v1/portfolio/performance:
     get:
       tags:
@@ -163,6 +165,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiResponse"
+      security:
+      - bearerAuth: []
   /api/v1/financial-transactions/metadata:
     get:
       tags:
@@ -175,6 +179,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TransactionMetadataApiResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransactionMetadataApiResponse"
+      security:
+      - bearerAuth: []
 components:
   schemas:
     CsvImportApiResponse:

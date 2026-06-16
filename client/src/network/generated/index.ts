@@ -14,6 +14,8 @@ export type {
   DatabaseResponses,
   FinancialTransactionResponse,
   GetMetadataData,
+  GetMetadataError,
+  GetMetadataErrors,
   GetMetadataResponse,
   GetMetadataResponses,
   GetOverviewData,

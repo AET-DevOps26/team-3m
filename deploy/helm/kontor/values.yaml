@@ -25,10 +25,6 @@ oidc:
   clientId: kontor-spa
   # -- Audience expected in issued access tokens.
   audience: kontor-api
-  # -- Redirect URI.
-  redirectUri: ""
-  # -- Post-logout redirect URI.
-  postLogoutRedirectUri: ""
 
 # Spring Boot core service.
 core:

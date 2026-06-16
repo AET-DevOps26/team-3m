@@ -61,35 +61,9 @@ jobs:
     if: ${{ needs.preview-gate.outputs.teardown != 'true' }}
     uses: ./.github/workflows/ai-quality.yml
 
-  changes:
-    name: Detect changes
+  helm-quality:
     needs: preview-gate
     if: ${{ needs.preview-gate.outputs.teardown != 'true' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-    permissions:
-      contents: read
-      pull-requests: read
-    outputs:
-      deploy: ${{ steps.filter.outputs.deploy }}
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-      - uses: dorny/paths-filter@v4.0.1
-        id: filter
-        with:
-          filters: |
-            deploy:
-              - 'deploy/**'
-              - '.github/workflows/helm-quality.yml'
-              - '.github/workflows/pr.yml'
-              - '.github/workflows/deploy.yml'
-              - '.trivyignore.yaml'
-
-  helm-quality:
-    needs: [changes, preview-gate]
-    if: ${{ needs.changes.outputs.deploy == 'true' }}
     uses: ./.github/workflows/helm-quality.yml
 
   openapi-sync:
@@ -129,14 +103,7 @@ jobs:
 
   deploy-preview:
     needs: [preview-gate, helm-quality, client-docker, server-docker, ai-docker, keycloak-docker]
-    if: >-
-      ${{ !cancelled()
-          && needs.preview-gate.outputs.deploy == 'true'
-          && needs.helm-quality.result != 'failure'
-          && needs.client-docker.result == 'success'
-          && needs.server-docker.result == 'success'
-          && needs.ai-docker.result == 'success'
-          && needs.keycloak-docker.result == 'success' }}
+    if: ${{ needs.preview-gate.outputs.deploy == 'true' }}
     uses: ./.github/workflows/deploy.yml
     secrets: inherit
     with:
@@ -149,10 +116,7 @@ jobs:
 
   preview-comment:
     needs: [preview-gate, deploy-preview]
-    if: >-
-      ${{ !cancelled()
-          && needs.preview-gate.outputs.deploy == 'true'
-          && needs.deploy-preview.result == 'success' }}
+    if: ${{ needs.preview-gate.outputs.deploy == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write

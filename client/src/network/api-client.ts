@@ -5,14 +5,17 @@ import { APIError } from "./errors"
 import type {
   ApiResponsePortfolioOverview,
   ApiResponsePortfolioPerformance,
+  DatabaseResponse,
   ListTransactionsApiResponse,
+  ServerResponse,
 } from "./generated"
+import type { ReadinessAiHealthReadinessGetResponse } from "./generated-ai"
 
-interface TextResponseOperation {
+interface TextResponseOperation<T = string> {
   responses: {
     200: {
       content: {
-        "*/*": string
+        "*/*": T
       }
     }
   }
@@ -30,13 +33,13 @@ interface JsonGetOperation<T> {
 
 interface ApiPaths {
   "/api/v1/health/server": {
-    get: TextResponseOperation
+    get: TextResponseOperation<ServerResponse>
   }
   "/api/v1/health/database": {
-    get: TextResponseOperation
+    get: TextResponseOperation<DatabaseResponse>
   }
   "/ai/health/readiness": {
-    get: TextResponseOperation
+    get: TextResponseOperation<ReadinessAiHealthReadinessGetResponse>
   }
   "/api/v1/portfolio/overview": {
     get: JsonGetOperation<ApiResponsePortfolioOverview>

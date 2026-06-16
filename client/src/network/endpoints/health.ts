@@ -1,6 +1,8 @@
 import { useMutation } from "@tanstack/react-query"
 import { apiClient } from "../api-client"
 import { APIError, RecoverableError } from "../errors"
+import type { DatabaseData, ServerData } from "../generated"
+import type { ReadinessAiHealthReadinessGetData } from "../generated-ai"
 
 export type HealthEndpoint = "server" | "database" | "ai"
 
@@ -17,7 +19,11 @@ const HEALTH_PATHS = {
   server: "/api/v1/health/server",
   database: "/api/v1/health/database",
   ai: "/ai/health/readiness",
-} as const satisfies Record<HealthEndpoint, string>
+} as const satisfies Record<HealthEndpoint, string> & {
+  server: ServerData["url"]
+  database: DatabaseData["url"]
+  ai: ReadinessAiHealthReadinessGetData["url"]
+}
 
 const ERROR_TITLES: Record<HealthEndpoint, string> = {
   server: "Server connection failed",

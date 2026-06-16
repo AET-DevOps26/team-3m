@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom"
 import { ProtectedRoute } from "@/auth/protected-route"
 import { AppFooter } from "@/components/app-footer"
 import { AppHeader } from "@/components/app-header"
+import { RiskToleranceSetupDialog } from "@/components/risk-tolerance-setup-dialog"
 import { RouteFallback } from "@/components/route-fallback"
 
 /**
@@ -14,6 +15,7 @@ export function AppLayout() {
     <ProtectedRoute>
       <div className="flex min-h-svh flex-col">
         <AppHeader />
+        <RiskToleranceSetupDialog />
         <main className="flex-1">
           <Suspense fallback={<RouteFallback />}>
             <Outlet />

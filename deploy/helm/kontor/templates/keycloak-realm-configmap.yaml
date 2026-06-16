@@ -36,6 +36,7 @@ data:
       {{- if .Values.keycloak.realm.seedDevUser }}
       "users": [
         {
+          "id": "00000000-0000-0000-0000-000000000001",
           "username": "dev",
           "enabled": true,
           "emailVerified": true,

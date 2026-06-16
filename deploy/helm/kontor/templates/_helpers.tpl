@@ -105,6 +105,17 @@ Component-scoped resource names.
 {{- printf "%s-ai" (include "kontor.fullname" .) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
+{{/*
+Name of the Secret holding AI service credentials (LOGOS_API_KEY).
+*/}}
+{{- define "kontor.ai.secretName" -}}
+{{- if .Values.ai.existingSecret -}}
+{{- .Values.ai.existingSecret -}}
+{{- else -}}
+{{- printf "%s-ai" (include "kontor.fullname" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "kontor.keycloak.fullname" -}}
 {{- printf "%s-keycloak" (include "kontor.fullname" .) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}

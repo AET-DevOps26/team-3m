@@ -91,6 +91,12 @@ ai:
   service:
     type: ClusterIP
     port: 8000
+  # -- Logos API key (lg-… key). Stored in a Secret and injected as LOGOS_API_KEY.
+  # Required for AI features. Supply via secrets.yaml or --set.
+  logosApiKey: ""
+  # -- When set, skip creating the AI Secret and mount this existing Secret instead.
+  # Expected key: LOGOS_API_KEY.
+  existingSecret: ""
   env: {}
   resources:
     requests:

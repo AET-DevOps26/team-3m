@@ -6,6 +6,8 @@ dependencies = [
     "fastapi>=0.136",
     "uvicorn[standard]>=0.49",
     "pydantic>=2.13",
+    "openai>=2.41.1",
+    "pydantic-settings>=2.14.1",
 ]
 
 [project.scripts]

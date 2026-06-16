@@ -118,6 +118,8 @@ services:
   ai:
     build:
       context: ./ai
+    environment:
+      LOGOS_API_KEY: "${LOGOS_API_KEY:-}"
     ports:
       - "8000:8000"
     healthcheck:

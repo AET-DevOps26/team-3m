@@ -16,6 +16,10 @@ spec:
       labels:
         {{- include "kontor.labels" . | nindent 8 }}
         app.kubernetes.io/component: ai
+      {{- if or .Values.ai.logosApiKey .Values.ai.existingSecret }}
+      annotations:
+        checksum/secret: {{ include (print $.Template.BasePath "/ai-secret.yaml") . | sha256sum }}
+      {{- end }}
     spec:
       securityContext:
         {{- toYaml .Values.ai.podSecurityContext | nindent 8 }}
@@ -35,6 +39,11 @@ spec:
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
+          {{- end }}
+          {{- if or .Values.ai.logosApiKey .Values.ai.existingSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ include "kontor.ai.secretName" . }}
           {{- end }}
           readinessProbe:
             httpGet:

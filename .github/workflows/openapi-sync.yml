@@ -26,6 +26,13 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v8.2.0
+
+      - name: Install AI dependencies
+        run: uv sync --locked
+        working-directory: ai
+
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
@@ -37,9 +44,13 @@ jobs:
         run: npm ci
         working-directory: client
 
-      - name: Regenerate OpenAPI spec
+      - name: Regenerate core OpenAPI spec
         run: ./gradlew generateOpenApiDocs
         working-directory: core
+
+      - name: Regenerate AI OpenAPI spec
+        run: uv run export-openapi
+        working-directory: ai
 
       - name: Regenerate client API types
         run: npm run generate:api
@@ -47,7 +58,7 @@ jobs:
 
       - name: Check for uncommitted diff
         run: |
-          git diff --exit-code core/docs/openapi.yml client/src/network/generated || {
-            echo "Generated files are out of sync. Run ./gradlew generateOpenApiDocs in core/ and npm run generate:api in client/, then commit the results."
+          git diff --exit-code core/docs/openapi.yml ai/docs/openapi.json client/src/network/generated client/src/network/generated-ai || {
+            echo "Generated files are out of sync. Run ./gradlew generateOpenApiDocs in core/, uv run export-openapi in ai/, and npm run generate:api in client/, then commit the results."
             exit 1
           }

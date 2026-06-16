@@ -13,7 +13,7 @@
     "format": "biome format . --fix",
     "typecheck": "tsc -b --noEmit",
     "preview": "vite preview",
-    "generate:api": "openapi-ts && biome check --write --no-errors-on-unmatched src/network/generated"
+    "generate:api": "openapi-ts && openapi-ts -f openapi-ts.ai.config.ts && biome check --write --no-errors-on-unmatched src/network/generated src/network/generated-ai"
   },
   "dependencies": {
     "@fontsource-variable/roboto": "^5.2.10",

@@ -80,12 +80,10 @@ function formatTooltipDate(timestampMs: number, range: TimeRange): string {
   }).format(d)
 }
 
-const STEP_MS: Record<TimeRange, number> = {
+const STEP_MS: Record<"1D" | "1W" | "1M", number> = {
   "1D": 4 * 60 * 60 * 1000,
   "1W": 24 * 60 * 60 * 1000,
   "1M": 7 * 24 * 60 * 60 * 1000,
-  "1Y": 30 * 24 * 60 * 60 * 1000,
-  MAX: 90 * 24 * 60 * 60 * 1000,
 }
 
 function computeEquidistantTicks(
@@ -93,20 +91,37 @@ function computeEquidistantTicks(
   maxMs: number,
   range: TimeRange,
 ): number[] {
-  let stepMs = STEP_MS[range]
-
-  if (range === "MAX") {
+  // 1Y and MAX use calendar-aligned month boundaries to avoid duplicate labels
+  if (range === "1Y" || range === "MAX") {
     const durationDays = (maxMs - minMs) / (24 * 60 * 60 * 1000)
-    if (durationDays <= 30) stepMs = 7 * 24 * 60 * 60 * 1000
-    else if (durationDays <= 90) stepMs = 14 * 24 * 60 * 60 * 1000
-    else if (durationDays <= 365) stepMs = 30 * 24 * 60 * 60 * 1000
-    else stepMs = 90 * 24 * 60 * 60 * 1000
+    let stepMonths = 1
+    if (durationDays > 730) stepMonths = 6
+    else if (durationDays > 365) stepMonths = 3
+
+    const start = new Date(minMs)
+    let current = new Date(start.getFullYear(), start.getMonth() + 1, 1)
+    const ticks: number[] = []
+    while (current.getTime() <= maxMs) {
+      ticks.push(current.getTime())
+      current = new Date(
+        current.getFullYear(),
+        current.getMonth() + stepMonths,
+        1,
+      )
+    }
+    return ticks
   }
 
-  const firstTick = Math.ceil(minMs / stepMs) * stepMs
-  const ticks: number[] = []
-  for (let t = firstTick; t <= maxMs; t += stepMs) {
-    ticks.push(t)
+  const stepMs = STEP_MS[range]
+  // Prepend minMs so the first data point always has a label
+  const seen = new Set<number>([minMs])
+  const ticks: number[] = [minMs]
+  const firstEquidistantTick = Math.ceil(minMs / stepMs) * stepMs
+  for (let t = firstEquidistantTick; t <= maxMs; t += stepMs) {
+    if (!seen.has(t)) {
+      seen.add(t)
+      ticks.push(t)
+    }
   }
   return ticks
 }
@@ -215,7 +230,7 @@ function PerformanceChart({
         <Area
           type="monotone"
           dataKey="cashValue"
-          stroke="var(--color-chart-1)"
+          stroke="var(--color-muted-foreground)"
           strokeWidth={1.5}
           fill="none"
           dot={false}
@@ -228,10 +243,20 @@ function PerformanceChart({
                 const t = payload?.[0]?.payload?.t
                 return typeof t === "number" ? formatTooltipDate(t, range) : ""
               }}
-              formatter={(value, name) => [
-                formatCurrency(Number(value), currency),
-                name === "investmentValue" ? "Investments" : "Cash",
-              ]}
+              formatter={(value, name, item) => (
+                <div className="flex items-center gap-1.5 w-full">
+                  <span
+                    className="size-2 shrink-0 rounded-full"
+                    style={{ backgroundColor: item.color }}
+                  />
+                  <span className="flex-1 text-muted-foreground">
+                    {name === "investmentValue" ? "Investments" : "Cash"}
+                  </span>
+                  <span className="font-medium tabular-nums ml-4">
+                    {formatCurrency(Number(value), currency)}
+                  </span>
+                </div>
+              )}
             />
           }
         />

@@ -4,6 +4,24 @@ export type ClientOptions = {
   baseUrl: "http://localhost" | (string & {})
 }
 
+export type UpdateRiskToleranceRequest = {
+  riskTolerance: "CONSERVATIVE" | "MODERATE" | "AGGRESSIVE"
+}
+
+export type UserProfileResponse = {
+  id: string
+  email?: string
+  preferredUsername?: string
+  riskTolerance?: "CONSERVATIVE" | "MODERATE" | "AGGRESSIVE"
+}
+
+export type ApiResponseUserProfileResponse = {
+  success: boolean
+  data?: UserProfileResponse
+  error?: string | null
+  details?: Array<unknown> | null
+}
+
 export type CsvImportApiResponse = {
   success: boolean
   data?: CsvImportResult
@@ -109,6 +127,61 @@ export type TransactionPage = {
   items: Array<FinancialTransactionResponse>
   nextCursor?: TransactionCursor
 }
+
+export type GetProfileData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/api/v1/profile"
+}
+
+export type GetProfileErrors = {
+  /**
+   * Unauthorized
+   */
+  401: ApiResponseUserProfileResponse
+}
+
+export type GetProfileError = GetProfileErrors[keyof GetProfileErrors]
+
+export type GetProfileResponses = {
+  /**
+   * OK
+   */
+  200: UserProfileResponse
+}
+
+export type GetProfileResponse = GetProfileResponses[keyof GetProfileResponses]
+
+export type UpdateProfileData = {
+  body: UpdateRiskToleranceRequest
+  path?: never
+  query?: never
+  url: "/api/v1/profile"
+}
+
+export type UpdateProfileErrors = {
+  /**
+   * Invalid request body
+   */
+  400: ApiResponseUserProfileResponse
+  /**
+   * Unauthorized
+   */
+  401: ApiResponseUserProfileResponse
+}
+
+export type UpdateProfileError = UpdateProfileErrors[keyof UpdateProfileErrors]
+
+export type UpdateProfileResponses = {
+  /**
+   * OK
+   */
+  200: UserProfileResponse
+}
+
+export type UpdateProfileResponse =
+  UpdateProfileResponses[keyof UpdateProfileResponses]
 
 export type ImportCsvData = {
   body?: {

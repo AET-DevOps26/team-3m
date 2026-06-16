@@ -5,7 +5,9 @@ import { APIError } from "./errors"
 import type {
   ApiResponsePortfolioOverview,
   ApiResponsePortfolioPerformance,
+  ApiResponseUserProfileResponse,
   ListTransactionsApiResponse,
+  UpdateRiskToleranceRequest,
 } from "./generated"
 
 interface TextResponseOperation {
@@ -43,6 +45,23 @@ interface ApiPaths {
   }
   "/api/v1/portfolio/performance": {
     get: JsonGetOperation<ApiResponsePortfolioPerformance>
+  }
+  "/api/v1/profile": {
+    get: JsonGetOperation<ApiResponseUserProfileResponse>
+    put: {
+      requestBody: {
+        content: {
+          "application/json": UpdateRiskToleranceRequest
+        }
+      }
+      responses: {
+        200: {
+          content: {
+            "*/*": ApiResponseUserProfileResponse
+          }
+        }
+      }
+    }
   }
   "/api/v1/financial-transactions": {
     get: {

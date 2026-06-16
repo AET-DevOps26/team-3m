@@ -17,7 +17,7 @@ import org.springframework.test.context.ActiveProfiles;
 class SeedDataMigrationTest {
 
     private static final String DEV_USER_OIDC_SUB = "00000000-0000-0000-0000-000000000001";
-    private static final int EXPECTED_SEED_TRANSACTION_COUNT = 8;
+    private static final int EXPECTED_SEED_TRANSACTION_COUNT = 52;
 
     @Autowired
     private DSLContext dsl;
@@ -34,7 +34,7 @@ class SeedDataMigrationTest {
     }
 
     @Test
-    @DisplayName("seed profile inserts all 8 example transactions for the dev user")
+    @DisplayName("seed profile inserts all example transactions for the dev user")
     void seedProfile_insertsExampleTransactions() {
         var count = dsl.selectCount()
                 .from(FINANCIAL_TRANSACTION)

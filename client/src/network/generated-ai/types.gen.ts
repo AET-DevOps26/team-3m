@@ -4,6 +4,114 @@ export type ClientOptions = {
   baseUrl: `${string}://${string}` | (string & {})
 }
 
+/**
+ * HTTPValidationError
+ */
+export type HttpValidationError = {
+  /**
+   * Detail
+   */
+  detail?: Array<ValidationError>
+}
+
+/**
+ * PortfolioHoldingInput
+ */
+export type PortfolioHoldingInput = {
+  /**
+   * Symbol
+   */
+  symbol: string
+  /**
+   * Name
+   */
+  name: string
+  /**
+   * Asset Class
+   */
+  asset_class: string
+  /**
+   * Shares
+   */
+  shares: number
+  /**
+   * Current Value
+   */
+  current_value: number
+  /**
+   * Currency
+   */
+  currency: string
+}
+
+/**
+ * PortfolioInput
+ */
+export type PortfolioInput = {
+  /**
+   * Holdings
+   */
+  holdings: Array<PortfolioHoldingInput>
+  /**
+   * Cash Balance
+   */
+  cash_balance: number
+  /**
+   * Total Value
+   */
+  total_value: number
+  /**
+   * Currency
+   */
+  currency: string
+}
+
+/**
+ * RecommendationResponse
+ */
+export type RecommendationResponse = {
+  /**
+   * Recommendation
+   */
+  recommendation: string
+  /**
+   * Rationale
+   */
+  rationale: string
+  /**
+   * Disclaimer
+   */
+  disclaimer: string
+}
+
+/**
+ * ValidationError
+ */
+export type ValidationError = {
+  /**
+   * Location
+   */
+  loc: Array<string | number>
+  /**
+   * Message
+   */
+  msg: string
+  /**
+   * Error Type
+   */
+  type: string
+  /**
+   * Input
+   */
+  input?: unknown
+  /**
+   * Context
+   */
+  ctx?: {
+    [key: string]: unknown
+  }
+}
+
 export type LivenessAiHealthLivenessGetData = {
   body?: never
   path?: never
@@ -37,3 +145,30 @@ export type ReadinessAiHealthReadinessGetResponses = {
 
 export type ReadinessAiHealthReadinessGetResponse =
   ReadinessAiHealthReadinessGetResponses[keyof ReadinessAiHealthReadinessGetResponses]
+
+export type GenerateRecommendationAiAdvisorRecommendationPostData = {
+  body: PortfolioInput
+  path?: never
+  query?: never
+  url: "/ai/advisor/recommendation"
+}
+
+export type GenerateRecommendationAiAdvisorRecommendationPostErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError
+}
+
+export type GenerateRecommendationAiAdvisorRecommendationPostError =
+  GenerateRecommendationAiAdvisorRecommendationPostErrors[keyof GenerateRecommendationAiAdvisorRecommendationPostErrors]
+
+export type GenerateRecommendationAiAdvisorRecommendationPostResponses = {
+  /**
+   * Successful Response
+   */
+  200: RecommendationResponse
+}
+
+export type GenerateRecommendationAiAdvisorRecommendationPostResponse =
+  GenerateRecommendationAiAdvisorRecommendationPostResponses[keyof GenerateRecommendationAiAdvisorRecommendationPostResponses]

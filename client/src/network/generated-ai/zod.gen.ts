@@ -3,6 +3,55 @@
 import * as z from "zod"
 
 /**
+ * PortfolioHoldingInput
+ */
+export const portfolioHoldingInputSchema = z.object({
+  symbol: z.string(),
+  name: z.string(),
+  asset_class: z.string(),
+  shares: z.number(),
+  current_value: z.number(),
+  currency: z.string(),
+})
+
+/**
+ * PortfolioInput
+ */
+export const portfolioInputSchema = z.object({
+  holdings: z.array(portfolioHoldingInputSchema),
+  cash_balance: z.number(),
+  total_value: z.number(),
+  currency: z.string(),
+})
+
+/**
+ * RecommendationResponse
+ */
+export const recommendationResponseSchema = z.object({
+  recommendation: z.string(),
+  rationale: z.string(),
+  disclaimer: z.string(),
+})
+
+/**
+ * ValidationError
+ */
+export const validationErrorSchema = z.object({
+  loc: z.array(z.union([z.string(), z.int()])),
+  msg: z.string(),
+  type: z.string(),
+  input: z.unknown().optional(),
+  ctx: z.record(z.string(), z.unknown()).optional(),
+})
+
+/**
+ * HTTPValidationError
+ */
+export const httpValidationErrorSchema = z.object({
+  detail: z.array(validationErrorSchema).optional(),
+})
+
+/**
  * Successful Response
  */
 export const livenessAiHealthLivenessGetResponseSchema = z.string()
@@ -11,3 +60,12 @@ export const livenessAiHealthLivenessGetResponseSchema = z.string()
  * Successful Response
  */
 export const readinessAiHealthReadinessGetResponseSchema = z.string()
+
+export const zGenerateRecommendationAiAdvisorRecommendationPostBody =
+  portfolioInputSchema
+
+/**
+ * Successful Response
+ */
+export const generateRecommendationAiAdvisorRecommendationPostResponseSchema =
+  recommendationResponseSchema

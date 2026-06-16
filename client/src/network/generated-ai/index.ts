@@ -2,10 +2,20 @@
 
 export type {
   ClientOptions,
+  GenerateRecommendationAiAdvisorRecommendationPostData,
+  GenerateRecommendationAiAdvisorRecommendationPostError,
+  GenerateRecommendationAiAdvisorRecommendationPostErrors,
+  GenerateRecommendationAiAdvisorRecommendationPostResponse,
+  GenerateRecommendationAiAdvisorRecommendationPostResponses,
+  HttpValidationError,
   LivenessAiHealthLivenessGetData,
   LivenessAiHealthLivenessGetResponse,
   LivenessAiHealthLivenessGetResponses,
+  PortfolioHoldingInput,
+  PortfolioInput,
   ReadinessAiHealthReadinessGetData,
   ReadinessAiHealthReadinessGetResponse,
   ReadinessAiHealthReadinessGetResponses,
+  RecommendationResponse,
+  ValidationError,
 } from "./types.gen"

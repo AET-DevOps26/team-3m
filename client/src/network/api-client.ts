@@ -9,7 +9,12 @@ import type {
   ListTransactionsApiResponse,
   ServerResponse,
 } from "./generated"
-import type { ReadinessAiHealthReadinessGetResponse } from "./generated-ai"
+import type {
+  GenerateRecommendationAiAdvisorRecommendationPostData,
+  GenerateRecommendationAiAdvisorRecommendationPostError,
+  GenerateRecommendationAiAdvisorRecommendationPostResponse,
+  ReadinessAiHealthReadinessGetResponse,
+} from "./generated-ai"
 
 interface TextResponseOperation<T = string> {
   responses: {
@@ -31,6 +36,26 @@ interface JsonGetOperation<T> {
   }
 }
 
+interface JsonPostOperation<TBody, TResponse, TError = never> {
+  requestBody: {
+    content: {
+      "application/json": TBody
+    }
+  }
+  responses: {
+    200: {
+      content: {
+        "application/json": TResponse
+      }
+    }
+    422: {
+      content: {
+        "application/json": TError
+      }
+    }
+  }
+}
+
 interface ApiPaths {
   "/api/v1/health/server": {
     get: TextResponseOperation<ServerResponse>
@@ -40,6 +65,13 @@ interface ApiPaths {
   }
   "/ai/health/readiness": {
     get: TextResponseOperation<ReadinessAiHealthReadinessGetResponse>
+  }
+  "/ai/advisor/recommendation": {
+    post: JsonPostOperation<
+      GenerateRecommendationAiAdvisorRecommendationPostData["body"],
+      GenerateRecommendationAiAdvisorRecommendationPostResponse,
+      GenerateRecommendationAiAdvisorRecommendationPostError
+    >
   }
   "/api/v1/portfolio/overview": {
     get: JsonGetOperation<ApiResponsePortfolioOverview>
@@ -173,6 +205,17 @@ function safeParse(text: string): unknown {
 
 function extractErrorMessage(data: unknown, response: Response): string {
   if (typeof data === "object" && data !== null) {
+    // FastAPI validation errors: { detail: string | Array<{msg, loc, ...}> }
+    const detail = (data as { detail?: unknown }).detail
+    if (typeof detail === "string" && detail.length > 0) return detail
+    if (Array.isArray(detail) && detail.length > 0) {
+      const first = detail[0]
+      if (typeof first === "object" && first !== null) {
+        const msg = (first as { msg?: unknown }).msg
+        if (typeof msg === "string" && msg.length > 0) return msg
+      }
+    }
+
     const message =
       (data as { error?: unknown }).error ??
       (data as { message?: unknown }).message

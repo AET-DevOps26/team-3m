@@ -3,6 +3,7 @@ import { Component, type ReactNode, Suspense } from "react"
 import { Link } from "react-router-dom"
 import { HoldingsTable } from "@/components/portfolio/portfolio-holdings-table"
 import { PerformanceCard } from "@/components/portfolio/portfolio-performance-card"
+import { PortfolioRecommendation } from "@/components/portfolio/portfolio-recommendation"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -173,6 +174,8 @@ function PortfolioContent() {
           <HoldingsTable holdings={overview.holdings ?? []} />
         </CardContent>
       </Card>
+
+      <PortfolioRecommendation overview={overview} />
     </div>
   )
 }

@@ -15,8 +15,17 @@ import {
   TransactionRowSkeleton,
 } from "./transaction-row"
 
-export function TransactionsOverviewBlock() {
-  const [filters, setFilters] = useState<Filters>(INITIAL_FILTERS)
+interface TransactionsOverviewBlockProps {
+  initialFilters?: Partial<Filters>
+}
+
+export function TransactionsOverviewBlock({
+  initialFilters,
+}: TransactionsOverviewBlockProps = {}) {
+  const [filters, setFilters] = useState<Filters>({
+    ...INITIAL_FILTERS,
+    ...initialFilters,
+  })
   const debouncedSearch = useDebounce(filters.search, 300)
   const apiFilters = { ...filters, search: debouncedSearch }
 

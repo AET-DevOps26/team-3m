@@ -38,7 +38,7 @@ class CurrentUserServiceTest {
     @DisplayName("resolve upserts the local app_user when it is missing")
     void resolve_missingUser_upsertsUser() {
         var jwt = jwt(SUB, Map.of("email", "alice@example.com", "preferred_username", "alice"));
-        var expected = new AppUser(UUID.randomUUID(), SUB, "alice@example.com", "alice");
+        var expected = new AppUser(UUID.randomUUID(), SUB, "alice@example.com", "alice", null);
         when(repository.findByOidcSub(SUB)).thenReturn(Optional.empty());
         when(repository.upsert(eq(SUB), eq("alice@example.com"), eq("alice"))).thenReturn(expected);
 
@@ -53,7 +53,7 @@ class CurrentUserServiceTest {
     @DisplayName("resolve returns existing app_user when claims are unchanged")
     void resolve_existingUserWithSameClaims_returnsExistingUser() {
         var jwt = jwt(SUB, Map.of("email", "alice@example.com", "preferred_username", "alice"));
-        var expected = new AppUser(UUID.randomUUID(), SUB, "alice@example.com", "alice");
+        var expected = new AppUser(UUID.randomUUID(), SUB, "alice@example.com", "alice", null);
         when(repository.findByOidcSub(SUB)).thenReturn(Optional.of(expected));
 
         var result = service.resolve(jwt);
@@ -67,8 +67,8 @@ class CurrentUserServiceTest {
     @DisplayName("resolve upserts existing app_user when claims change")
     void resolve_existingUserWithChangedClaims_upsertsUser() {
         var jwt = jwt(SUB, Map.of("email", "alice.changed@example.com", "preferred_username", "alice"));
-        var existing = new AppUser(UUID.randomUUID(), SUB, "alice@example.com", "alice");
-        var expected = new AppUser(existing.id(), SUB, "alice.changed@example.com", "alice");
+        var existing = new AppUser(UUID.randomUUID(), SUB, "alice@example.com", "alice", null);
+        var expected = new AppUser(existing.id(), SUB, "alice.changed@example.com", "alice", null);
         when(repository.findByOidcSub(SUB)).thenReturn(Optional.of(existing));
         when(repository.upsert(eq(SUB), eq("alice.changed@example.com"), eq("alice")))
                 .thenReturn(expected);
@@ -104,7 +104,7 @@ class CurrentUserServiceTest {
     @DisplayName("resolve passes null email when claim is absent")
     void resolve_missingEmail_passesNullToRepository() {
         var jwt = jwt(SUB, Map.of("preferred_username", "alice"));
-        var expected = new AppUser(UUID.randomUUID(), SUB, null, "alice");
+        var expected = new AppUser(UUID.randomUUID(), SUB, null, "alice", null);
         when(repository.findByOidcSub(SUB)).thenReturn(Optional.empty());
         when(repository.upsert(eq(SUB), eq(null), eq("alice"))).thenReturn(expected);
 

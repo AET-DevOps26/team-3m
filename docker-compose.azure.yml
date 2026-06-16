@@ -138,8 +138,6 @@ services:
       VITE_API_BASE_URL: "https://${DOMAIN}"
       VITE_OIDC_AUTHORITY: "https://${KEYCLOAK_DOMAIN:-auth.${DOMAIN}}/realms/kontor"
       VITE_OIDC_CLIENT_ID: "kontor-spa"
-      VITE_OIDC_REDIRECT_URI: "https://${DOMAIN}/auth/callback"
-      VITE_OIDC_POST_LOGOUT_REDIRECT_URI: "https://${DOMAIN}/"
       VITE_OIDC_AUDIENCE: "kontor-api"
     labels:
       - "traefik.enable=true"
@@ -156,7 +154,7 @@ services:
     restart: unless-stopped
 
   ai:
-    image: ghcr.io/aet-devops26/team-3m/kontor-ai:latest
+    image: ghcr.io/aet-devops26/team-3m/kontor-ai:${KONTOR_AI_IMAGE_TAG:-latest}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.ai.rule=Host(`${DOMAIN}`) && PathPrefix(`/ai`)"

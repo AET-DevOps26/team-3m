@@ -140,17 +140,6 @@ const authMiddleware: Middleware = {
 const httpErrorMiddleware: Middleware = {
   async onResponse({ response }) {
     if (response.ok) return
-    if (response.status === 401) {
-      triggerSigninRedirect()
-      const text = await response.clone().text()
-      const body = safeParse(text)
-      throw new APIError({
-        code: "unauthenticated",
-        status: 401,
-        message: extractErrorMessage(body, response),
-        details: body,
-      })
-    }
     const text = await response.clone().text()
     const body = safeParse(text)
     if (response.status === 401) {

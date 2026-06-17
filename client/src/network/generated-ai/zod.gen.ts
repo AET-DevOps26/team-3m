@@ -9,8 +9,8 @@ export const portfolioHoldingInputSchema = z.object({
   symbol: z.string(),
   name: z.string(),
   asset_class: z.string(),
-  shares: z.number(),
-  current_value: z.number(),
+  shares: z.number().gte(0),
+  current_value: z.number().gte(0),
   currency: z.string(),
 })
 
@@ -22,7 +22,7 @@ export const portfolioInputSchema = z.object({
   cash_balance: z.number(),
   total_value: z.number(),
   currency: z.string(),
-  risk_tolerance: z.string().nullish(),
+  risk_tolerance: z.enum(["CONSERVATIVE", "MODERATE", "AGGRESSIVE"]).nullish(),
 })
 
 /**

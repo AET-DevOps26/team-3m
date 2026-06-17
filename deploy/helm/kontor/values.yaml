@@ -98,6 +98,20 @@ ai:
   # Expected key: LOGOS_API_KEY.
   existingSecret: ""
   env: {}
+  # -- Per-path protection for the /ai ingress (the AI service calls a paid LLM
+  # backend). Rendered as nginx-ingress annotations on a dedicated /ai Ingress so
+  # the limits do not affect the SPA (/) or core (/api). Set rateLimit.enabled
+  # false to drop the rate-limit annotations.
+  ingress:
+    rateLimit:
+      enabled: true
+      # -- Requests per minute per client IP.
+      rpm: 60
+      # -- Concurrent connections per client IP.
+      connections: 10
+    # -- Max request body accepted on /ai. Recommendation payloads are small JSON;
+    # keep this well below the global ingress limit.
+    proxyBodySize: 1m
   resources:
     requests:
       cpu: 100m

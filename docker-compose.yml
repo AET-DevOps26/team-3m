@@ -1,3 +1,8 @@
+x-keycloak-oidc-env: &keycloak-oidc-env
+  KEYCLOAK_ISSUER: "http://localhost:${KEYCLOAK_PORT:-8081}/realms/kontor"
+  KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/realms/kontor/protocol/openid-connect/certs"
+  KEYCLOAK_AUDIENCE: "${KEYCLOAK_AUDIENCE:-kontor-api}"
+
 services:
   db:
     image: pgvector/pgvector:pg18-trixie
@@ -83,14 +88,12 @@ services:
       keycloak:
         condition: service_healthy
     environment:
+      <<: *keycloak-oidc-env
       POSTGRES_HOST: db
       POSTGRES_PORT: "5432"
       POSTGRES_DB: "${POSTGRES_DB:-team3m}"
       POSTGRES_USER: "${POSTGRES_USER:-team3m}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-change-me-local}"
-      KEYCLOAK_ISSUER: "http://localhost:${KEYCLOAK_PORT:-8081}/realms/kontor"
-      KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/realms/kontor/protocol/openid-connect/certs"
-      KEYCLOAK_AUDIENCE: "${KEYCLOAK_AUDIENCE:-kontor-api}"
     ports:
       - "8080:8080"
     healthcheck:
@@ -119,6 +122,7 @@ services:
     build:
       context: ./ai
     environment:
+      <<: *keycloak-oidc-env
       LOGOS_API_KEY: "${LOGOS_API_KEY:-}"
     ports:
       - "8000:8000"

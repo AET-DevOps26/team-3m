@@ -19,7 +19,7 @@
 
 The repository includes a root `.env.example` and a local `.env` with the default compose values. Update `.env` if you want to change the Postgres credentials, Keycloak database credentials, or shared local Keycloak dev-user password.
 
-The AI service requires a **Logos API key** (`LOGOS_API_KEY=lg-…`) in `.env`. Obtain the key from your tutor. The Logos endpoint is only reachable from the TUM network or via eduVPN — the AI service will start without the key, but recommendation calls will fail.
+The AI service requires a **Logos API key** (`LOGOS_API_KEY=lg-…`) in `.env`. The Logos endpoint is only reachable from the TUM network or via eduVPN — the AI service will start without the key, but recommendation calls will fail.
 
 The Compose Keycloak service is for local development only. It builds the custom Keycloak image from `infra/keycloak/theme/` (Keycloak with the Kontor login theme baked in), runs `start-dev`, imports `infra/keycloak/realms/kontor-realm.json`, and stores Keycloak state in the `keycloak_postgres_data` Docker volume. The realm import is skipped once the realm already exists, so delete that volume if you need to re-apply the import from scratch. The first `docker compose up --build` builds the theme image (Node + Maven), which takes a few minutes; subsequent runs use the cached layer.
 

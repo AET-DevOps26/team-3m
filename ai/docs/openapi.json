@@ -82,7 +82,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     }
   },
@@ -117,10 +122,12 @@
           },
           "shares": {
             "type": "number",
+            "minimum": 0.0,
             "title": "Shares"
           },
           "current_value": {
             "type": "number",
+            "minimum": 0.0,
             "title": "Current Value"
           },
           "currency": {
@@ -163,7 +170,12 @@
           "risk_tolerance": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "enum": [
+                  "CONSERVATIVE",
+                  "MODERATE",
+                  "AGGRESSIVE"
+                ]
               },
               {
                 "type": "null"
@@ -243,6 +255,12 @@
           "type"
         ],
         "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
       }
     }
   }

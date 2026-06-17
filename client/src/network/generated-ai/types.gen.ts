@@ -67,7 +67,7 @@ export type PortfolioInput = {
   /**
    * Risk Tolerance
    */
-  risk_tolerance?: string | null
+  risk_tolerance?: "CONSERVATIVE" | "MODERATE" | "AGGRESSIVE" | null
 }
 
 /**

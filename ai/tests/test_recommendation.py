@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from advisor.auth import require_authenticated_user
 from advisor.config import Settings, get_settings
 from advisor.main import app
 from advisor.recommendation import LLMRecommendation
@@ -34,17 +35,30 @@ def transport() -> ASGITransport:
 
 
 @pytest.fixture
-def settings_with_key() -> Generator[None]:
+def authenticated() -> Generator[None]:
+    app.dependency_overrides[require_authenticated_user] = lambda: "test-user"
+    yield
+    app.dependency_overrides.pop(require_authenticated_user, None)
+
+
+@pytest.fixture
+def settings_with_key(authenticated: None) -> Generator[None]:
     app.dependency_overrides[get_settings] = lambda: Settings(logos_api_key="lg-test")
     yield
     app.dependency_overrides.pop(get_settings, None)
 
 
 @pytest.fixture
-def settings_without_key() -> Generator[None]:
+def settings_without_key(authenticated: None) -> Generator[None]:
     app.dependency_overrides[get_settings] = lambda: Settings(logos_api_key="")
     yield
     app.dependency_overrides.pop(get_settings, None)
+
+
+async def test_recommendation_requires_authentication(transport: ASGITransport) -> None:
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.post("/ai/advisor/recommendation", json=SAMPLE_PORTFOLIO)
+    assert response.status_code == 401
 
 
 async def test_recommendation_returns_503_when_no_api_key(transport: ASGITransport, settings_without_key: None) -> None:
@@ -154,6 +168,55 @@ async def test_recommendation_prompt_omits_risk_tolerance_when_absent(
     user_msg = next((m for m in captured if m["role"] == "user"), None)
     assert user_msg is not None
     assert "risk tolerance" not in user_msg["content"].lower()
+
+
+async def test_recommendation_returns_502_when_client_raises(transport: ASGITransport, settings_with_key: None) -> None:
+    with patch("advisor.recommendation.make_logos_client") as mock_factory:
+        mock_logos = AsyncMock()
+        mock_logos.chat.completions.create = AsyncMock(side_effect=RuntimeError("upstream exploded"))
+        mock_factory.return_value = mock_logos
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.post("/ai/advisor/recommendation", json=SAMPLE_PORTFOLIO)
+
+    assert response.status_code == 502
+    assert "upstream exploded" not in response.text
+
+
+async def test_recommendation_returns_502_when_content_empty(transport: ASGITransport, settings_with_key: None) -> None:
+    empty_response = MagicMock()
+    empty_response.choices = []
+
+    with patch("advisor.recommendation.make_logos_client") as mock_factory:
+        mock_logos = AsyncMock()
+        mock_logos.chat.completions.create = AsyncMock(return_value=empty_response)
+        mock_factory.return_value = mock_logos
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.post("/ai/advisor/recommendation", json=SAMPLE_PORTFOLIO)
+
+    assert response.status_code == 502
+
+
+async def test_recommendation_returns_502_when_unparsable(transport: ASGITransport, settings_with_key: None) -> None:
+    garbage_response = MagicMock()
+    garbage_response.choices[0].message.content = "not valid json"
+
+    with patch("advisor.recommendation.make_logos_client") as mock_factory:
+        mock_logos = AsyncMock()
+        mock_logos.chat.completions.create = AsyncMock(return_value=garbage_response)
+        mock_factory.return_value = mock_logos
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.post("/ai/advisor/recommendation", json=SAMPLE_PORTFOLIO)
+
+    assert response.status_code == 502
+
+
+async def test_recommendation_rejects_invalid_risk_tolerance(transport: ASGITransport, settings_with_key: None) -> None:
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.post(
+            "/ai/advisor/recommendation",
+            json={**SAMPLE_PORTFOLIO, "risk_tolerance": "YOLO"},
+        )
+    assert response.status_code == 422
 
 
 def _make_chat_response(llm: LLMRecommendation) -> MagicMock:

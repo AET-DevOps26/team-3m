@@ -11,7 +11,7 @@
 
 INSERT INTO app_user (id, oidc_sub, email, preferred_username)
 VALUES (
-    '11111111-1111-1111-1111-1111111111de',
+    '11111111-1111-4111-8111-1111111111de',
     '00000000-0000-0000-0000-0000000000de',
     'dev@kontor.local',
     'dev'

@@ -4,7 +4,8 @@ from typing import Annotated
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jwt import InvalidTokenError, PyJWKClient
+from jwt import PyJWKClient
+from jwt.exceptions import InvalidTokenError, PyJWKClientConnectionError
 
 from .config import Settings, get_settings
 
@@ -37,6 +38,11 @@ async def require_authenticated_user(
             audience=settings.keycloak_audience,
             issuer=settings.keycloak_issuer,
         )
+    except PyJWKClientConnectionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Authentication backend is unavailable",
+        ) from exc
     except InvalidTokenError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

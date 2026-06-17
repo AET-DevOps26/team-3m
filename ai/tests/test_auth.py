@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi import HTTPException
 from fastapi.security import HTTPAuthorizationCredentials
-from jwt import InvalidTokenError
+from jwt.exceptions import InvalidTokenError
 
 from advisor.auth import require_authenticated_user
 from advisor.config import Settings

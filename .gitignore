@@ -27,3 +27,4 @@ playwright-report/
 blob-report/
 playwright/.cache/
 .playwright-mcp/
+client/e2e/.auth/

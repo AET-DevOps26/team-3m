@@ -86,6 +86,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiResponse"
+      security:
+      - bearerAuth: []
   /api/v1/portfolio/performance:
     get:
       tags:
@@ -174,6 +176,33 @@ paths:
         schema:
           type: string
           format: uuid
+      - name: search
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: category
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: type
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: dateFrom
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: dateTo
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
       responses:
         "200":
           description: Transaction page
@@ -187,6 +216,28 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiResponse"
+      security:
+      - bearerAuth: []
+  /api/v1/financial-transactions/metadata:
+    get:
+      tags:
+      - financial-transaction-controller
+      operationId: getMetadata
+      responses:
+        "200":
+          description: Distinct categories and types for the authenticated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransactionMetadataApiResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransactionMetadataApiResponse"
+      security:
+      - bearerAuth: []
 components:
   schemas:
     UpdateRiskToleranceRequest:
@@ -512,6 +563,35 @@ components:
           - {}
       required:
       - items
+    TransactionMetadata:
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            type: string
+        types:
+          type: array
+          items:
+            type: string
+    TransactionMetadataApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/TransactionMetadata"
+        error:
+          type:
+          - string
+          - "null"
+        details:
+          type:
+          - array
+          - "null"
+          items: {}
+      required:
+      - success
   securitySchemes:
     bearerAuth:
       type: http

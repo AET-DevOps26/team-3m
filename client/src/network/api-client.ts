@@ -7,6 +7,7 @@ import type {
   ApiResponsePortfolioPerformance,
   ApiResponseUserProfileResponse,
   ListTransactionsApiResponse,
+  TransactionMetadataApiResponse,
   UpdateRiskToleranceRequest,
 } from "./generated"
 
@@ -70,6 +71,11 @@ interface ApiPaths {
           pageSize?: number
           afterDatetime?: string
           afterId?: string
+          search?: string
+          category?: string
+          type?: string
+          dateFrom?: string
+          dateTo?: string
         }
       }
       responses: {
@@ -80,6 +86,9 @@ interface ApiPaths {
         }
       }
     }
+  }
+  "/api/v1/financial-transactions/metadata": {
+    get: JsonGetOperation<TransactionMetadataApiResponse>
   }
 }
 

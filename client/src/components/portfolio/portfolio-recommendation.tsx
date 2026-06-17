@@ -44,9 +44,9 @@ export function PortfolioRecommendation({
             size="sm"
           >
             {isPending ? (
-              <Loader2 className="mr-2 size-4 animate-spin" />
+              <Loader2 className="size-4 animate-spin" />
             ) : (
-              <Sparkles className="mr-2 size-4" />
+              <Sparkles className="size-4" />
             )}
             {isPending ? "Generating…" : data ? "Regenerate" : "Generate"}
           </Button>

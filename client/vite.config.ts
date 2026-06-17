@@ -7,6 +7,12 @@ import packageJson from "./package.json"
 
 // https://vite.dev/config/
 export default defineConfig({
+  server: {
+    proxy: {
+      "/api": "http://localhost:8080",
+      "/ai": "http://localhost:8000",
+    },
+  },
   define: {
     __APP_VERSION__: JSON.stringify(packageJson.version),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),

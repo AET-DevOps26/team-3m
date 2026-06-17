@@ -1,0 +1,94 @@
+import { useMutation } from "@tanstack/react-query"
+import { apiClient } from "../api-client"
+import { APIError } from "../errors"
+import type {
+  PortfolioHolding,
+  PortfolioOverview,
+} from "../generated/types.gen"
+import type {
+  PortfolioHoldingInput,
+  PortfolioInput,
+  RecommendationResponse,
+} from "../generated-ai/types.gen"
+import type { RiskTolerance } from "./profile"
+
+export type { RecommendationResponse }
+
+interface GenerateRecommendationParams {
+  overview: PortfolioOverview
+  riskTolerance: RiskTolerance | null | undefined
+}
+
+function isHoldingUsable(h: PortfolioHolding): h is PortfolioHolding & {
+  symbol: string
+  name: string
+  shares: number
+  currentValue: number
+} {
+  return (
+    typeof h.symbol === "string" &&
+    h.symbol.trim().length > 0 &&
+    typeof h.name === "string" &&
+    h.name.trim().length > 0 &&
+    typeof h.shares === "number" &&
+    Number.isFinite(h.shares) &&
+    typeof h.currentValue === "number" &&
+    Number.isFinite(h.currentValue)
+  )
+}
+
+function toHoldingInput(
+  h: PortfolioHolding & {
+    symbol: string
+    name: string
+    shares: number
+    currentValue: number
+  },
+  fallbackCurrency: string,
+): PortfolioHoldingInput {
+  return {
+    symbol: h.symbol,
+    name: h.name,
+    asset_class: h.assetClass ?? "",
+    shares: h.shares,
+    current_value: h.currentValue,
+    currency: h.currency ?? fallbackCurrency,
+  }
+}
+
+function toPortfolioInput(
+  overview: PortfolioOverview,
+  riskTolerance: RiskTolerance | null | undefined,
+): PortfolioInput {
+  const currency = overview.currency ?? ""
+  return {
+    holdings: (overview.holdings ?? [])
+      .filter(isHoldingUsable)
+      .map((h) => toHoldingInput(h, currency)),
+    cash_balance: overview.cashBalance ?? 0,
+    total_value: overview.totalValue ?? 0,
+    currency,
+    risk_tolerance: riskTolerance ?? null,
+  }
+}
+
+export function useGenerateRecommendation() {
+  return useMutation<
+    RecommendationResponse,
+    APIError,
+    GenerateRecommendationParams
+  >({
+    mutationFn: async ({ overview, riskTolerance }) => {
+      const { data } = await apiClient.POST("/ai/advisor/recommendation", {
+        body: toPortfolioInput(overview, riskTolerance),
+      })
+      if (!data) {
+        throw new APIError({
+          code: "parse",
+          message: "AI service returned an empty recommendation",
+        })
+      }
+      return data
+    },
+  })
+}

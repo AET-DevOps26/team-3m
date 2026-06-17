@@ -10,6 +10,11 @@ import type {
   TransactionMetadataApiResponse,
   UpdateRiskToleranceRequest,
 } from "./generated"
+import type {
+  GenerateRecommendationAiAdvisorRecommendationPostData,
+  GenerateRecommendationAiAdvisorRecommendationPostError,
+  GenerateRecommendationAiAdvisorRecommendationPostResponse,
+} from "./generated-ai"
 
 interface JsonGetOperation<T> {
   responses: {
@@ -21,7 +26,34 @@ interface JsonGetOperation<T> {
   }
 }
 
+interface JsonPostOperation<TBody, TResponse, TError = never> {
+  requestBody: {
+    content: {
+      "application/json": TBody
+    }
+  }
+  responses: {
+    200: {
+      content: {
+        "application/json": TResponse
+      }
+    }
+    422: {
+      content: {
+        "application/json": TError
+      }
+    }
+  }
+}
+
 interface ApiPaths {
+  "/ai/advisor/recommendation": {
+    post: JsonPostOperation<
+      GenerateRecommendationAiAdvisorRecommendationPostData["body"],
+      GenerateRecommendationAiAdvisorRecommendationPostResponse,
+      GenerateRecommendationAiAdvisorRecommendationPostError
+    >
+  }
   "/api/v1/portfolio/overview": {
     get: JsonGetOperation<ApiResponsePortfolioOverview>
   }
@@ -108,17 +140,6 @@ const authMiddleware: Middleware = {
 const httpErrorMiddleware: Middleware = {
   async onResponse({ response }) {
     if (response.ok) return
-    if (response.status === 401) {
-      triggerSigninRedirect()
-      const text = await response.clone().text()
-      const body = safeParse(text)
-      throw new APIError({
-        code: "unauthenticated",
-        status: 401,
-        message: extractErrorMessage(body, response),
-        details: body,
-      })
-    }
     const text = await response.clone().text()
     const body = safeParse(text)
     if (response.status === 401) {
@@ -179,6 +200,17 @@ function safeParse(text: string): unknown {
 
 function extractErrorMessage(data: unknown, response: Response): string {
   if (typeof data === "object" && data !== null) {
+    // FastAPI validation errors: { detail: string | Array<{msg, loc, ...}> }
+    const detail = (data as { detail?: unknown }).detail
+    if (typeof detail === "string" && detail.length > 0) return detail
+    if (Array.isArray(detail) && detail.length > 0) {
+      const first = detail[0]
+      if (typeof first === "object" && first !== null) {
+        const msg = (first as { msg?: unknown }).msg
+        if (typeof msg === "string" && msg.length > 0) return msg
+      }
+    }
+
     const message =
       (data as { error?: unknown }).error ??
       (data as { message?: unknown }).message

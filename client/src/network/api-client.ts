@@ -11,16 +11,6 @@ import type {
   UpdateRiskToleranceRequest,
 } from "./generated"
 
-interface TextResponseOperation {
-  responses: {
-    200: {
-      content: {
-        "*/*": string
-      }
-    }
-  }
-}
-
 interface JsonGetOperation<T> {
   responses: {
     200: {
@@ -32,15 +22,6 @@ interface JsonGetOperation<T> {
 }
 
 interface ApiPaths {
-  "/api/v1/health/server": {
-    get: TextResponseOperation
-  }
-  "/api/v1/health/database": {
-    get: TextResponseOperation
-  }
-  "/ai/health/readiness": {
-    get: TextResponseOperation
-  }
   "/api/v1/portfolio/overview": {
     get: JsonGetOperation<ApiResponsePortfolioOverview>
   }

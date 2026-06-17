@@ -1,0 +1,45 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Kontor AI",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/ai/health/liveness": {
+      "get": {
+        "summary": "Liveness",
+        "operationId": "liveness_ai_health_liveness_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ai/health/readiness": {
+      "get": {
+        "summary": "Readiness",
+        "operationId": "readiness_ai_health_readiness_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -54,15 +54,21 @@ Each microservice lives in its own directory with a Gradle wrapper.
 | Format fix | `uv run ruff format .` |
 | Lint | `uv run ruff check .` |
 | Lint (autofix) | `uv run ruff check --fix .` |
+| Regenerate OpenAPI spec | `uv run export-openapi` |
 
 ## OpenAPI
 
-The TypeScript client (`client/src/network/generated/`) is generated from the
-server's OpenAPI spec (`core/docs/openapi.yml`), which is itself generated from
-the annotated controllers. After changing any controller or its request/response
-DTOs, regenerate both — `./gradlew generateOpenApiDocs` (core) then
-`npm run generate:api` (client) — and commit the result. CI's `openapi-sync`
-workflow fails if the committed files are out of sync.
+The TypeScript client is generated from each backend's OpenAPI spec:
+
+- **Core** (`client/src/network/generated/`) ← `core/docs/openapi.yml`, generated
+  from the annotated Spring controllers via `./gradlew generateOpenApiDocs` (core).
+- **AI** (`client/src/network/generated-ai/`) ← `ai/docs/openapi.json`, generated
+  from the FastAPI app via `uv run export-openapi` (ai).
+
+After changing any controller/route or its request/response DTOs, regenerate the
+relevant spec, then run `npm run generate:api` (client) — which regenerates both
+client outputs — and commit the result. CI's `openapi-sync` workflow fails if the
+committed files are out of sync.
 
 ## Deployment
 

@@ -8,6 +8,9 @@ dependencies = [
     "pydantic>=2.13",
 ]
 
+[project.scripts]
+export-openapi = "advisor.openapi:main"
+
 [dependency-groups]
 ci = [
     "httpx>=0.28",
@@ -23,6 +26,9 @@ dev = [
 [build-system]
 requires = ["uv_build>=0.7"]
 build-backend = "uv_build"
+
+[tool.uv]
+exclude-newer = "7 days"
 
 [tool.uv.build-backend]
 module-name = "advisor"

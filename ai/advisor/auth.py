@@ -5,7 +5,7 @@ import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import PyJWKClient
-from jwt.exceptions import InvalidTokenError, PyJWKClientConnectionError
+from jwt.exceptions import InvalidTokenError, PyJWKClientConnectionError, PyJWKClientError
 
 from .config import Settings, get_settings
 
@@ -42,6 +42,12 @@ async def require_authenticated_user(
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Authentication backend is unavailable",
+        ) from exc
+    except PyJWKClientError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+            headers=_UNAUTHENTICATED_HEADERS,
         ) from exc
     except InvalidTokenError as exc:
         raise HTTPException(

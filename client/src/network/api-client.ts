@@ -6,27 +6,15 @@ import type {
   ApiResponsePortfolioOverview,
   ApiResponsePortfolioPerformance,
   ApiResponseUserProfileResponse,
-  DatabaseResponse,
   ListTransactionsApiResponse,
-  ServerResponse,
+  TransactionMetadataApiResponse,
   UpdateRiskToleranceRequest,
 } from "./generated"
 import type {
   GenerateRecommendationAiAdvisorRecommendationPostData,
   GenerateRecommendationAiAdvisorRecommendationPostError,
   GenerateRecommendationAiAdvisorRecommendationPostResponse,
-  ReadinessAiHealthReadinessGetResponse,
 } from "./generated-ai"
-
-interface TextResponseOperation<T = string> {
-  responses: {
-    200: {
-      content: {
-        "*/*": T
-      }
-    }
-  }
-}
 
 interface JsonGetOperation<T> {
   responses: {
@@ -59,15 +47,6 @@ interface JsonPostOperation<TBody, TResponse, TError = never> {
 }
 
 interface ApiPaths {
-  "/api/v1/health/server": {
-    get: TextResponseOperation<ServerResponse>
-  }
-  "/api/v1/health/database": {
-    get: TextResponseOperation<DatabaseResponse>
-  }
-  "/ai/health/readiness": {
-    get: TextResponseOperation<ReadinessAiHealthReadinessGetResponse>
-  }
   "/ai/advisor/recommendation": {
     post: JsonPostOperation<
       GenerateRecommendationAiAdvisorRecommendationPostData["body"],
@@ -105,6 +84,11 @@ interface ApiPaths {
           pageSize?: number
           afterDatetime?: string
           afterId?: string
+          search?: string
+          category?: string
+          type?: string
+          dateFrom?: string
+          dateTo?: string
         }
       }
       responses: {
@@ -115,6 +99,9 @@ interface ApiPaths {
         }
       }
     }
+  }
+  "/api/v1/financial-transactions/metadata": {
+    get: JsonGetOperation<TransactionMetadataApiResponse>
   }
 }
 

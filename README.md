@@ -89,6 +89,20 @@ uv run uvicorn advisor.main:app --reload
 | Lint             | `uv run ruff check .`          |
 | Lint (autofix)   | `uv run ruff check --fix .`    |
 
+### Generated API Client
+
+The client's TypeScript types and Zod schemas are generated from each backend's
+OpenAPI spec — never hand-written. After changing a route or its request/response
+models, regenerate the spec and the client, then commit the result:
+
+```sh
+cd core && ./gradlew generateOpenApiDocs   # core spec  → core/docs/openapi.yml
+cd ai   && uv run export-openapi           # AI spec    → ai/docs/openapi.json
+cd client && npm run generate:api          # both specs → client/src/network/generated*
+```
+
+CI's `openapi-sync` workflow fails if the committed files are out of sync.
+
 ---
 
 ## Deployment

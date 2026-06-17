@@ -1,6 +1,6 @@
 [project]
 name = "kontor-ai"
-version = "0.14.0"
+version = "0.15.0"
 requires-python = ">=3.14"
 dependencies = [
     "fastapi>=0.136",
@@ -28,6 +28,9 @@ dev = [
 [build-system]
 requires = ["uv_build>=0.7"]
 build-backend = "uv_build"
+
+[tool.uv]
+exclude-newer = "7 days"
 
 [tool.uv.build-backend]
 module-name = "advisor"

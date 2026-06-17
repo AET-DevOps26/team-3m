@@ -17,6 +17,7 @@ const teamMembers = [
   { name: "Mathilde", role: "UI/UX Expert", github: "mathildeshagl" },
   { name: "Magnus", role: "DevOps Expert", github: "magkue" },
   { name: "Maximilian", role: "Java Expert", github: "rappm" },
+  { name: "Aniruddh Zaveri", role: "Tutor", github: "az108" },
 ]
 
 const techStack = [

@@ -10,17 +10,6 @@ import type {
   TransactionMetadataApiResponse,
   UpdateRiskToleranceRequest,
 } from "./generated"
-import type { ReadinessAiHealthReadinessGetResponse } from "./generated-ai"
-
-interface TextResponseOperation<T = string> {
-  responses: {
-    200: {
-      content: {
-        "*/*": T
-      }
-    }
-  }
-}
 
 interface JsonGetOperation<T> {
   responses: {

@@ -5,9 +5,10 @@ import { APIError } from "./errors"
 import type {
   ApiResponsePortfolioOverview,
   ApiResponsePortfolioPerformance,
-  DatabaseResponse,
+  ApiResponseUserProfileResponse,
   ListTransactionsApiResponse,
-  ServerResponse,
+  TransactionMetadataApiResponse,
+  UpdateRiskToleranceRequest,
 } from "./generated"
 import type { ReadinessAiHealthReadinessGetResponse } from "./generated-ai"
 
@@ -32,20 +33,28 @@ interface JsonGetOperation<T> {
 }
 
 interface ApiPaths {
-  "/api/v1/health/server": {
-    get: TextResponseOperation<ServerResponse>
-  }
-  "/api/v1/health/database": {
-    get: TextResponseOperation<DatabaseResponse>
-  }
-  "/ai/health/readiness": {
-    get: TextResponseOperation<ReadinessAiHealthReadinessGetResponse>
-  }
   "/api/v1/portfolio/overview": {
     get: JsonGetOperation<ApiResponsePortfolioOverview>
   }
   "/api/v1/portfolio/performance": {
     get: JsonGetOperation<ApiResponsePortfolioPerformance>
+  }
+  "/api/v1/profile": {
+    get: JsonGetOperation<ApiResponseUserProfileResponse>
+    put: {
+      requestBody: {
+        content: {
+          "application/json": UpdateRiskToleranceRequest
+        }
+      }
+      responses: {
+        200: {
+          content: {
+            "*/*": ApiResponseUserProfileResponse
+          }
+        }
+      }
+    }
   }
   "/api/v1/financial-transactions": {
     get: {
@@ -54,6 +63,11 @@ interface ApiPaths {
           pageSize?: number
           afterDatetime?: string
           afterId?: string
+          search?: string
+          category?: string
+          type?: string
+          dateFrom?: string
+          dateTo?: string
         }
       }
       responses: {
@@ -64,6 +78,9 @@ interface ApiPaths {
         }
       }
     }
+  }
+  "/api/v1/financial-transactions/metadata": {
+    get: JsonGetOperation<TransactionMetadataApiResponse>
   }
 }
 

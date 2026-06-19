@@ -21,16 +21,11 @@ setup("authenticate as dev user", async ({ page }) => {
 
   await page.waitForURL("/", { timeout: 30_000 })
 
-  // A freshly provisioned user lands on a blocking risk-tolerance dialog that
-  // aria-hides the page. Wait for either that dialog or the portfolio heading,
-  // then clear the dialog so the saved session is fully onboarded.
-  const heading = page.getByRole("heading", { name: "Portfolio Overview" })
-  await Promise.race([
-    heading.waitFor(),
-    page.getByRole("alertdialog").waitFor(),
-  ])
+  // A freshly provisioned user (e.g. CI's empty database) lands on a blocking
+  // risk-tolerance dialog that aria-hides the page. Clear it so the saved
+  // session is fully onboarded and later tests can interact with the page.
   await completeRiskToleranceIfPresent(page)
-  await heading.waitFor()
+  await page.getByRole("heading", { name: "Portfolio Overview" }).waitFor()
 
   await page.context().storageState({ path: AUTH_FILE })
 })

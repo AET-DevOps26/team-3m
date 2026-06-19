@@ -1,4 +1,9 @@
 import { expect, test } from "@playwright/test"
+import { primeSession } from "./session"
+
+test.beforeEach(async ({ page }) => {
+  await primeSession(page)
+})
 
 test("shows page heading and back button", async ({ page }) => {
   await page.goto("/transactions")

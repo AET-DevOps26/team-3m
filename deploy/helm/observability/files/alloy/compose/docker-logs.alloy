@@ -33,6 +33,13 @@ loki.source.docker "containers" {
 loki.process "drop_health" {
   forward_to = [loki.write.default.receiver]
 
+  // Kubelet probe access logs (any path, e.g. the client SPA's "GET /").
+  stage.drop {
+    expression          = `kube-probe`
+    drop_counter_reason = "kube_probe"
+  }
+
+  // App access logs for health endpoints (e.g. uvicorn, which omits user-agent).
   stage.drop {
     expression          = `(GET|HEAD) \S*/health\S* HTTP`
     drop_counter_reason = "health_check"

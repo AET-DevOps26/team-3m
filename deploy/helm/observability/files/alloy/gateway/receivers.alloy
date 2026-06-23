@@ -34,6 +34,7 @@ otelcol.processor.filter "drop_health" {
 
   traces {
     span = [
+      `IsMatch(name, ".*/health.*")`,
       `attributes["url.path"] != nil and IsMatch(attributes["url.path"], ".*/health.*")`,
       `attributes["http.target"] != nil and IsMatch(attributes["http.target"], ".*/health.*")`,
       `attributes["http.route"] != nil and IsMatch(attributes["http.route"], ".*/health.*")`,

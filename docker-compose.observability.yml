@@ -169,6 +169,8 @@ services:
       <<: *otel-backend-env
       OTEL_SERVICE_NAME: kontor-ai
       OTEL_PYTHON_LOG_CORRELATION: "true"
+      # Don't trace health probes at all (avoids orphaned ASGI child spans).
+      OTEL_PYTHON_EXCLUDED_URLS: "health"
 
   keycloak:
     environment:

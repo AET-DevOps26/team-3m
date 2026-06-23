@@ -108,6 +108,27 @@ jobs:
               ;;
           esac
 
+      - name: Prepare AI ingress migration
+        if: inputs.action == 'deploy'
+        env:
+          RELEASE: ${{ inputs.release-name }}
+          NAMESPACE: ${{ inputs.namespace }}
+        run: |
+          set -euo pipefail
+          if ! kubectl get ingress "$RELEASE" -n "$NAMESPACE" >/dev/null 2>&1; then
+            echo "Main ingress does not exist yet; no migration needed."
+            exit 0
+          fi
+          if ! kubectl get ingress "$RELEASE" -n "$NAMESPACE" -o json \
+            | jq -e 'any(.spec.rules[]?.http.paths[]?; .path == "/ai")' >/dev/null; then
+            echo "Main ingress no longer owns /ai; no migration needed."
+            exit 0
+          fi
+          echo "Removing /ai from main ingress before Helm creates the dedicated AI ingress."
+          kubectl get ingress "$RELEASE" -n "$NAMESPACE" -o json \
+            | jq 'del(.metadata.annotations["kubectl.kubernetes.io/last-applied-configuration"]) | .spec.rules |= map(if .http.paths then .http.paths |= map(select(.path != "/ai")) else . end)' \
+            | kubectl replace -f -
+
       - name: Helm deploy (prod)
         if: inputs.action == 'deploy' && inputs.environment == 'k8s-prod'
         env:

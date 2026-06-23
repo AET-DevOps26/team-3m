@@ -74,8 +74,17 @@ keycloak:
     webOrigins:
       - https://kontor.live
       - https://team-3m.stud.k8s.aet.cit.tum.de
+    grafanaClient:
+      enabled: true
+      rootUrl: https://grafana.team-3m.stud.k8s.aet.cit.tum.de
+      redirectUris:
+        - https://grafana.team-3m.stud.k8s.aet.cit.tum.de/login/generic_oauth
 
 ingress:
   hosts:
     - kontor.live
     - team-3m.stud.k8s.aet.cit.tum.de
+
+observability:
+  enabled: true
+  environment: prod

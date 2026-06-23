@@ -156,6 +156,31 @@ global ghcr registry from `kontor.image` must NOT be prepended.
 {{- end -}}
 
 {{/*
+OpenTelemetry env for OTLP-instrumented backend services (core, ai).
+Usage: include "kontor.observability.backendEnv" (dict "root" . "serviceName" "kontor-core")
+*/}}
+{{- define "kontor.observability.backendEnv" -}}
+- name: OTEL_EXPORTER_OTLP_ENDPOINT
+  value: {{ .root.Values.observability.collectorEndpoint | quote }}
+- name: OTEL_EXPORTER_OTLP_PROTOCOL
+  value: grpc
+- name: OTEL_SERVICE_NAME
+  value: {{ .serviceName | quote }}
+- name: OTEL_RESOURCE_ATTRIBUTES
+  value: {{ printf "service.namespace=kontor,deployment.environment=%s" (default "unknown" .root.Values.observability.environment) | quote }}
+- name: OTEL_TRACES_SAMPLER
+  value: parentbased_traceidratio
+- name: OTEL_TRACES_SAMPLER_ARG
+  value: {{ .root.Values.observability.traces.sampleRatio | quote }}
+- name: OTEL_TRACES_EXPORTER
+  value: otlp
+- name: OTEL_METRICS_EXPORTER
+  value: otlp
+- name: OTEL_LOGS_EXPORTER
+  value: none
+{{- end -}}
+
+{{/*
 Resolve the OIDC issuer URL. Prefer an explicit `oidc.issuerUrl`; otherwise, when
 this release deploys Keycloak, derive it from the first hostname + realm.
 */}}

@@ -84,6 +84,18 @@ spec:
         - protocol: TCP
           port: 8080
     {{- end }}
+    {{- if .Values.observability.enabled }}
+    # OTLP export to the Alloy gateway in the shared monitoring namespace.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.observability.collectorNamespace }}
+      ports:
+        - protocol: TCP
+          port: 4317
+        - protocol: TCP
+          port: 4318
+    {{- end }}
   {{- end }}
 ---
 # Client: ingress from ingress-nginx only.
@@ -139,8 +151,9 @@ spec:
 {{- end }}
 ---
 # Keycloak: HTTP (8080) ingress from ingress-nginx and the core pod. The management
-# port (9000, health/metrics) is intentionally not allowed from any pod here, so it
-# stays cluster-internal. Kubelet probes bypass NetworkPolicy.
+# port (9000, health/metrics) stays cluster-internal except — when observability is
+# enabled — for the Alloy collector in the monitoring namespace, which scrapes its
+# Prometheus metrics. Kubelet probes bypass NetworkPolicy.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -171,5 +184,14 @@ spec:
       ports:
         - protocol: TCP
           port: 8080
+    {{- if .Values.observability.enabled }}
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.observability.collectorNamespace }}
+      ports:
+        - protocol: TCP
+          port: 9000
+    {{- end }}
 {{- end }}
 {{- end }}

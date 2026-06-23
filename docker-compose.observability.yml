@@ -1,0 +1,194 @@
+x-otel-backend-env: &otel-backend-env
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://alloy:4317"
+  OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+  OTEL_RESOURCE_ATTRIBUTES: "service.namespace=kontor,deployment.environment=local"
+  OTEL_LOGS_EXPORTER: none
+  OTEL_TRACES_EXPORTER: otlp
+  OTEL_METRICS_EXPORTER: otlp
+
+services:
+  seaweedfs:
+    image: chrislusf/seaweedfs:3.80
+    command:
+      - server
+      - -dir=/data
+      - -ip.bind=0.0.0.0
+      - -s3
+      - -s3.config=/etc/seaweedfs/s3.json
+      - -master.volumeSizeLimitMB=1024
+    volumes:
+      - seaweedfs_data:/data
+      - ./deploy/helm/observability/files/seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
+    ports:
+      - "${SEAWEEDFS_S3_PORT:-8333}:8333"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9333/cluster/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  seaweedfs-init:
+    image: chrislusf/seaweedfs:3.80
+    depends_on:
+      seaweedfs:
+        condition: service_healthy
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        set -e
+        for i in $$(seq 1 30); do
+          echo "s3.bucket.create -name loki; s3.bucket.create -name tempo" \
+            | weed shell -master=seaweedfs:9333 && exit 0
+          echo "waiting for seaweedfs master... ($$i)"; sleep 2
+        done
+        echo "failed to create buckets" >&2; exit 1
+    restart: "no"
+
+  loki:
+    image: grafana/loki:3.4.2
+    command: ["-config.file=/etc/loki/loki.yaml", "-config.expand-env=true"]
+    environment:
+      S3_ACCESS_KEY: observability
+      S3_SECRET_KEY: observability-secret
+    volumes:
+      - ./deploy/helm/observability/files/loki/loki.yaml:/etc/loki/loki.yaml:ro
+      - loki_data:/loki
+    depends_on:
+      seaweedfs-init:
+        condition: service_completed_successfully
+    ports:
+      - "${LOKI_PORT:-3100}:3100"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3100/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 15
+      start_period: 20s
+
+  tempo:
+    image: grafana/tempo:2.7.1
+    command: ["-config.file=/etc/tempo/tempo.yaml", "-config.expand-env=true"]
+    environment:
+      S3_ACCESS_KEY: observability
+      S3_SECRET_KEY: observability-secret
+    volumes:
+      - ./deploy/helm/observability/files/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
+      - tempo_data:/var/tempo
+    depends_on:
+      seaweedfs-init:
+        condition: service_completed_successfully
+    ports:
+      - "${TEMPO_PORT:-3200}:3200"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3200/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 15
+      start_period: 20s
+
+  prometheus:
+    image: prom/prometheus:v3.2.1
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+      - --storage.tsdb.retention.size=10GB
+      - --web.enable-remote-write-receiver
+      - --enable-feature=exemplar-storage,native-histograms
+    volumes:
+      - ./deploy/helm/observability/files/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9090/-/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 15
+      start_period: 15s
+
+  alloy:
+    image: grafana/alloy:v1.7.5
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy-config
+    volumes:
+      - ./deploy/helm/observability/files/alloy/gateway/receivers.alloy:/etc/alloy-config/receivers.alloy:ro
+      - ./deploy/helm/observability/files/alloy/gateway/exporters.alloy:/etc/alloy-config/exporters.alloy:ro
+      - ./deploy/helm/observability/files/alloy/compose/keycloak-scrape.alloy:/etc/alloy-config/keycloak-scrape.alloy:ro
+      - ./deploy/helm/observability/files/alloy/compose/docker-logs.alloy:/etc/alloy-config/docker-logs.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - alloy_data:/var/lib/alloy/data
+    depends_on:
+      loki:
+        condition: service_healthy
+      tempo:
+        condition: service_healthy
+      prometheus:
+        condition: service_healthy
+    ports:
+      - "${OTLP_GRPC_PORT:-4317}:4317"
+      - "${OTLP_HTTP_PORT:-4318}:4318"
+      - "${ALLOY_UI_PORT:-12345}:12345"
+
+  grafana:
+    image: grafana/grafana:11.5.2
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD:-admin}"
+      GF_USERS_DEFAULT_THEME: light
+      GF_FEATURE_TOGGLES_ENABLE: traceqlEditor
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    volumes:
+      - ./deploy/helm/observability/files/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./deploy/helm/observability/files/grafana/dashboards/provider.yaml:/etc/grafana/provisioning/dashboards/provider.yaml:ro
+      - ./deploy/helm/observability/files/grafana/dashboards/json:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      prometheus:
+        condition: service_healthy
+      loki:
+        condition: service_healthy
+      tempo:
+        condition: service_healthy
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+
+  core:
+    environment:
+      <<: *otel-backend-env
+      OTEL_SERVICE_NAME: kontor-core
+      JAVA_TOOL_OPTIONS: "-javaagent:/app/otel/opentelemetry-javaagent.jar -Djava.io.tmpdir=/tmp"
+      LOGGING_PATTERN_CORRELATION: "[trace_id=%X{trace_id} span_id=%X{span_id}] "
+
+  ai:
+    environment:
+      <<: *otel-backend-env
+      OTEL_SERVICE_NAME: kontor-ai
+      OTEL_PYTHON_LOG_CORRELATION: "true"
+
+  keycloak:
+    environment:
+      KC_METRICS_ENABLED: "true"
+      KC_TRACING_ENABLED: "true"
+      KC_TRACING_ENDPOINT: "http://alloy:4317"
+      KC_TRACING_PROTOCOL: grpc
+      KC_TRACING_SAMPLER_TYPE: parentbased_always_on
+      KC_TRACING_SERVICE_NAME: kontor-keycloak
+
+  client:
+    environment:
+      VITE_OTEL_EXPORTER_OTLP_ENDPOINT: "http://localhost:${OTLP_HTTP_PORT:-4318}"
+      VITE_DEPLOYMENT_ENVIRONMENT: local
+      VITE_OTEL_SERVICE_NAME: kontor-client
+
+volumes:
+  seaweedfs_data:
+  loki_data:
+  tempo_data:
+  prometheus_data:
+  grafana_data:
+  alloy_data:

@@ -30,6 +30,10 @@ data:
           {
             "name": "kontor-user",
             "description": "Standard user able to manage their own financial data."
+          },
+          {
+            "name": "kontor-admin",
+            "description": "Grants the Grafana Admin role via SSO."
           }
         ]
       },
@@ -97,6 +101,25 @@ data:
             }
           ]
         }
+        {{- if .Values.keycloak.realm.grafanaClient.enabled }}
+        ,{
+          "clientId": "grafana",
+          "name": "Grafana (observability SSO)",
+          "enabled": true,
+          "publicClient": false,
+          "secret": {{ .Values.keycloak.realm.grafanaClient.secret | quote }},
+          "standardFlowEnabled": true,
+          "directAccessGrantsEnabled": false,
+          "serviceAccountsEnabled": false,
+          "protocol": "openid-connect",
+          {{- with .Values.keycloak.realm.grafanaClient.rootUrl }}
+          "rootUrl": {{ . | quote }},
+          {{- end }}
+          "redirectUris": {{ .Values.keycloak.realm.grafanaClient.redirectUris | toJson }},
+          "webOrigins": ["+"],
+          "defaultClientScopes": ["web-origins", "acr", "profile", "roles", "basic", "email"]
+        }
+        {{- end }}
       ]
     }
 {{- end }}

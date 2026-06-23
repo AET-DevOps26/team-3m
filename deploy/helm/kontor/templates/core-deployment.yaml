@@ -67,9 +67,16 @@ spec:
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
-            # /tmp lands on an emptyDir so readOnlyRootFilesystem stays on.
+            {{- if .Values.observability.enabled }}
+            {{- include "kontor.observability.backendEnv" (dict "root" . "serviceName" "kontor-core") | nindent 12 }}
+            # Print the OTel-populated MDC trace/span ids so scraped logs link to traces.
+            - name: LOGGING_PATTERN_CORRELATION
+              value: "[trace_id=%X{trace_id} span_id=%X{span_id}] "
+            {{- end }}
+            # /tmp lands on an emptyDir so readOnlyRootFilesystem stays on. The OTel
+            # Java agent (baked into the image) is attached only when observability is on.
             - name: JAVA_TOOL_OPTIONS
-              value: "-Djava.io.tmpdir=/tmp"
+              value: {{ if .Values.observability.enabled }}"-javaagent:/app/otel/opentelemetry-javaagent.jar -Djava.io.tmpdir=/tmp"{{ else }}"-Djava.io.tmpdir=/tmp"{{ end }}
           envFrom:
             - secretRef:
                 name: {{ include "kontor.postgres.secretName" . }}

@@ -1,0 +1,89 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alloy-gateway-config
+  labels:
+    {{- include "obs.componentLabels" (dict "root" . "component" "alloy-gateway") | nindent 4 }}
+data:
+  receivers.alloy: |
+{{ .Files.Get "files/alloy/gateway/receivers.alloy" | indent 4 }}
+  exporters.alloy: |
+{{ .Files.Get "files/alloy/gateway/exporters.alloy" | indent 4 }}
+  keycloak-scrape.alloy: |
+{{ .Files.Get "files/alloy/k8s-gateway/keycloak-scrape.alloy" | indent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alloy
+  labels:
+    {{- include "obs.componentLabels" (dict "root" . "component" "alloy-gateway") | nindent 4 }}
+spec:
+  selector:
+    {{- include "obs.selectorLabels" (dict "root" . "component" "alloy-gateway") | nindent 4 }}
+  ports:
+    - { name: otlp-grpc, port: 4317, targetPort: 4317 }
+    - { name: otlp-http, port: 4318, targetPort: 4318 }
+    - { name: http, port: 12345, targetPort: 12345 }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alloy-gateway
+  labels:
+    {{- include "obs.componentLabels" (dict "root" . "component" "alloy-gateway") | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "obs.selectorLabels" (dict "root" . "component" "alloy-gateway") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "obs.componentLabels" (dict "root" . "component" "alloy-gateway") | nindent 8 }}
+      annotations:
+        checksum/config: {{ printf "%s%s%s" (.Files.Get "files/alloy/gateway/receivers.alloy") (.Files.Get "files/alloy/gateway/exporters.alloy") (.Files.Get "files/alloy/k8s-gateway/keycloak-scrape.alloy") | sha256sum }}
+    spec:
+      serviceAccountName: alloy
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 473
+        runAsGroup: 473
+        fsGroup: 473
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: alloy
+          image: {{ .Values.images.alloy }}
+          imagePullPolicy: {{ .Values.images.pullPolicy }}
+          args:
+            - run
+            - --server.http.listen-addr=0.0.0.0:12345
+            - --storage.path=/var/lib/alloy/data
+            - /etc/alloy-config
+          ports:
+            - { name: otlp-grpc, containerPort: 4317 }
+            - { name: otlp-http, containerPort: 4318 }
+            - { name: http, containerPort: 12345 }
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.alloy.gateway.resources | nindent 12 }}
+          volumeMounts:
+            - { name: config, mountPath: /etc/alloy-config }
+            - { name: storage, mountPath: /var/lib/alloy/data }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+      volumes:
+        - name: config
+          configMap:
+            name: alloy-gateway-config
+        - name: storage
+          emptyDir: {}

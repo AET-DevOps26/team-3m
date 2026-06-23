@@ -68,3 +68,7 @@ ingress:
     - pr-${PR_NUMBER}.${BASE_DOMAIN}
   tls:
     clusterIssuer: letsencrypt-staging
+
+observability:
+  enabled: true
+  environment: pr-${PR_NUMBER}

@@ -6,10 +6,13 @@ import { authConfig } from "@/auth/auth-config"
 import { AuthTokenBridge } from "@/auth/auth-token-bridge"
 import { Toaster } from "@/components/ui/sonner"
 import { createQueryClient, RecoveryHost } from "@/network"
+import { initObservability } from "@/observability/otel"
 
 import "./index.css"
 import { ThemeProvider } from "@/components/theme-provider.tsx"
 import App from "./App.tsx"
+
+initObservability()
 
 const queryClient = createQueryClient()
 

@@ -1,0 +1,52 @@
+otelcol.receiver.otlp "in" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+
+  http {
+    endpoint = "0.0.0.0:4318"
+
+    cors {
+      allowed_origins = ["*"]
+      allowed_headers = ["*"]
+    }
+  }
+
+  output {
+    metrics = [otelcol.processor.batch.in.input]
+    logs    = [otelcol.processor.batch.in.input]
+    traces  = [otelcol.processor.batch.in.input]
+  }
+}
+
+otelcol.processor.batch "in" {
+  output {
+    metrics = [otelcol.processor.transform.labels.input]
+    logs    = [otelcol.processor.transform.labels.input]
+    traces  = [otelcol.exporter.otlp.traces.input]
+  }
+}
+
+otelcol.processor.transform "labels" {
+  error_mode = "ignore"
+
+  metric_statements {
+    context = "datapoint"
+    statements = [
+      `set(attributes["deployment_environment"], resource.attributes["deployment.environment"])`,
+      `set(attributes["service"], resource.attributes["service.name"])`,
+    ]
+  }
+
+  log_statements {
+    context = "resource"
+    statements = [
+      `set(attributes["loki.resource.labels"], "service.name, deployment.environment")`,
+    ]
+  }
+
+  output {
+    metrics = [otelcol.exporter.prometheus.metrics.input]
+    logs    = [otelcol.exporter.loki.logs.input]
+  }
+}

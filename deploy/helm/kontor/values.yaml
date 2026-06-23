@@ -341,6 +341,14 @@ keycloak:
     registrationAllowed: false
     # -- Seed a dev/dev test user. Dev / PR instances only; false in prod.
     seedDevUser: false
+    # Optional confidential OIDC client for Grafana SSO (the shared observability
+    # stack). Only the prod realm needs it. `secret` must match the observability
+    # chart's grafana.oauth.clientSecret; both are injected from a shared CI secret.
+    grafanaClient:
+      enabled: false
+      redirectUris: []
+      rootUrl: ""
+      secret: ""
   resources:
     requests:
       cpu: 500m
@@ -388,6 +396,24 @@ ingress:
     clusterIssuer: letsencrypt-prod
     # -- Secret holding the cert; cert-manager creates it on first issue.
     secretName: kontor-tls
+
+# OpenTelemetry → shared LGTM observability stack (deploy/helm/observability,
+# namespace team-3m-monitoring). Disabled by default so the app chart stays
+# self-contained; the prod and PR value overlays turn it on and set `environment`.
+observability:
+  enabled: false
+  # OTLP gRPC endpoint of the Alloy gateway (in-cluster, cross-namespace).
+  collectorEndpoint: "http://alloy.team-3m-monitoring.svc.cluster.local:4317"
+  # Namespace the Alloy gateway runs in (used for NetworkPolicy egress).
+  collectorNamespace: team-3m-monitoring
+  # Logical environment tagged on every signal: prod | pr-<N> | local. Filters and
+  # switches environments in Grafana. Set per overlay.
+  environment: ""
+  # Public OTLP/HTTP endpoint the browser SPA pushes traces to (gateway ingress).
+  clientEndpoint: "https://otlp.team-3m.stud.k8s.aet.cit.tum.de"
+  traces:
+    # parentbased_traceidratio argument; 1.0 = sample everything.
+    sampleRatio: "1.0"
 
 # Defense-in-depth on a shared cluster: restrict who can talk to what.
 networkPolicy:

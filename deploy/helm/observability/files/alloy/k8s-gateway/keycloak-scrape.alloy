@@ -1,0 +1,49 @@
+discovery.kubernetes "keycloak" {
+  role = "pod"
+
+  selectors {
+    role  = "pod"
+    label = "app.kubernetes.io/component=keycloak"
+  }
+}
+
+discovery.relabel "keycloak" {
+  targets = discovery.kubernetes.keycloak.targets
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_number"]
+    regex         = "9000"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    regex         = "team-3m"
+    target_label  = "deployment_environment"
+    replacement   = "prod"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    regex         = "team-3m-pr-(.+)"
+    target_label  = "deployment_environment"
+    replacement   = "pr-$1"
+  }
+
+  rule {
+    target_label = "service"
+    replacement  = "keycloak"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label  = "namespace"
+  }
+}
+
+prometheus.scrape "keycloak" {
+  targets         = discovery.relabel.keycloak.output
+  metrics_path    = "/metrics"
+  scrape_interval = "30s"
+  forward_to      = [prometheus.remote_write.default.receiver]
+}

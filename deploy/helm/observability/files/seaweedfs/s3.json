@@ -1,0 +1,14 @@
+{
+  "identities": [
+    {
+      "name": "observability",
+      "credentials": [
+        {
+          "accessKey": "observability",
+          "secretKey": "observability-secret"
+        }
+      ],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    }
+  ]
+}

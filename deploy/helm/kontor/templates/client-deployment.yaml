@@ -44,6 +44,14 @@ spec:
             - name: VITE_OIDC_AUDIENCE
               value: {{ . | quote }}
             {{- end }}
+            {{- if .Values.observability.enabled }}
+            - name: VITE_OTEL_EXPORTER_OTLP_ENDPOINT
+              value: {{ .Values.observability.clientEndpoint | quote }}
+            - name: VITE_DEPLOYMENT_ENVIRONMENT
+              value: {{ default "unknown" .Values.observability.environment | quote }}
+            - name: VITE_OTEL_SERVICE_NAME
+              value: kontor-client
+            {{- end }}
           readinessProbe:
             httpGet:
               path: {{ .Values.client.probes.readinessPath }}

@@ -1,0 +1,213 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  labels:
+    {{- include "obs.componentLabels" (dict "root" . "component" "grafana") | nindent 4 }}
+data:
+  datasources.yaml: |
+{{ .Files.Get "files/grafana/datasources/datasources.yaml" | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-provider
+  labels:
+    {{- include "obs.componentLabels" (dict "root" . "component" "grafana") | nindent 4 }}
+data:
+  provider.yaml: |
+{{ .Files.Get "files/grafana/dashboards/provider.yaml" | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  labels:
+    {{- include "obs.componentLabels" (dict "root" . "component" "grafana") | nindent 4 }}
+data:
+{{- range $path, $_ := .Files.Glob "files/grafana/dashboards/json/*.json" }}
+  {{ base $path }}: |
+{{ $.Files.Get $path | indent 4 }}
+{{- end }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-data
+  labels:
+    {{- include "obs.componentLabels" (dict "root" . "component" "grafana") | nindent 4 }}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: {{ .Values.storageClass }}
+  resources:
+    requests:
+      storage: {{ .Values.grafana.persistence.size }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  labels:
+    {{- include "obs.componentLabels" (dict "root" . "component" "grafana") | nindent 4 }}
+spec:
+  selector:
+    {{- include "obs.selectorLabels" (dict "root" . "component" "grafana") | nindent 4 }}
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  labels:
+    {{- include "obs.componentLabels" (dict "root" . "component" "grafana") | nindent 4 }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "obs.selectorLabels" (dict "root" . "component" "grafana") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "obs.componentLabels" (dict "root" . "component" "grafana") | nindent 8 }}
+      annotations:
+        checksum/datasources: {{ .Files.Get "files/grafana/datasources/datasources.yaml" | sha256sum }}
+        checksum/dashboards: {{ .Files.Glob "files/grafana/dashboards/json/*.json" | toString | sha256sum }}
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 472
+        runAsGroup: 472
+        fsGroup: 472
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: grafana
+          image: {{ .Values.images.grafana }}
+          imagePullPolicy: {{ .Values.images.pullPolicy }}
+          env:
+            - name: GF_SECURITY_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "obs.grafana.secretName" . }}
+                  key: admin-user
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "obs.grafana.secretName" . }}
+                  key: admin-password
+            - name: GF_FEATURE_TOGGLES_ENABLE
+              value: traceqlEditor
+            - name: GF_USERS_DEFAULT_THEME
+              value: light
+            {{- if and .Values.grafana.ingress.enabled .Values.grafana.ingress.hosts }}
+            - name: GF_SERVER_ROOT_URL
+              value: {{ printf "https://%s" (first .Values.grafana.ingress.hosts) | quote }}
+            {{- end }}
+            {{- if .Values.grafana.oauth.enabled }}
+            - name: GF_AUTH_GENERIC_OAUTH_ENABLED
+              value: "true"
+            - name: GF_AUTH_GENERIC_OAUTH_NAME
+              value: {{ .Values.grafana.oauth.name | quote }}
+            - name: GF_AUTH_GENERIC_OAUTH_CLIENT_ID
+              value: {{ .Values.grafana.oauth.clientId | quote }}
+            - name: GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "obs.grafana.secretName" . }}
+                  key: oauth-client-secret
+            - name: GF_AUTH_GENERIC_OAUTH_SCOPES
+              value: {{ .Values.grafana.oauth.scopes | quote }}
+            - name: GF_AUTH_GENERIC_OAUTH_AUTH_URL
+              value: {{ printf "%s/protocol/openid-connect/auth" .Values.grafana.oauth.issuerUrl | quote }}
+            - name: GF_AUTH_GENERIC_OAUTH_TOKEN_URL
+              value: {{ printf "%s/protocol/openid-connect/token" .Values.grafana.oauth.issuerUrl | quote }}
+            - name: GF_AUTH_GENERIC_OAUTH_API_URL
+              value: {{ printf "%s/protocol/openid-connect/userinfo" .Values.grafana.oauth.issuerUrl | quote }}
+            - name: GF_AUTH_GENERIC_OAUTH_LOGIN_ATTRIBUTE_PATH
+              value: preferred_username
+            - name: GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH
+              value: {{ .Values.grafana.oauth.roleAttributePath | quote }}
+            - name: GF_AUTH_GENERIC_OAUTH_ALLOW_ASSIGN_GRAFANA_ADMIN
+              value: "true"
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: 3000
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            {{- toYaml .Values.grafana.resources | nindent 12 }}
+          volumeMounts:
+            - { name: data, mountPath: /var/lib/grafana }
+            - { name: datasources, mountPath: /etc/grafana/provisioning/datasources }
+            - { name: dashboard-provider, mountPath: /etc/grafana/provisioning/dashboards }
+            - { name: dashboards, mountPath: /var/lib/grafana/dashboards }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop: ["ALL"]
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: grafana-data
+        - name: datasources
+          configMap:
+            name: grafana-datasources
+        - name: dashboard-provider
+          configMap:
+            name: grafana-dashboard-provider
+        - name: dashboards
+          configMap:
+            name: grafana-dashboards
+{{- if .Values.grafana.ingress.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: grafana
+  labels:
+    {{- include "obs.componentLabels" (dict "root" . "component" "grafana") | nindent 4 }}
+  annotations:
+    {{- if .Values.grafana.ingress.tls.enabled }}
+    cert-manager.io/cluster-issuer: {{ .Values.grafana.ingress.tls.clusterIssuer }}
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.grafana.ingress.className }}
+  {{- if .Values.grafana.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        {{- range .Values.grafana.ingress.hosts }}
+        - {{ . }}
+        {{- end }}
+      secretName: {{ .Values.grafana.ingress.tls.secretName }}
+  {{- end }}
+  rules:
+    {{- range .Values.grafana.ingress.hosts }}
+    - host: {{ . }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: grafana
+                port:
+                  number: 3000
+    {{- end }}
+{{- end }}

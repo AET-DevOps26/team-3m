@@ -115,8 +115,13 @@ jobs:
           KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
           KEYCLOAK_DB_PASSWORD: ${{ secrets.KEYCLOAK_DB_PASSWORD }}
           LOGOS_API_KEY: ${{ secrets.LOGOS_API_KEY }}
+          GRAFANA_OAUTH_CLIENT_SECRET: ${{ secrets.GRAFANA_OAUTH_CLIENT_SECRET }}
         run: |
           set -euo pipefail
+          EXTRA=()
+          # Grafana SSO client secret (shared with the observability stack); only set
+          # when configured, so the realm's grafana client matches Grafana's generic_oauth.
+          [ -n "${GRAFANA_OAUTH_CLIENT_SECRET}" ] && EXTRA+=(--set-string "keycloak.realm.grafanaClient.secret=${GRAFANA_OAUTH_CLIENT_SECRET}")
           helm upgrade --install '${{ inputs.release-name }}' "$CHART" \
             -n '${{ inputs.namespace }}' \
             -f "$CHART/values-prod.yaml" \
@@ -128,6 +133,7 @@ jobs:
             --set-string keycloak.admin.password="$KEYCLOAK_ADMIN_PASSWORD" \
             --set-string keycloak.db.password="$KEYCLOAK_DB_PASSWORD" \
             --set-string ai.logosApiKey="$LOGOS_API_KEY" \
+            "${EXTRA[@]}" \
             --rollback-on-failure --force-conflicts --wait --timeout 4m
 
       - name: Helm deploy (preview)

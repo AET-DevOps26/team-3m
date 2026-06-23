@@ -29,12 +29,15 @@ export class ErrorBoundary extends Component<
 
   render() {
     if (this.state.error) {
-      return (
-        this.props.fallback ?? (
-          <p className="py-8 text-center text-sm text-destructive">
-            Something went wrong. Please refresh the page to try again.
-          </p>
-        )
+      // Distinguish an explicit `fallback={null}` (render nothing) from an
+      // omitted fallback (undefined → show the default message). `??` would
+      // collapse both, defeating intentional silent fallbacks.
+      return this.props.fallback !== undefined ? (
+        this.props.fallback
+      ) : (
+        <p className="py-8 text-center text-sm text-destructive">
+          Something went wrong. Please refresh the page to try again.
+        </p>
       )
     }
     return this.props.children

@@ -11,7 +11,7 @@ test("footer About link navigates to about page", async ({ page }) => {
   await page.goto("/")
 
   await page
-    .getByRole("navigation")
+    .getByRole("contentinfo")
     .getByRole("link", { name: "About" })
     .click()
 

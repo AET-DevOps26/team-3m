@@ -69,6 +69,7 @@ test("saving a risk tolerance dismisses the dialog", async ({ page }) => {
   await page.getByRole("button", { name: "Get started" }).click()
 
   await expect(dialog).toBeHidden()
+  expect(saved).toBe(true)
 })
 
 test("does not prompt a user who already set their risk tolerance", async ({

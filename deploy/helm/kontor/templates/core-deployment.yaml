@@ -69,7 +69,7 @@ spec:
             {{- end }}
             # /tmp lands on an emptyDir so readOnlyRootFilesystem stays on.
             - name: JAVA_TOOL_OPTIONS
-              value: "-Djava.io.tmpdir=/tmp"
+              value: "-Djava.io.tmpdir=/tmp -XX:MaxRAMPercentage=75"
           envFrom:
             - secretRef:
                 name: {{ include "kontor.postgres.secretName" . }}

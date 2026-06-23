@@ -6,7 +6,20 @@ metadata:
     {{- include "obs.componentLabels" (dict "root" . "component" "seaweedfs") | nindent 4 }}
 data:
   s3.json: |
-{{ .Files.Get "files/seaweedfs/s3.json" | indent 4 }}
+    {
+      "identities": [
+        {
+          "name": "observability",
+          "credentials": [
+            {
+              "accessKey": {{ .Values.s3.accessKey | quote }},
+              "secretKey": {{ .Values.s3.secretKey | quote }}
+            }
+          ],
+          "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+        }
+      ]
+    }
 ---
 apiVersion: v1
 kind: Service
@@ -45,7 +58,7 @@ spec:
       labels:
         {{- include "obs.componentLabels" (dict "root" . "component" "seaweedfs") | nindent 8 }}
       annotations:
-        checksum/config: {{ .Files.Get "files/seaweedfs/s3.json" | sha256sum }}
+        checksum/config: {{ printf "%s:%s" .Values.s3.accessKey .Values.s3.secretKey | sha256sum }}
     spec:
       securityContext:
         runAsNonRoot: true

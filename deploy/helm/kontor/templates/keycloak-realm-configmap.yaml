@@ -32,7 +32,7 @@ data:
             "description": "Standard user able to manage their own financial data."
           },
           {
-            "name": "kontor-admin",
+            "name": "grafana-admin",
             "description": "Grants the Grafana Admin role via SSO."
           }
         ]

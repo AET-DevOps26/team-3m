@@ -48,7 +48,17 @@ discovery.relabel "pods" {
 
 loki.source.kubernetes "pods" {
   targets    = discovery.relabel.pods.output
+  forward_to = [loki.process.drop_health.receiver]
+}
+
+// Drop health/readiness/liveness probe access-log lines (e.g. uvicorn, nginx).
+loki.process "drop_health" {
   forward_to = [loki.write.default.receiver]
+
+  stage.drop {
+    expression          = `(GET|HEAD) \S*/health\S* HTTP`
+    drop_counter_reason = "health_check"
+  }
 }
 
 loki.write "default" {

@@ -76,7 +76,7 @@ spec:
         {{- include "obs.componentLabels" (dict "root" . "component" "grafana") | nindent 8 }}
       annotations:
         checksum/datasources: {{ .Files.Get "files/grafana/datasources/datasources.yaml" | sha256sum }}
-        checksum/dashboards: {{ .Files.Glob "files/grafana/dashboards/json/*.json" | toString | sha256sum }}
+        checksum/dashboards: {{ (.Files.Glob "files/grafana/dashboards/json/*.json").AsConfig | sha256sum }}
     spec:
       securityContext:
         runAsNonRoot: true

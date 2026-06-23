@@ -26,5 +26,15 @@ loki.source.docker "containers" {
   host          = "unix:///var/run/docker.sock"
   targets       = discovery.docker.containers.targets
   relabel_rules = discovery.relabel.containers.rules
-  forward_to    = [loki.write.default.receiver]
+  forward_to    = [loki.process.drop_health.receiver]
+}
+
+// Drop health/readiness/liveness probe access-log lines (e.g. uvicorn, nginx).
+loki.process "drop_health" {
+  forward_to = [loki.write.default.receiver]
+
+  stage.drop {
+    expression          = `(GET|HEAD) \S*/health\S* HTTP`
+    drop_counter_reason = "health_check"
+  }
 }

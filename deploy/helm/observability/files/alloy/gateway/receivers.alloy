@@ -23,7 +23,25 @@ otelcol.processor.batch "in" {
   output {
     metrics = [otelcol.processor.transform.labels.input]
     logs    = [otelcol.processor.transform.labels.input]
-    traces  = [otelcol.exporter.otlp.traces.input]
+    traces  = [otelcol.processor.filter.drop_health.input]
+  }
+}
+
+// Drop health/readiness/liveness probe spans (kubelet + actuator) so they don't
+// flood traces or skew the span-metrics RED rates.
+otelcol.processor.filter "drop_health" {
+  error_mode = "ignore"
+
+  traces {
+    span = [
+      `attributes["url.path"] != nil and IsMatch(attributes["url.path"], ".*/health.*")`,
+      `attributes["http.target"] != nil and IsMatch(attributes["http.target"], ".*/health.*")`,
+      `attributes["http.route"] != nil and IsMatch(attributes["http.route"], ".*/health.*")`,
+    ]
+  }
+
+  output {
+    traces = [otelcol.exporter.otlp.traces.input]
   }
 }
 

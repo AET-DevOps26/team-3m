@@ -40,16 +40,21 @@
     },
     {
       "id": 2,
-      "title": "HTTP p95 latency",
+      "title": "HTTP latency (avg / max)",
       "type": "timeseries",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
       "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
       "targets": [
         {
-          "refId": "A",
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{service=\"keycloak\", deployment_environment=~\"$deployment_environment\"}[$__rate_interval])))",
-          "legendFormat": "p95"
+          "refId": "avg",
+          "expr": "sum(rate(http_server_requests_seconds_sum{service=\"keycloak\", deployment_environment=~\"$deployment_environment\"}[$__rate_interval])) / clamp_min(sum(rate(http_server_requests_seconds_count{service=\"keycloak\", deployment_environment=~\"$deployment_environment\"}[$__rate_interval])), 0.000001)",
+          "legendFormat": "avg"
+        },
+        {
+          "refId": "max",
+          "expr": "max(http_server_requests_seconds_max{service=\"keycloak\", deployment_environment=~\"$deployment_environment\"})",
+          "legendFormat": "max"
         }
       ]
     },
@@ -70,21 +75,16 @@
     },
     {
       "id": 4,
-      "title": "Login events rate (requires metrics event listener)",
+      "title": "Top endpoints by request rate",
       "type": "timeseries",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
-      "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (error) (rate(keycloak_logins_total{deployment_environment=~\"$deployment_environment\"}[$__rate_interval]))",
-          "legendFormat": "{{error}}"
-        },
-        {
-          "refId": "B",
-          "expr": "sum (rate(keycloak_failed_login_attempts_total{deployment_environment=~\"$deployment_environment\"}[$__rate_interval]))",
-          "legendFormat": "failed attempts"
+          "expr": "topk(10, sum by (uri) (rate(http_server_requests_seconds_count{service=\"keycloak\", deployment_environment=~\"$deployment_environment\"}[$__rate_interval])))",
+          "legendFormat": "{{uri}}"
         }
       ]
     }

@@ -19,7 +19,7 @@
 
 The repository includes a root `.env.example` and a local `.env` with the default compose values. Update `.env` if you want to change the Postgres credentials, Keycloak database credentials, or shared local Keycloak dev-user password.
 
-The AI service requires a **Logos API key** (`LOGOS_API_KEY=lg-…`) in `.env`. The Logos endpoint is only reachable from the TUM network or via eduVPN — the AI service will start without the key, but recommendation calls will fail.
+The AI service uses a **Logos API key** (`LOGOS_API_KEY=lg-…`) in `.env` when available. The Logos endpoint is only reachable from the TUM network or via eduVPN. When the key is missing, the AI service **automatically falls back to a local LLM** (see [Local LLM (offline AI)](#local-llm-offline-ai) below). If no local LLM is configured either (`LOCAL_LLM_BASE_URL` empty), recommendation calls return `503`; if a local LLM is configured but not running, they return `502` ("Local LLM is not reachable").
 
 The Compose Keycloak service is for local development only. It builds the custom Keycloak image from `infra/keycloak/theme/` (Keycloak with the Kontor login theme baked in), runs `start-dev`, imports `infra/keycloak/realms/kontor-realm.json`, and stores Keycloak state in the `keycloak_postgres_data` Docker volume. The realm import is skipped once the realm already exists, so delete that volume if you need to re-apply the import from scratch. The first `docker compose up --build` builds the theme image (Node + Maven), which takes a few minutes; subsequent runs use the cached layer.
 
@@ -34,6 +34,30 @@ docker compose up --build
 | Client      | <http://localhost:5173> |
 | Server      | <http://localhost:8080> |
 | AI Service  | <http://localhost:8000> |
+
+### Local LLM (offline AI)
+
+When `LOGOS_API_KEY` is empty, the AI service falls back to a local [Ollama](https://ollama.com/) model so the AI features keep working without TUM network access. There are two ways to provide it.
+
+**Native Ollama (recommended on macOS).** A native Ollama uses the Mac GPU and is much faster than a container:
+
+```sh
+brew install ollama        # or download the app from ollama.com
+ollama pull llama3.2       # one-time model download
+ollama serve               # keep running (the app starts this for you)
+```
+
+The default `docker compose up` reaches it via `host.docker.internal:11434`. No extra flags needed.
+
+**Containerised Ollama (no host setup).** Layer the opt-in override file — it runs Ollama in a container, pulls the model once, and points the AI service at it:
+
+```sh
+docker compose -f docker-compose.yml -f docker-compose.local-llm.yml up --build
+```
+
+Note: containerised Ollama on macOS is **CPU-only** (Docker Desktop can't pass through Apple's Metal GPU), so it is noticeably slower than the native option above.
+
+Override the model with `LOCAL_LLM_MODEL` (default `llama3.2`). **Trust boundary:** in fallback mode your portfolio data is sent to whatever listens on `LOCAL_LLM_BASE_URL`. Set `LOCAL_LLM_BASE_URL=` (empty) in `.env` to disable the fallback entirely.
 
 ### Local Development
 

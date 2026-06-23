@@ -7,7 +7,8 @@
 -- (the Keycloak user id is the OIDC `sub`, so the seeded app_user matches the row
 -- CurrentUserService resolves on first login).
 --
--- Idempotent: ON CONFLICT DO NOTHING makes it safe to re-run on every deploy.
+-- Idempotent: ON CONFLICT (oidc_sub) DO NOTHING preserves existing IDs on re-run;
+-- oidc_sub lookups below keep transactions compatible with fresh and existing deployments.
 
 INSERT INTO app_user (id, oidc_sub, email, preferred_username)
 VALUES (

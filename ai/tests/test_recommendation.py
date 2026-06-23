@@ -272,9 +272,4 @@ def _make_chat_client(llm: LLMRecommendation) -> AsyncMock:
 
 
 def _make_provider(client: AsyncMock, *, is_local: bool = False, model: str = "test-model") -> LlmProvider:
-    return LlmProvider(
-        name="local" if is_local else "logos",
-        client=client,
-        model=model,
-        is_local=is_local,
-    )
+    return LlmProvider(client=client, model=model, is_local=is_local)

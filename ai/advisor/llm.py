@@ -16,7 +16,6 @@ class LlmProvider:
     tune the request (e.g. lower temperature) and surface a provider-specific error.
     """
 
-    name: str
     client: AsyncOpenAI
     model: str
     is_local: bool
@@ -32,7 +31,6 @@ def resolve_llm_provider(settings: Settings) -> LlmProvider | None:
     if settings.logos_api_key:
         logger.info("LLM provider: logos (%s)", settings.logos_model)
         return LlmProvider(
-            name="logos",
             client=AsyncOpenAI(api_key=settings.logos_api_key, base_url=settings.logos_base_url),
             model=settings.logos_model,
             is_local=False,
@@ -41,11 +39,8 @@ def resolve_llm_provider(settings: Settings) -> LlmProvider | None:
     if settings.local_llm_base_url:
         logger.info("LLM provider: local (%s @ %s)", settings.local_llm_model, settings.local_llm_base_url)
         return LlmProvider(
-            name="local",
-            client=AsyncOpenAI(
-                api_key=settings.local_llm_api_key or "ollama",
-                base_url=settings.local_llm_base_url,
-            ),
+            # Ollama ignores the key but the OpenAI client requires a non-empty one.
+            client=AsyncOpenAI(api_key="ollama", base_url=settings.local_llm_base_url),
             model=settings.local_llm_model,
             is_local=True,
         )

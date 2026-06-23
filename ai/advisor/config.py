@@ -9,7 +9,6 @@ class Settings(BaseSettings):
     logos_model: str = "openai/gpt-oss-120b"
     local_llm_base_url: str = "http://localhost:11434/v1"
     local_llm_model: str = "llama3.2"
-    local_llm_api_key: str = "ollama"
     keycloak_issuer: str = "http://localhost:8081/realms/kontor"
     keycloak_jwk_set_uri: str = "http://localhost:8081/realms/kontor/protocol/openid-connect/certs"
     keycloak_audience: str = "kontor-api"

@@ -26,7 +26,6 @@ def test_resolve_llm_provider_uses_logos_when_key_present() -> None:
     settings = Settings(logos_api_key="lg-test-key", logos_base_url="https://logos.test/v1")
     provider = resolve_llm_provider(settings)
     assert provider is not None
-    assert provider.name == "logos"
     assert provider.is_local is False
     assert provider.model == settings.logos_model
     assert provider.client.api_key == "lg-test-key"
@@ -37,7 +36,6 @@ def test_resolve_llm_provider_prefers_logos_when_both_configured() -> None:
     settings = Settings(logos_api_key="lg-test-key", local_llm_base_url="http://localhost:11434/v1")
     provider = resolve_llm_provider(settings)
     assert provider is not None
-    assert provider.name == "logos"
     assert provider.is_local is False
 
 
@@ -49,7 +47,6 @@ def test_resolve_llm_provider_falls_back_to_local_without_key() -> None:
     )
     provider = resolve_llm_provider(settings)
     assert provider is not None
-    assert provider.name == "local"
     assert provider.is_local is True
     assert provider.model == "llama3.2"
     assert str(provider.client.base_url) == "http://localhost:11434/v1/"

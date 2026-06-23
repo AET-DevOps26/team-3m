@@ -153,6 +153,46 @@ The app is available at `https://azure.kontor.live` once Traefik has issued the 
 
 ---
 
+## Load balancing & scaling
+
+Traefik already acts as the load balancer for the stack: it discovers containers
+via the Docker provider and round-robins across every container that shares a
+service's `traefik.http.services.<name>.loadbalancer.*` labels. To put it to work,
+the stateless services run **two replicas each** by default:
+
+| Service | Replicas | Memory limit |
+| ------- | -------- | ------------ |
+| `core`  | `CORE_REPLICAS` (default `2`) | `CORE_MEMORY_LIMIT` (default `1536m`) |
+| `ai`    | `AI_REPLICAS` (default `2`)   | `AI_MEMORY_LIMIT` (default `512m`)    |
+
+Both are stateless — `core` authenticates with JWTs and keeps no server-side
+session, and `ai` holds no per-request state — so replicas are interchangeable.
+Each replica reuses the same Traefik labels, no host ports, and no
+`container_name`; any of those would otherwise pin a service to one container and
+block scaling. The `deploy.resources.limits.memory` cap stops a single replica
+from OOM-ing the shared VM, and `core` sets `JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75`
+so the JVM heap tracks `CORE_MEMORY_LIMIT` instead of a hard-coded `-Xmx`.
+
+`docker compose up -d` honors `deploy.replicas`, so the existing deploy flow needs
+no changes — Compose starts `core-1`/`core-2` (and `ai-1`/`ai-2`) and Traefik
+load-balances across them automatically. Tune the counts/limits in `.env`:
+
+```sh
+CORE_REPLICAS=3
+AI_REPLICAS=1
+```
+
+`db`, `keycloak-db`, `keycloak`, and `traefik` are intentionally left at one
+replica (stateful stores, or Traefik binds the host ports).
+
+> This is horizontal scaling of stateless services on a **single VM** — it adds
+> throughput and crash redundancy (Traefik routes around a dead replica), not
+> host-level HA. A re-pull recreates a service's replicas together, so plain
+> Compose does not give true zero-downtime rolling deploys; that would need
+> Swarm or a scripted drain.
+
+---
+
 ## Teardown
 
 On the VM:

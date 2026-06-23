@@ -76,7 +76,7 @@ spec:
             # /tmp lands on an emptyDir so readOnlyRootFilesystem stays on. The OTel
             # Java agent (baked into the image) is attached only when observability is on.
             - name: JAVA_TOOL_OPTIONS
-              value: {{ if .Values.observability.enabled }}"-javaagent:/app/otel/opentelemetry-javaagent.jar -Djava.io.tmpdir=/tmp"{{ else }}"-Djava.io.tmpdir=/tmp"{{ end }}
+              value: {{ if .Values.observability.enabled }}"-javaagent:/app/otel/opentelemetry-javaagent.jar -Djava.io.tmpdir=/tmp -XX:MaxRAMPercentage=75"{{ else }}"-Djava.io.tmpdir=/tmp -XX:MaxRAMPercentage=75"{{ end }}
           envFrom:
             - secretRef:
                 name: {{ include "kontor.postgres.secretName" . }}

@@ -2,6 +2,7 @@ import { LogOut, User } from "lucide-react"
 import { Suspense } from "react"
 import { useAuth } from "react-oidc-context"
 import { Link } from "react-router-dom"
+import { ErrorBoundary } from "@/components/error-boundary"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -99,17 +100,25 @@ export function AppHeader() {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuLabel>Risk tolerance</DropdownMenuLabel>
-              <Suspense
+              <ErrorBoundary
                 fallback={
-                  <div className="flex flex-col gap-1 px-2 py-1">
-                    {[0, 1, 2].map((i) => (
-                      <Skeleton key={i} className="h-7 w-full" />
-                    ))}
-                  </div>
+                  <p className="px-2 py-1 text-xs text-muted-foreground">
+                    Couldn't load preferences.
+                  </p>
                 }
               >
-                <RiskToleranceItems />
-              </Suspense>
+                <Suspense
+                  fallback={
+                    <div className="flex flex-col gap-1 px-2 py-1">
+                      {[0, 1, 2].map((i) => (
+                        <Skeleton key={i} className="h-7 w-full" />
+                      ))}
+                    </div>
+                  }
+                >
+                  <RiskToleranceItems />
+                </Suspense>
+              </ErrorBoundary>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem

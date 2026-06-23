@@ -1,15 +1,15 @@
 plugins {
 	id 'java'
 	id 'checkstyle'
-	id 'org.springframework.boot' version '4.0.6'
+	id 'org.springframework.boot' version '4.1.0'
 	id 'io.spring.dependency-management' version '1.1.7'
-	id 'com.diffplug.spotless' version '8.6.0'
+	id 'com.diffplug.spotless' version '8.7.0'
 	id 'net.ltgt.errorprone' version '5.1.0'
-	id 'org.jooq.jooq-codegen-gradle' version '3.21.5'
+	id 'org.jooq.jooq-codegen-gradle' version '3.21.6'
 }
 
 group = 'de.devops26.kontor'
-version = '0.12.0'
+version = '0.17.0'
 
 ext['jooq.version'] = '3.21.5'
 
@@ -38,7 +38,7 @@ dependencies {
 	implementation 'org.apache.commons:commons-csv:1.14.1'
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
 	runtimeOnly 'org.postgresql:postgresql'
-	jooqCodegen 'org.jooq:jooq-meta-extensions:3.21.5'
+	jooqCodegen 'org.jooq:jooq-meta-extensions:3.21.6'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
@@ -46,7 +46,7 @@ dependencies {
 	testImplementation 'org.testcontainers:testcontainers-junit-jupiter:2.0.5'
 	testImplementation 'org.testcontainers:testcontainers-postgresql:2.0.5'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-	errorprone 'com.google.errorprone:error_prone_core:2.49.0'
+	errorprone 'com.google.errorprone:error_prone_core:2.50.0'
 }
 
 jooq {
@@ -139,7 +139,7 @@ spotless {
 }
 
 checkstyle {
-	toolVersion = '13.5.0'
+	toolVersion = '13.6.0'
 	configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
 	maxWarnings = 0
 }

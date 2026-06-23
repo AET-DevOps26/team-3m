@@ -80,8 +80,9 @@ export function normalizeType(type: string): string {
     .filter((word) => word.length > 0 && !TYPE_QUALIFIERS.has(word))
     .join(" ")
 
-  // Collapse all transfer variants (transfer direct debit, transfer inbound, etc.) into one type
-  if (base.startsWith("transfer")) return "transfer"
+  // Collapse all transfer/customer variants into one type
+  if (base.startsWith("transfer") || base.startsWith("customer"))
+    return "transfer"
 
   return base
 }

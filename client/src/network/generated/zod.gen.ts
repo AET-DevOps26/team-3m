@@ -2,6 +2,24 @@
 
 import * as z from "zod"
 
+export const updateRiskToleranceRequestSchema = z.object({
+  riskTolerance: z.enum(["CONSERVATIVE", "MODERATE", "AGGRESSIVE"]),
+})
+
+export const userProfileResponseSchema = z.object({
+  id: z.uuid(),
+  email: z.string().optional(),
+  preferredUsername: z.string().optional(),
+  riskTolerance: z.enum(["CONSERVATIVE", "MODERATE", "AGGRESSIVE"]).optional(),
+})
+
+export const apiResponseUserProfileResponseSchema = z.object({
+  success: z.boolean(),
+  data: userProfileResponseSchema.optional(),
+  error: z.string().nullish(),
+  details: z.array(z.unknown()).nullish(),
+})
+
 export const csvImportResultSchema = z.object({
   importedCount: z.int().gte(0).max(2147483647, {
     error: "Invalid value: Expected int32 to be <= 2147483647",
@@ -110,6 +128,30 @@ export const listTransactionsApiResponseSchema = z.object({
   details: z.array(z.unknown()).nullish(),
 })
 
+export const transactionMetadataSchema = z.object({
+  categories: z.array(z.string()).optional(),
+  types: z.array(z.string()).optional(),
+})
+
+export const transactionMetadataApiResponseSchema = z.object({
+  success: z.boolean(),
+  data: transactionMetadataSchema.optional(),
+  error: z.string().nullish(),
+  details: z.array(z.unknown()).nullish(),
+})
+
+/**
+ * OK
+ */
+export const getProfileResponseSchema = userProfileResponseSchema
+
+export const zUpdateProfileBody = updateRiskToleranceRequestSchema
+
+/**
+ * OK
+ */
+export const updateProfileResponseSchema = userProfileResponseSchema
+
 export const zImportCsvBody = z.object({
   file: z.string(),
 })
@@ -142,9 +184,19 @@ export const zListTransactionsQuery = z.object({
     .default(200),
   afterDatetime: z.string().optional(),
   afterId: z.uuid().optional(),
+  search: z.string().optional(),
+  category: z.string().optional(),
+  type: z.string().optional(),
+  dateFrom: z.iso.date().optional(),
+  dateTo: z.iso.date().optional(),
 })
 
 /**
  * Transaction page
  */
 export const listTransactionsResponseSchema = listTransactionsApiResponseSchema
+
+/**
+ * Distinct categories and types for the authenticated user
+ */
+export const getMetadataResponseSchema = transactionMetadataApiResponseSchema

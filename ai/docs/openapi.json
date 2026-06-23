@@ -1,0 +1,267 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Kontor AI",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/ai/health/liveness": {
+      "get": {
+        "summary": "Liveness",
+        "operationId": "liveness_ai_health_liveness_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ai/health/readiness": {
+      "get": {
+        "summary": "Readiness",
+        "operationId": "readiness_ai_health_readiness_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ai/advisor/recommendation": {
+      "post": {
+        "summary": "Generate Recommendation",
+        "operationId": "generate_recommendation_ai_advisor_recommendation_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PortfolioInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendationResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "AI service request failed or returned an unparsable response"
+          },
+          "503": {
+            "description": "AI service is not configured"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "PortfolioHoldingInput": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "title": "Symbol"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "asset_class": {
+            "type": "string",
+            "title": "Asset Class"
+          },
+          "shares": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Shares"
+          },
+          "current_value": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Current Value"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          }
+        },
+        "type": "object",
+        "required": [
+          "symbol",
+          "name",
+          "asset_class",
+          "shares",
+          "current_value",
+          "currency"
+        ],
+        "title": "PortfolioHoldingInput"
+      },
+      "PortfolioInput": {
+        "properties": {
+          "holdings": {
+            "items": {
+              "$ref": "#/components/schemas/PortfolioHoldingInput"
+            },
+            "type": "array",
+            "title": "Holdings"
+          },
+          "cash_balance": {
+            "type": "number",
+            "title": "Cash Balance"
+          },
+          "total_value": {
+            "type": "number",
+            "title": "Total Value"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "risk_tolerance": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "CONSERVATIVE",
+                  "MODERATE",
+                  "AGGRESSIVE"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Tolerance"
+          }
+        },
+        "type": "object",
+        "required": [
+          "holdings",
+          "cash_balance",
+          "total_value",
+          "currency"
+        ],
+        "title": "PortfolioInput"
+      },
+      "RecommendationResponse": {
+        "properties": {
+          "recommendation": {
+            "type": "string",
+            "title": "Recommendation"
+          },
+          "rationale": {
+            "type": "string",
+            "title": "Rationale"
+          },
+          "disclaimer": {
+            "type": "string",
+            "title": "Disclaimer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "recommendation",
+          "rationale",
+          "disclaimer"
+        ],
+        "title": "RecommendationResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

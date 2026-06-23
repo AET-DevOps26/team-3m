@@ -20,14 +20,20 @@ public class AppUserRepository {
     }
 
     public Optional<AppUser> findByOidcSub(String oidcSub) {
-        return dsl.select(APP_USER.ID, APP_USER.OIDC_SUB, APP_USER.EMAIL, APP_USER.PREFERRED_USERNAME)
+        return dsl.select(
+                        APP_USER.ID,
+                        APP_USER.OIDC_SUB,
+                        APP_USER.EMAIL,
+                        APP_USER.PREFERRED_USERNAME,
+                        APP_USER.RISK_TOLERANCE)
                 .from(APP_USER)
                 .where(APP_USER.OIDC_SUB.eq(oidcSub))
                 .fetchOptional(record -> new AppUser(
                         record.get(APP_USER.ID),
                         record.get(APP_USER.OIDC_SUB),
                         record.get(APP_USER.EMAIL),
-                        record.get(APP_USER.PREFERRED_USERNAME)));
+                        record.get(APP_USER.PREFERRED_USERNAME),
+                        toRiskTolerance(record.get(APP_USER.RISK_TOLERANCE))));
     }
 
     public AppUser upsert(String oidcSub, String email, String preferredUsername) {
@@ -46,7 +52,12 @@ public class AppUserRepository {
                         APP_USER.PREFERRED_USERNAME,
                         DSL.coalesce(DSL.excluded(APP_USER.PREFERRED_USERNAME), APP_USER.PREFERRED_USERNAME))
                 .set(APP_USER.UPDATED_AT, DSL.excluded(APP_USER.UPDATED_AT))
-                .returning(APP_USER.ID, APP_USER.OIDC_SUB, APP_USER.EMAIL, APP_USER.PREFERRED_USERNAME)
+                .returning(
+                        APP_USER.ID,
+                        APP_USER.OIDC_SUB,
+                        APP_USER.EMAIL,
+                        APP_USER.PREFERRED_USERNAME,
+                        APP_USER.RISK_TOLERANCE)
                 .fetchOne();
 
         if (record == null) {
@@ -56,6 +67,36 @@ public class AppUserRepository {
                 record.get(APP_USER.ID),
                 record.get(APP_USER.OIDC_SUB),
                 record.get(APP_USER.EMAIL),
-                record.get(APP_USER.PREFERRED_USERNAME));
+                record.get(APP_USER.PREFERRED_USERNAME),
+                toRiskTolerance(record.get(APP_USER.RISK_TOLERANCE)));
+    }
+
+    public AppUser updateRiskTolerance(UUID userId, RiskTolerance riskTolerance) {
+        var now = OffsetDateTime.now(ZoneOffset.UTC);
+        var record = dsl.update(APP_USER)
+                .set(APP_USER.RISK_TOLERANCE, riskTolerance.name())
+                .set(APP_USER.UPDATED_AT, now)
+                .where(APP_USER.ID.eq(userId))
+                .returning(
+                        APP_USER.ID,
+                        APP_USER.OIDC_SUB,
+                        APP_USER.EMAIL,
+                        APP_USER.PREFERRED_USERNAME,
+                        APP_USER.RISK_TOLERANCE)
+                .fetchOne();
+
+        if (record == null) {
+            throw new IllegalStateException("Update of app_user returned no row for id=" + userId);
+        }
+        return new AppUser(
+                record.get(APP_USER.ID),
+                record.get(APP_USER.OIDC_SUB),
+                record.get(APP_USER.EMAIL),
+                record.get(APP_USER.PREFERRED_USERNAME),
+                toRiskTolerance(record.get(APP_USER.RISK_TOLERANCE)));
+    }
+
+    private static RiskTolerance toRiskTolerance(String value) {
+        return value == null ? null : RiskTolerance.valueOf(value);
     }
 }

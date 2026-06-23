@@ -1,0 +1,45 @@
+{{- if .Values.ingress.enabled }}
+{{- /* Dedicated Ingress for the /ai path so rate-limit / body-size annotations
+       apply only to the paid AI backend, not the SPA (/) or core (/api). Cert
+       issuance is owned by the main ingress; this one reuses the same TLS secret. */ -}}
+{{- $hosts := .Values.ingress.hosts }}
+{{- if not $hosts }}
+{{- $hosts = list .Values.ingress.host }}
+{{- end }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "kontor.fullname" . }}-ai
+  labels:
+    {{- include "kontor.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ai
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: {{ .Values.ai.ingress.proxyBodySize | quote }}
+    {{- if .Values.ai.ingress.rateLimit.enabled }}
+    nginx.ingress.kubernetes.io/limit-rpm: {{ .Values.ai.ingress.rateLimit.rpm | quote }}
+    nginx.ingress.kubernetes.io/limit-connections: {{ .Values.ai.ingress.rateLimit.connections | quote }}
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- if .Values.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        {{- range $hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .Values.ingress.tls.secretName }}
+  {{- end }}
+  rules:
+    {{- range $hosts }}
+    - host: {{ . | quote }}
+      http:
+        paths:
+          - path: /ai
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "kontor.ai.fullname" $ }}
+                port:
+                  number: {{ $.Values.ai.service.port }}
+    {{- end }}
+{{- end }}

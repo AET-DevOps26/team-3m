@@ -16,6 +16,10 @@ spec:
       labels:
         {{- include "kontor.labels" . | nindent 8 }}
         app.kubernetes.io/component: ai
+      {{- if .Values.ai.logosApiKey }}
+      annotations:
+        checksum/secret: {{ include (print $.Template.BasePath "/ai-secret.yaml") . | sha256sum }}
+      {{- end }}
     spec:
       securityContext:
         {{- toYaml .Values.ai.podSecurityContext | nindent 8 }}
@@ -29,12 +33,25 @@ spec:
             - name: http
               containerPort: 8000
               protocol: TCP
-          {{- if .Values.ai.env }}
           env:
+            {{- with (include "kontor.oidc.issuerUrl" .) }}
+            - name: KEYCLOAK_ISSUER
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with (include "kontor.oidc.jwkSetUri" .) }}
+            - name: KEYCLOAK_JWK_SET_URI
+              value: {{ . | quote }}
+            {{- end }}
+            - name: KEYCLOAK_AUDIENCE
+              value: {{ .Values.oidc.audience | quote }}
             {{- range $key, $value := .Values.ai.env }}
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
+          {{- if or .Values.ai.logosApiKey .Values.ai.existingSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ include "kontor.ai.secretName" . }}
           {{- end }}
           readinessProbe:
             httpGet:

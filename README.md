@@ -19,6 +19,8 @@
 
 The repository includes a root `.env.example` and a local `.env` with the default compose values. Update `.env` if you want to change the Postgres credentials, Keycloak database credentials, or shared local Keycloak dev-user password.
 
+The AI service requires a **Logos API key** (`LOGOS_API_KEY=lg-…`) in `.env`. The Logos endpoint is only reachable from the TUM network or via eduVPN — the AI service will start without the key, but recommendation calls will fail.
+
 The Compose Keycloak service is for local development only. It builds the custom Keycloak image from `infra/keycloak/theme/` (Keycloak with the Kontor login theme baked in), runs `start-dev`, imports `infra/keycloak/realms/kontor-realm.json`, and stores Keycloak state in the `keycloak_postgres_data` Docker volume. The realm import is skipped once the realm already exists, so delete that volume if you need to re-apply the import from scratch. The first `docker compose up --build` builds the theme image (Node + Maven), which takes a few minutes; subsequent runs use the cached layer.
 
 Local Keycloak users live in `infra/keycloak/realms/kontor-users-0.json`. Add another object to the `users` array to create more local accounts with their own `realmRoles` and `attributes`. The sample users share the `KEYCLOAK_DEV_USERS_PASSWORD` environment placeholder so adding users does not require more Compose variables.
@@ -27,10 +29,11 @@ Local Keycloak users live in `infra/keycloak/realms/kontor-users-0.json`. Add an
 docker compose up --build
 ```
 
-| Service | URL                     |
-| ------- | ----------------------- |
-| Client  | <http://localhost:5173> |
-| Server  | <http://localhost:8080> |
+| Service     | URL                     |
+| ----------- | ----------------------- |
+| Client      | <http://localhost:5173> |
+| Server      | <http://localhost:8080> |
+| AI Service  | <http://localhost:8000> |
 
 ### Local Development
 
@@ -72,19 +75,33 @@ Requires [uv](https://docs.astral.sh/uv/getting-started/installation/).
 ```sh
 cd ai
 uv sync
-uv run uvicorn ai.main:app --reload
+uv run uvicorn advisor.main:app --reload
 ```
 
 | Task             | Command                        |
 | ---------------- | ------------------------------ |
 | Install deps     | `uv sync`                      |
-| Dev server       | `uv run uvicorn ai.main:app --reload` |
+| Dev server       | `uv run uvicorn advisor.main:app --reload` |
 | Test             | `uv run pytest`                |
 | Type check       | `uv run ty check`              |
 | Format check     | `uv run ruff format --check .` |
 | Format fix       | `uv run ruff format .`         |
 | Lint             | `uv run ruff check .`          |
 | Lint (autofix)   | `uv run ruff check --fix .`    |
+
+### Generated API Client
+
+The client's TypeScript types and Zod schemas are generated from each backend's
+OpenAPI spec — never hand-written. After changing a route or its request/response
+models, regenerate the spec and the client, then commit the result:
+
+```sh
+cd core && ./gradlew generateOpenApiDocs   # core spec  → core/docs/openapi.yml
+cd ai   && uv run export-openapi           # AI spec    → ai/docs/openapi.json
+cd client && npm run generate:api          # both specs → client/src/network/generated*
+```
+
+CI's `openapi-sync` workflow fails if the committed files are out of sync.
 
 ---
 
@@ -96,6 +113,8 @@ core, Postgres (with `pgvector`), and an optional Keycloak. The chart README
 documents environment overlays (`values-prod.yaml`,
 `values-pr.template.yaml`), required secrets, and the install / upgrade flow.
 
+
+Copy `deploy/helm/kontor/secrets.example.yaml` to `secrets.yaml` and fill in all `REPLACE_ME` values, including `ai.logosApiKey` (the `lg-…` key from your tutor — requires TUM network / eduVPN):
 
 ```sh
 helm upgrade --install kontor ./deploy/helm/kontor \

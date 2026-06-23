@@ -21,7 +21,7 @@ import org.springframework.test.context.ActiveProfiles;
 class SeedDataMigrationTest {
 
     private static final String DEV_USER_OIDC_SUB = "00000000-0000-0000-0000-000000000001";
-    private static final int EXPECTED_SEED_TRANSACTION_COUNT = 52;
+    private static final int EXPECTED_SEED_TRANSACTION_COUNT = 53;
 
     @Autowired
     private DSLContext dsl;
@@ -65,7 +65,7 @@ class SeedDataMigrationTest {
                 .fetchOne(0, int.class);
 
         dsl.insertInto(APP_USER)
-                .set(APP_USER.ID, UUID.fromString("11111111-1111-1111-1111-111111111111"))
+                .set(APP_USER.ID, UUID.fromString("11111111-1111-4111-8111-111111111111"))
                 .set(APP_USER.OIDC_SUB, DEV_USER_OIDC_SUB)
                 .set(APP_USER.EMAIL, "dev@kontor.local")
                 .set(APP_USER.PREFERRED_USERNAME, "dev")

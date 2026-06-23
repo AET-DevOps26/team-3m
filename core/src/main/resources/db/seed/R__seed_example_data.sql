@@ -1,7 +1,8 @@
 -- Example seed data for local dev and Kubernetes PR preview environments.
--- Covers four months of realistic personal finance activity (Feb–May 2026):
--- recurring salary, rent, bills, and gym alongside a growing multi-asset
--- portfolio (Apple, NVIDIA, Microsoft, MSCI World, MSCI EM, S&P 500 ETF).
+-- Covers four months of realistic personal finance activity (Feb–May 2026)
+-- on top of a January opening balance that funds the account: recurring
+-- salary, rent, bills, and gym alongside a growing multi-asset portfolio
+-- (Apple, NVIDIA, Microsoft, MSCI World, MSCI EM, S&P 500 ETF).
 --
 -- Keyed to the fixed Keycloak dev user id in kontor-users-0.json and the
 -- Helm keycloak-realm-configmap.yaml seedDevUser block.
@@ -10,7 +11,7 @@
 
 INSERT INTO app_user (id, oidc_sub, email, preferred_username)
 VALUES (
-    '11111111-1111-1111-1111-111111111111',
+    '11111111-1111-4111-8111-111111111111',
     '00000000-0000-0000-0000-000000000001',
     'dev@kontor.local',
     'dev'
@@ -24,6 +25,8 @@ INSERT INTO financial_transaction (
     external_transaction_id, counterparty_name, counterparty_iban,
     payment_reference, mcc_code
 ) VALUES
+    -- ── January 2026 (opening balance) ──────────────────────────────────────────
+    (gen_random_uuid(), (SELECT id FROM app_user WHERE oidc_sub = '00000000-0000-0000-0000-000000000001'), '2026-01-31T09:00:00.000000Z', '2026-01-31', 'DEFAULT', 'CASH', 'CUSTOMER_INBOUND', NULL, 'Opening balance', NULL, NULL, NULL, 15000.000000, NULL, NULL, 'EUR', NULL, NULL, NULL, 'Opening balance', '00000000-0000-4001-8000-000000000001', NULL, NULL, NULL, NULL),
     -- ── February 2026 ──────────────────────────────────────────────────────────
     (gen_random_uuid(), (SELECT id FROM app_user WHERE oidc_sub = '00000000-0000-0000-0000-000000000001'), '2026-02-01T09:30:00.000000Z', '2026-02-01', 'DEFAULT', 'CASH', 'CUSTOMER_INBOUND', NULL, 'Jane Doe', NULL, NULL, NULL, 3200.000000, NULL, NULL, 'EUR', NULL, NULL, NULL, 'Monthly salary February 2026', '00000000-0000-4002-8000-000000000001', 'Jane Doe', 'DE89370400440532013000', NULL, NULL),
     (gen_random_uuid(), (SELECT id FROM app_user WHERE oidc_sub = '00000000-0000-0000-0000-000000000001'), '2026-02-01T10:00:00.000000Z', '2026-02-01', 'DEFAULT', 'CASH', 'CUSTOMER_OUTBOUND', NULL, 'Hausverwaltung Berlin Mitte', NULL, NULL, NULL, -1200.000000, NULL, NULL, 'EUR', NULL, NULL, NULL, 'Rent February 2026', '00000000-0000-4002-8000-000000000002', 'Hausverwaltung Berlin Mitte', 'DE02120300000000202051', 'Miete 02/2026', NULL),

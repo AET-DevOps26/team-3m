@@ -51,7 +51,11 @@ services:
     restart: unless-stopped
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26.0
+    # Custom Keycloak image with the Kontor login theme baked in (built in CI from
+    # infra/keycloak/theme, same image used by k8s/Helm and local compose). The
+    # realm's loginTheme: kontor resolves to this baked-in theme. Tag defaults to
+    # `latest`; override via KONTOR_KEYCLOAK_IMAGE_TAG to pin a PR/sha build.
+    image: ghcr.io/aet-devops26/team-3m/kontor-keycloak:${KONTOR_KEYCLOAK_IMAGE_TAG:-latest}
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |

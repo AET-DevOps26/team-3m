@@ -76,8 +76,9 @@ keycloak:
       - https://team-3m.stud.k8s.aet.cit.tum.de
     grafanaClient:
       enabled: true
-      rootUrl: https://grafana.team-3m.stud.k8s.aet.cit.tum.de
+      rootUrl: https://grafana.kontor.live
       redirectUris:
+        - https://grafana.kontor.live/login/generic_oauth
         - https://grafana.team-3m.stud.k8s.aet.cit.tum.de/login/generic_oauth
 
 ingress:

@@ -96,6 +96,7 @@ grafana:
     enabled: true
     className: nginx
     hosts:
+      - grafana.kontor.live
       - grafana.team-3m.stud.k8s.aet.cit.tum.de
     tls:
       enabled: true

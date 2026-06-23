@@ -15,7 +15,6 @@ metadata:
   labels:
     {{- include "obs.componentLabels" (dict "root" . "component" "seaweedfs") | nindent 4 }}
 spec:
-  clusterIP: None
   selector:
     {{- include "obs.selectorLabels" (dict "root" . "component" "seaweedfs") | nindent 4 }}
   ports:
@@ -73,6 +72,7 @@ spec:
           volumeMounts:
             - { name: data, mountPath: /data }
             - { name: config, mountPath: /etc/seaweedfs }
+            - { name: tmp, mountPath: /tmp }
           readinessProbe:
             httpGet:
               path: /cluster/healthz
@@ -96,6 +96,8 @@ spec:
         - name: config
           configMap:
             name: seaweedfs-config
+        - name: tmp
+          emptyDir: {}
   volumeClaimTemplates:
     - metadata:
         name: data

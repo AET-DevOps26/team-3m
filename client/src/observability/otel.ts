@@ -54,7 +54,10 @@ export function initObservability(): void {
     tracerProvider,
     instrumentations: [
       new DocumentLoadInstrumentation(),
-      new FetchInstrumentation({ propagateTraceHeaderCorsUrls: [/.*/] }),
+      // Only propagate the W3C trace header to same-origin requests (the /api calls).
+      // Injecting `traceparent` on cross-origin fetches (e.g. Keycloak) triggers a CORS
+      // preflight those servers reject, which breaks login.
+      new FetchInstrumentation(),
     ],
   })
 

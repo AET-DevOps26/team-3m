@@ -1,6 +1,6 @@
 import { Buffer } from "node:buffer"
-import { expect, test } from "@playwright/test"
-import { envelope } from "./stubs"
+import { expect, type Page, test } from "@playwright/test"
+import { fulfillOk } from "./stubs"
 
 const IMPORT_ROUTE = /\/api\/v1\/financial-transactions\/import/
 
@@ -10,7 +10,7 @@ const CSV_FILE = {
   buffer: Buffer.from("date,amount\n2026-02-03,-1885\n"),
 }
 
-async function openImportDialog(page: import("@playwright/test").Page) {
+async function openImportDialog(page: Page) {
   await page.goto("/")
   await page.getByRole("button", { name: "Import CSV" }).click()
   await expect(
@@ -26,8 +26,9 @@ test("opens the import dialog with the CSV dropzone", async ({ page }) => {
 
 test("imports a CSV file and reports success", async ({ page }) => {
   await page.route(IMPORT_ROUTE, async (route) => {
-    await route.fulfill({
-      json: envelope({ importedCount: 3, message: "Imported 3 transactions" }),
+    await fulfillOk(route, {
+      importedCount: 3,
+      message: "Imported 3 transactions",
     })
   })
 

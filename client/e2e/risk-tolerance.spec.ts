@@ -1,41 +1,13 @@
 import { expect, test } from "@playwright/test"
-
-// A valid RFC-4122 v4 UUID — the client validates profile ids with z.uuid(),
-// so stubbed responses must use a well-formed id.
-const DEV_USER_ID = "00000000-0000-4000-8000-000000000000"
-
-interface ProfileEnvelope {
-  success: boolean
-  data: {
-    id: string
-    email: string
-    preferredUsername: string
-    riskTolerance: string | null
-  }
-  error: null
-  details: null
-}
-
-function profileEnvelope(riskTolerance: string | null): ProfileEnvelope {
-  return {
-    success: true,
-    data: {
-      id: DEV_USER_ID,
-      email: "dev@kontor.local",
-      preferredUsername: "dev",
-      riskTolerance,
-    },
-    error: null,
-    details: null,
-  }
-}
+import { completeRiskToleranceIfPresent } from "./onboarding"
+import { fulfillOk, profile } from "./stubs"
 
 test("prompts a first-time user to set their risk tolerance", async ({
   page,
 }) => {
   await page.route("**/api/v1/profile", async (route) => {
     if (route.request().method() === "GET") {
-      await route.fulfill({ json: profileEnvelope(null) })
+      await fulfillOk(route, profile(null))
       return
     }
     await route.continue()
@@ -53,22 +25,15 @@ test("saving a risk tolerance dismisses the dialog", async ({ page }) => {
   await page.route("**/api/v1/profile", async (route) => {
     if (route.request().method() === "PUT") {
       saved = true
-      await route.fulfill({ json: profileEnvelope("MODERATE") })
+      await fulfillOk(route, profile("MODERATE"))
       return
     }
-    await route.fulfill({ json: profileEnvelope(saved ? "MODERATE" : null) })
+    await fulfillOk(route, profile(saved ? "MODERATE" : null))
   })
 
   await page.goto("/")
+  await completeRiskToleranceIfPresent(page)
 
-  const dialog = page.getByRole("alertdialog")
-  await expect(dialog.getByText("Set your risk tolerance")).toBeVisible()
-
-  await page.getByRole("combobox").click()
-  await page.getByRole("option", { name: "Moderate" }).click()
-  await page.getByRole("button", { name: "Get started" }).click()
-
-  await expect(dialog).toBeHidden()
   expect(saved).toBe(true)
 })
 
@@ -77,7 +42,7 @@ test("does not prompt a user who already set their risk tolerance", async ({
 }) => {
   await page.route("**/api/v1/profile", async (route) => {
     if (route.request().method() === "GET") {
-      await route.fulfill({ json: profileEnvelope("AGGRESSIVE") })
+      await fulfillOk(route, profile("AGGRESSIVE"))
       return
     }
     await route.continue()

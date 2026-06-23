@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test"
-import { envelope, overview, SAMPLE_HOLDINGS } from "./stubs"
+import { fulfillOk, overview, SAMPLE_HOLDINGS } from "./stubs"
 
 const OVERVIEW_ROUTE = /\/api\/v1\/portfolio\/overview/
 
@@ -7,7 +7,7 @@ test("renders holdings and summary values from portfolio data", async ({
   page,
 }) => {
   await page.route(OVERVIEW_ROUTE, async (route) => {
-    await route.fulfill({ json: envelope(overview()) })
+    await fulfillOk(route, overview())
   })
 
   await page.goto("/")

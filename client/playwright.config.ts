@@ -13,6 +13,9 @@ export default defineConfig({
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "html",
   use: {
     baseURL: process.env.E2E_BASE_URL ?? "http://localhost:5173",
+    // Pin the locale so number/currency formatting (Intl with the runtime
+    // default locale) is deterministic across environments.
+    locale: "en-US",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },

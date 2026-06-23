@@ -1,10 +1,12 @@
 import { expect, type Page } from "@playwright/test"
 
-// The dialog only appears once the profile query resolves, a beat after the
-// page shell (and its static heading) render. We must wait for it rather than
-// check instantaneously, or a fresh user is left un-onboarded and the modal
-// blocks every later interaction.
-const DIALOG_TIMEOUT_MS = 15_000
+// The dialog only appears once the profile query resolves. We wait for the
+// page's network to go idle (so that query has run) rather than blindly waiting
+// a long fixed timeout, then give the dialog a brief window to mount. Checking
+// instantaneously would leave a fresh user un-onboarded with the modal blocking
+// every later interaction.
+const SETTLE_TIMEOUT_MS = 15_000
+const DIALOG_RENDER_TIMEOUT_MS = 2_000
 
 /**
  * Completes the first-run "Set your risk tolerance" dialog if it appears.
@@ -18,10 +20,16 @@ export async function completeRiskToleranceIfPresent(
   page: Page,
 ): Promise<void> {
   const dialog = page.getByRole("alertdialog")
+  await page
+    .waitForLoadState("networkidle", { timeout: SETTLE_TIMEOUT_MS })
+    .catch(() => {})
   try {
-    await dialog.waitFor({ state: "visible", timeout: DIALOG_TIMEOUT_MS })
+    await dialog.waitFor({
+      state: "visible",
+      timeout: DIALOG_RENDER_TIMEOUT_MS,
+    })
   } catch {
-    // No dialog appeared within the window — the user is already onboarded.
+    // No dialog appeared once the page settled — the user is already onboarded.
     return
   }
 

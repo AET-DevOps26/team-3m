@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test"
 import { primeSession } from "./session"
 import {
-  envelope,
+  fulfillOk,
   transaction,
   transactionMetadata,
   transactionsPage,
@@ -12,25 +12,24 @@ const LIST_ROUTE = /\/api\/v1\/financial-transactions\?/
 
 test.beforeEach(async ({ page }) => {
   await page.route(METADATA_ROUTE, async (route) => {
-    await route.fulfill({ json: envelope(transactionMetadata()) })
+    await fulfillOk(route, transactionMetadata())
   })
 })
 
 test("renders a populated transaction list", async ({ page }) => {
   await page.route(LIST_ROUTE, async (route) => {
-    await route.fulfill({
-      json: envelope(
-        transactionsPage([
-          transaction({ name: "Apple", category: "TRADING", amount: -1885 }),
-          transaction({
-            name: "Monthly salary",
-            category: "CASH",
-            type: "CUSTOMER_INBOUND",
-            amount: 3200,
-          }),
-        ]),
-      ),
-    })
+    await fulfillOk(
+      route,
+      transactionsPage([
+        transaction({ name: "Apple", category: "TRADING", amount: -1885 }),
+        transaction({
+          name: "Monthly salary",
+          category: "CASH",
+          type: "CUSTOMER_INBOUND",
+          amount: 3200,
+        }),
+      ]),
+    )
   })
 
   await primeSession(page)
@@ -42,13 +41,12 @@ test("renders a populated transaction list", async ({ page }) => {
 
 test("filters transactions by category server-side", async ({ page }) => {
   await page.route(LIST_ROUTE, async (route) => {
-    await route.fulfill({
-      json: envelope(
-        transactionsPage([
-          transaction({ name: "Apple", category: "TRADING", amount: -1885 }),
-        ]),
-      ),
-    })
+    await fulfillOk(
+      route,
+      transactionsPage([
+        transaction({ name: "Apple", category: "TRADING", amount: -1885 }),
+      ]),
+    )
   })
 
   await primeSession(page)
@@ -67,7 +65,7 @@ test("shows an empty state when no transactions match the filter", async ({
   page,
 }) => {
   await page.route(LIST_ROUTE, async (route) => {
-    await route.fulfill({ json: envelope(transactionsPage([])) })
+    await fulfillOk(route, transactionsPage([]))
   })
 
   await primeSession(page)

@@ -5,16 +5,23 @@
 // validates them with z.uuid(), and datetimes use an explicit +00:00 offset to
 // match the offset-aware parsing the client applies.
 
+import type { Route } from "@playwright/test"
+
 /** A valid RFC-4122 v4 UUID (version 4, variant 8). */
 export const UUID = "00000000-0000-4000-8000-000000000000"
 
 function uuid(n: number): string {
-  return `00000000-0000-4000-8000-00000000000${n}`
+  return `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`
 }
 
 /** Wraps a payload in the API's standard success envelope. */
 export function envelope<T>(data: T) {
   return { success: true, data, error: null, details: null }
+}
+
+/** Fulfills a route with a success-envelope JSON body. */
+export function fulfillOk(route: Route, data: unknown) {
+  return route.fulfill({ json: envelope(data) })
 }
 
 // --- Profile ---------------------------------------------------------------
@@ -82,8 +89,9 @@ function offsetIso(timestampMs: number): string {
 export function performance(count = 40, spanDays = 400) {
   const now = Date.now()
   const dayMs = 24 * 60 * 60 * 1000
+  const denom = Math.max(count - 1, 1)
   const snapshots = Array.from({ length: count }, (_, i) => {
-    const t = now - spanDays * dayMs * (1 - i / (count - 1))
+    const t = now - spanDays * dayMs * (1 - i / denom)
     const investmentValue = 10_000 + i * 120
     const cashValue = 1500
     return {
@@ -134,7 +142,12 @@ export function transaction(
 }
 
 export function transactionsPage(items: StubTransaction[]) {
-  return { items, nextCursor: null }
+  // Assign each item a distinct, valid id so rows never collide on the
+  // React key={tx.id} the transaction list uses, regardless of caller input.
+  return {
+    items: items.map((item, i) => ({ ...item, id: uuid(i + 1) })),
+    nextCursor: null,
+  }
 }
 
 export function transactionMetadata(

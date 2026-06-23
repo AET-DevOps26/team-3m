@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test"
-import { envelope, performance } from "./stubs"
+import { fulfillOk, performance } from "./stubs"
 
 const PERFORMANCE_ROUTE = /\/api\/v1\/portfolio\/performance/
 const EMPTY_MESSAGE = "Import more transactions to see performance over time."
@@ -8,7 +8,7 @@ test("shows an empty state when there is no performance history", async ({
   page,
 }) => {
   await page.route(PERFORMANCE_ROUTE, async (route) => {
-    await route.fulfill({ json: envelope({ snapshots: [], currency: "EUR" }) })
+    await fulfillOk(route, { snapshots: [], currency: "EUR" })
   })
 
   await page.goto("/")
@@ -19,7 +19,7 @@ test("shows an empty state when there is no performance history", async ({
 
 test("renders the chart and switches time ranges", async ({ page }) => {
   await page.route(PERFORMANCE_ROUTE, async (route) => {
-    await route.fulfill({ json: envelope(performance()) })
+    await fulfillOk(route, performance())
   })
 
   await page.goto("/")

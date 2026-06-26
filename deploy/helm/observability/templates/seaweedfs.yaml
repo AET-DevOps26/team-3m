@@ -78,6 +78,7 @@ spec:
             - -s3
             - -s3.config=/etc/seaweedfs/s3.json
             - -master.volumeSizeLimitMB=1024
+            - -master.volumePreallocate=false
           ports:
             - { name: s3, containerPort: 8333 }
             - { name: master, containerPort: 9333 }

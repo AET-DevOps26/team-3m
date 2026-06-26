@@ -8,7 +8,7 @@ x-otel-backend-env: &otel-backend-env
 
 services:
   seaweedfs:
-    image: chrislusf/seaweedfs:3.80
+    image: chrislusf/seaweedfs:4.36
     command:
       - server
       - -dir=/data
@@ -29,7 +29,7 @@ services:
       start_period: 10s
 
   seaweedfs-init:
-    image: chrislusf/seaweedfs:3.80
+    image: chrislusf/seaweedfs:4.36
     depends_on:
       seaweedfs:
         condition: service_healthy
@@ -46,7 +46,7 @@ services:
     restart: "no"
 
   loki:
-    image: grafana/loki:3.4.2
+    image: grafana/loki:3.7.3
     command: ["-config.file=/etc/loki/loki.yaml", "-config.expand-env=true"]
     environment:
       S3_ACCESS_KEY: observability
@@ -67,7 +67,7 @@ services:
       start_period: 20s
 
   tempo:
-    image: grafana/tempo:2.7.1
+    image: grafana/tempo:2.10.7
     command: ["-config.file=/etc/tempo/tempo.yaml", "-config.expand-env=true"]
     environment:
       S3_ACCESS_KEY: observability
@@ -88,7 +88,7 @@ services:
       start_period: 20s
 
   prometheus:
-    image: prom/prometheus:v3.2.1
+    image: prom/prometheus:v3.12.0
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.path=/prometheus
@@ -109,7 +109,7 @@ services:
       start_period: 15s
 
   alloy:
-    image: grafana/alloy:v1.7.5
+    image: grafana/alloy:v1.17.0
     command:
       - run
       - --server.http.listen-addr=0.0.0.0:12345
@@ -135,7 +135,7 @@ services:
       - "${ALLOY_UI_PORT:-12345}:12345"
 
   grafana:
-    image: grafana/grafana:11.5.2
+    image: grafana/grafana:13.1.0
     environment:
       GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD:-admin}"
       GF_USERS_DEFAULT_THEME: light

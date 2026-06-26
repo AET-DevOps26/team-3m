@@ -10,6 +10,7 @@ metadata:
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
 spec:
   backoffLimit: 6
+  activeDeadlineSeconds: 600
   ttlSecondsAfterFinished: 300
   template:
     metadata:
@@ -30,10 +31,11 @@ spec:
           command: ["sh", "-c"]
           args:
             - |
-              set -e
               for i in $(seq 1 60); do
-                echo "s3.bucket.create -name {{ .Values.s3.bucketLoki }}; s3.bucket.create -name {{ .Values.s3.bucketTempo }}" \
-                  | weed shell -master=seaweedfs:9333 && exit 0
+                if echo "s3.bucket.create -name {{ .Values.s3.bucketLoki }}; s3.bucket.create -name {{ .Values.s3.bucketTempo }}" \
+                  | timeout 15 weed shell -master=seaweedfs:9333; then
+                  echo "buckets ensured"; exit 0
+                fi
                 echo "waiting for seaweedfs master... ($i)"; sleep 3
               done
               echo "failed to create buckets" >&2; exit 1

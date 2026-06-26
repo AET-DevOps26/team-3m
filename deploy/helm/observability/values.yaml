@@ -4,12 +4,12 @@ fullnameOverride: ""
 storageClass: csi-rbd-sc
 
 images:
-  seaweedfs: chrislusf/seaweedfs:3.80
-  loki: grafana/loki:3.4.2
-  tempo: grafana/tempo:2.7.1
-  prometheus: prom/prometheus:v3.2.1
-  grafana: grafana/grafana:11.5.2
-  alloy: grafana/alloy:v1.7.5
+  seaweedfs: chrislusf/seaweedfs:4.36
+  loki: grafana/loki:3.7.3
+  tempo: grafana/tempo:2.10.7
+  prometheus: prom/prometheus:v3.12.0
+  grafana: grafana/grafana:13.1.0
+  alloy: grafana/alloy:v1.17.0
   pullPolicy: IfNotPresent
 
 s3:

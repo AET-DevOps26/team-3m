@@ -81,8 +81,9 @@ grafana:
     clientId: grafana
     clientSecret: ""
     scopes: "openid email profile"
-    # All authenticated users get Viewer; realm role kontor-admin grants Admin.
-    roleAttributePath: "contains(realm_access.roles[*], 'kontor-admin') && 'Admin' || 'Viewer'"
+    # All authenticated users get Viewer; the grafana client role grafana-admin
+    # grants Admin. Client roles are namespaced under resource_access.<clientId>.
+    roleAttributePath: "contains(resource_access.grafana.roles[*], 'grafana-admin') && 'Admin' || 'Viewer'"
   persistence:
     size: 2Gi
   resources:

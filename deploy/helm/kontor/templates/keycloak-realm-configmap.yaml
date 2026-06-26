@@ -30,12 +30,18 @@ data:
           {
             "name": "kontor-user",
             "description": "Standard user able to manage their own financial data."
-          },
-          {
-            "name": "grafana-admin",
-            "description": "Grants the Grafana Admin role via SSO."
           }
         ]
+        {{- if .Values.keycloak.realm.grafanaClient.enabled }},
+        "client": {
+          "grafana": [
+            {
+              "name": "grafana-admin",
+              "description": "Grants the Grafana Admin role via SSO."
+            }
+          ]
+        }
+        {{- end }}
       },
       {{- if .Values.keycloak.realm.seedDevUser }}
       "users": [
@@ -117,7 +123,24 @@ data:
           {{- end }}
           "redirectUris": {{ .Values.keycloak.realm.grafanaClient.redirectUris | toJson }},
           "webOrigins": ["+"],
-          "defaultClientScopes": ["web-origins", "acr", "profile", "roles", "basic", "email"]
+          "defaultClientScopes": ["web-origins", "acr", "profile", "roles", "basic", "email"],
+          "protocolMappers": [
+            {
+              "name": "grafana-client-roles",
+              "protocol": "openid-connect",
+              "protocolMapper": "oidc-usermodel-client-role-mapper",
+              "consentRequired": false,
+              "config": {
+                "usermodel.clientRoleMapping.clientId": "grafana",
+                "claim.name": "resource_access.grafana.roles",
+                "jsonType.label": "String",
+                "multivalued": "true",
+                "id.token.claim": "true",
+                "access.token.claim": "false",
+                "userinfo.token.claim": "true"
+              }
+            }
+          ]
         }
         {{- end }}
       ]

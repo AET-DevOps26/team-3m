@@ -17,6 +17,8 @@ RUN apk add --no-cache wget && \
 
 COPY --from=build --chown=app:app /app/.venv ./.venv
 COPY --from=build --chown=app:app /app/advisor ./advisor
+COPY --chown=app:app alembic.ini ./alembic.ini
+COPY --chown=app:app migrations ./migrations
 
 USER app
 

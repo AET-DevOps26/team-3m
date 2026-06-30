@@ -48,11 +48,13 @@ spec:
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
-          {{- if or .Values.ai.logosApiKey .Values.ai.existingSecret }}
           envFrom:
             - secretRef:
+                name: {{ include "kontor.ai.postgres.secretName" . }}
+            {{- if or .Values.ai.logosApiKey .Values.ai.existingSecret }}
+            - secretRef:
                 name: {{ include "kontor.ai.secretName" . }}
-          {{- end }}
+            {{- end }}
           readinessProbe:
             httpGet:
               path: {{ .Values.ai.probes.readinessPath }}

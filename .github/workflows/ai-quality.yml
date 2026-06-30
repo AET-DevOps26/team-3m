@@ -12,6 +12,20 @@ jobs:
     defaults:
       run:
         working-directory: ai
+    services:
+      postgres:
+        image: pgvector/pgvector:pg18-trixie
+        env:
+          POSTGRES_DB: kontor_ai
+          POSTGRES_USER: kontor_ai
+          POSTGRES_PASSWORD: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U kontor_ai -d kontor_ai"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - uses: actions/checkout@v7
@@ -36,3 +50,29 @@ jobs:
 
       - name: Run Tests (pytest)
         run: uv run pytest
+
+      - name: Migration smoke test (Postgres)
+        env:
+          DATABASE_URL: postgresql+asyncpg://kontor_ai:ci@localhost:5432/kontor_ai
+        run: |
+          uv run alembic upgrade head
+          uv run python - <<'PY'
+          import asyncio
+
+          from advisor.db import session_factory
+          from advisor.repository import get_latest_recommendation, save_recommendation
+
+
+          async def main() -> None:
+              async with session_factory() as session:
+                  await save_recommendation(
+                      session, user_id="ci", recommendation="r", rationale="why", risk_tolerance=None
+                  )
+              async with session_factory() as session:
+                  latest = await get_latest_recommendation(session, "ci")
+              assert latest is not None and latest.recommendation == "r"
+              print("round-trip OK")
+
+
+          asyncio.run(main())
+          PY

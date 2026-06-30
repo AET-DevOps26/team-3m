@@ -115,6 +115,7 @@ jobs:
           KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
           KEYCLOAK_DB_PASSWORD: ${{ secrets.KEYCLOAK_DB_PASSWORD }}
           LOGOS_API_KEY: ${{ secrets.LOGOS_API_KEY }}
+          AI_DB_PASSWORD: ${{ secrets.AI_DB_PASSWORD || secrets.POSTGRES_PASSWORD }}
         run: |
           set -euo pipefail
           helm upgrade --install '${{ inputs.release-name }}' "$CHART" \
@@ -128,6 +129,7 @@ jobs:
             --set-string keycloak.admin.password="$KEYCLOAK_ADMIN_PASSWORD" \
             --set-string keycloak.db.password="$KEYCLOAK_DB_PASSWORD" \
             --set-string ai.logosApiKey="$LOGOS_API_KEY" \
+            --set-string ai.db.password="$AI_DB_PASSWORD" \
             --rollback-on-failure --force-conflicts --wait --timeout 4m
 
       - name: Helm deploy (preview)
@@ -136,6 +138,7 @@ jobs:
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
           LOGOS_API_KEY: ${{ secrets.LOGOS_API_KEY }}
+          AI_DB_PASSWORD: ${{ secrets.AI_DB_PASSWORD || secrets.POSTGRES_PASSWORD }}
           PR_NUMBER: ${{ inputs.pr-number }}
           BASE_DOMAIN: ${{ inputs.base-domain }}
         run: |
@@ -152,6 +155,7 @@ jobs:
             --set-string postgres.password="$POSTGRES_PASSWORD" \
             --set-string keycloak.admin.password="$KEYCLOAK_ADMIN_PASSWORD" \
             --set-string ai.logosApiKey="$LOGOS_API_KEY" \
+            --set-string ai.db.password="$AI_DB_PASSWORD" \
             --rollback-on-failure --force-conflicts --wait --timeout 4m
 
       - name: Helm teardown

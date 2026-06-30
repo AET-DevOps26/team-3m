@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { apiClient } from "../api-client"
 import { APIError } from "../errors"
 import type {
@@ -72,7 +72,31 @@ function toPortfolioInput(
   }
 }
 
+export const LATEST_RECOMMENDATION_QUERY_KEY = [
+  "ai",
+  "recommendation",
+  "latest",
+] as const
+
+export function useLatestRecommendation() {
+  return useQuery<RecommendationResponse | null, APIError>({
+    queryKey: LATEST_RECOMMENDATION_QUERY_KEY,
+    queryFn: async () => {
+      try {
+        const { data } = await apiClient.GET("/ai/advisor/recommendation")
+        return data ?? null
+      } catch (error) {
+        if (error instanceof APIError && error.status === 404) {
+          return null
+        }
+        throw error
+      }
+    },
+  })
+}
+
 export function useGenerateRecommendation() {
+  const queryClient = useQueryClient()
   return useMutation<
     RecommendationResponse,
     APIError,
@@ -89,6 +113,9 @@ export function useGenerateRecommendation() {
         })
       }
       return data
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(LATEST_RECOMMENDATION_QUERY_KEY, data)
     },
   })
 }

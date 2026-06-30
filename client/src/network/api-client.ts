@@ -14,6 +14,7 @@ import type {
   GenerateRecommendationAiAdvisorRecommendationPostData,
   GenerateRecommendationAiAdvisorRecommendationPostError,
   GenerateRecommendationAiAdvisorRecommendationPostResponse,
+  LatestRecommendationAiAdvisorRecommendationGetResponse,
 } from "./generated-ai"
 
 interface JsonGetOperation<T> {
@@ -48,6 +49,7 @@ interface JsonPostOperation<TBody, TResponse, TError = never> {
 
 interface ApiPaths {
   "/ai/advisor/recommendation": {
+    get: JsonGetOperation<LatestRecommendationAiAdvisorRecommendationGetResponse>
     post: JsonPostOperation<
       GenerateRecommendationAiAdvisorRecommendationPostData["body"],
       GenerateRecommendationAiAdvisorRecommendationPostResponse,

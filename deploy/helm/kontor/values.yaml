@@ -112,6 +112,46 @@ ai:
     # -- Max request body accepted on /ai. Recommendation payloads are small JSON;
     # keep this well below the global ingress limit.
     proxyBodySize: 1m
+  # Dedicated Postgres for the AI service (recommendation history). Separate
+  # failure/backup domain from the core app DB, and keeps the AI service
+  # independent — it owns its own schema + Alembic migrations.
+  db:
+    image:
+      registry: docker.io
+      repository: pgvector/pgvector
+      tag: pg18-trixie
+      pullPolicy: ""
+    database: kontor_ai
+    username: kontor_ai
+    # REQUIRED when ai.db.existingSecret is empty — the render fails otherwise.
+    password: ""
+    # Existing Secret with keys: POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD, DATABASE_URL.
+    existingSecret: ""
+    persistence:
+      enabled: true
+      size: 8Gi
+      storageClass: "csi-rbd-sc"
+      accessModes:
+        - ReadWriteOnce
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 999
+      runAsGroup: 999
+      fsGroup: 999
+      seccompProfile:
+        type: RuntimeDefault
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop: ["ALL"]
   resources:
     requests:
       cpu: 100m

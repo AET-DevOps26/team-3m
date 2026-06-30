@@ -8,9 +8,11 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   type RecommendationResponse,
   useGenerateRecommendation,
+  useLatestRecommendation,
 } from "@/network/endpoints/ai-advisor"
 import type { PortfolioOverview } from "@/network/endpoints/portfolio"
 import { useProfile } from "@/network/endpoints/profile"
@@ -23,8 +25,8 @@ export function PortfolioRecommendation({
   overview,
 }: PortfolioRecommendationProps) {
   const { data: profile } = useProfile()
-  const { mutate, data, isPending, isError, error } =
-    useGenerateRecommendation()
+  const { data: stored, isLoading } = useLatestRecommendation()
+  const { mutate, isPending, isError, error } = useGenerateRecommendation()
 
   return (
     <Card>
@@ -48,12 +50,19 @@ export function PortfolioRecommendation({
             ) : (
               <Sparkles className="size-4" />
             )}
-            {isPending ? "Generating…" : data ? "Regenerate" : "Generate"}
+            {isPending ? "Generating…" : stored ? "Regenerate" : "Generate"}
           </Button>
         </div>
       </CardHeader>
-      {data && <RecommendationResult result={data} />}
-      {isError && !data && (
+      {isLoading && !stored && (
+        <CardContent className="space-y-3">
+          <Skeleton className="h-5 w-3/4" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-5/6" />
+        </CardContent>
+      )}
+      {stored && <RecommendationResult result={stored} />}
+      {isError && !stored && (
         <CardContent className="space-y-1">
           <p className="text-sm text-destructive">
             {error?.message ?? "Failed to generate recommendation."}

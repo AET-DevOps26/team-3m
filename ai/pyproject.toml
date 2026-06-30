@@ -9,6 +9,9 @@ dependencies = [
     "openai>=2.41.1",
     "pydantic-settings>=2.14.1",
     "pyjwt[crypto]>=2.10",
+    "sqlalchemy[asyncio]>=2.0",
+    "asyncpg>=0.30",
+    "alembic>=1.13",
 ]
 
 [project.scripts]
@@ -16,6 +19,7 @@ export-openapi = "advisor.openapi:main"
 
 [dependency-groups]
 ci = [
+    "aiosqlite>=0.20",
     "httpx>=0.28",
     "pytest>=9",
     "pytest-asyncio>=1.4",

@@ -150,6 +150,30 @@ export type ReadinessAiHealthReadinessGetResponses = {
 export type ReadinessAiHealthReadinessGetResponse =
   ReadinessAiHealthReadinessGetResponses[keyof ReadinessAiHealthReadinessGetResponses]
 
+export type LatestRecommendationAiAdvisorRecommendationGetData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/ai/advisor/recommendation"
+}
+
+export type LatestRecommendationAiAdvisorRecommendationGetErrors = {
+  /**
+   * No recommendation has been generated yet
+   */
+  404: unknown
+}
+
+export type LatestRecommendationAiAdvisorRecommendationGetResponses = {
+  /**
+   * Successful Response
+   */
+  200: RecommendationResponse
+}
+
+export type LatestRecommendationAiAdvisorRecommendationGetResponse =
+  LatestRecommendationAiAdvisorRecommendationGetResponses[keyof LatestRecommendationAiAdvisorRecommendationGetResponses]
+
 export type GenerateRecommendationAiAdvisorRecommendationPostData = {
   body: PortfolioInput
   path?: never

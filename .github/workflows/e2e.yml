@@ -50,3 +50,7 @@ jobs:
           name: playwright-report
           path: client/playwright-report/
           retention-days: 7
+
+      - name: Tear down stack
+        if: always()
+        run: docker compose down --volumes --remove-orphans

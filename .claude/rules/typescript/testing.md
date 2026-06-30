@@ -13,8 +13,10 @@ paths:
 
 Use **Playwright** as the E2E testing framework for critical user flows. The
 suite lives in `client/e2e/`, runs with `npm run e2e` (from `client/`), and is
-enforced by the `E2E Tests` job in CI (`.github/workflows/pr.yml`), which builds
-the full stack with Docker Compose before running.
+defined as the reusable `E2E Tests` workflow (`.github/workflows/e2e.yml`), which
+builds the full stack with Docker Compose before running. On PRs it is opt-in via
+the `test:e2e` label (the suite is slow); on `main` it runs unconditionally in
+`ci-cd.yml` and blocks the prod deploy unless it passes.
 
 ### Keep E2E tests in sync with the app (REQUIRED)
 

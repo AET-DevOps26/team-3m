@@ -33,6 +33,9 @@ jobs:
   openapi-sync:
     uses: ./.github/workflows/openapi-sync.yml
 
+  e2e:
+    uses: ./.github/workflows/e2e.yml
+
   release:
     name: Semantic Release
     needs: [client-quality, server-quality, ai-quality, helm-quality, openapi-sync]
@@ -125,7 +128,7 @@ jobs:
       ref: ${{ needs.release.outputs.sha }}
 
   deploy-prod:
-    needs: [release, client-docker, server-docker, ai-docker, keycloak-docker]
+    needs: [release, e2e, client-docker, server-docker, ai-docker, keycloak-docker]
     if: ${{ needs.release.outputs.released == 'true' || github.event_name == 'workflow_dispatch' }}
     uses: ./.github/workflows/deploy.yml
     secrets: inherit

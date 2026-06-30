@@ -87,10 +87,12 @@ re-run a prod deploy (e.g. after a failed rollout) without a code change.
 Keycloak runs as a custom image (`kontor-keycloak`) with the Kontor login theme
 baked in. The theme is a minimal vendored [Keycloakify](https://keycloakify.dev/)
 project at `infra/keycloak/theme/`; its multi-stage Dockerfile builds the theme
-jar (Node + Maven) and copies it into `/opt/keycloak/providers/`. Compose builds
-it locally; CI builds and pushes it (`keycloak-docker` job in `pr.yml` /
-`ci-cd.yml`). The realm selects it via `loginTheme: kontor`. To change the theme,
-edit the vendored source — see `infra/keycloak/theme/README.md`.
+jar (Node + Maven) and copies it into `/opt/keycloak/providers/`. Local compose
+builds it locally; CI builds and pushes it (`keycloak-docker` job in `pr.yml` /
+`ci-cd.yml`), and both the Helm chart (k8s) and the Azure compose
+(`docker-compose.azure.yml`, tag via `KONTOR_KEYCLOAK_IMAGE_TAG`) pull that
+prebuilt image. The realm selects it via `loginTheme: kontor`. To change the
+theme, edit the vendored source — see `infra/keycloak/theme/README.md`.
 
 ## Rules
 

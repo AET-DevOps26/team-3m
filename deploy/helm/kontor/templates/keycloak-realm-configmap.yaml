@@ -1,13 +1,14 @@
 {{- if .Values.keycloak.deploy }}
 {{- $realm := .Values.oidc.realm }}
 apiVersion: v1
-kind: ConfigMap
+kind: Secret
 metadata:
   name: {{ include "kontor.keycloak.fullname" . }}-realm
   labels:
     {{- include "kontor.labels" . | nindent 4 }}
     app.kubernetes.io/component: keycloak
-data:
+type: Opaque
+stringData:
   {{ $realm }}-realm.json: |-
     {
       "realm": {{ $realm | quote }},

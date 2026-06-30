@@ -8,7 +8,7 @@ otelcol.receiver.otlp "in" {
 
     cors {
       allowed_origins = ["*"]
-      allowed_headers = ["*"]
+      allowed_headers = ["content-type", "traceparent", "tracestate", "baggage"]
     }
   }
 

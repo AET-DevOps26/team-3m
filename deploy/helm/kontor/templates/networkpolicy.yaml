@@ -90,6 +90,9 @@ spec:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: {{ .Values.observability.collectorNamespace }}
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: alloy-gateway
       ports:
         - protocol: TCP
           port: 4317
@@ -189,6 +192,9 @@ spec:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: {{ .Values.observability.collectorNamespace }}
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: alloy-gateway
       ports:
         - protocol: TCP
           port: 9000

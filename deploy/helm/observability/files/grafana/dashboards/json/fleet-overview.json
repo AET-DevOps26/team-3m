@@ -1,19 +1,28 @@
 {
   "uid": "kontor-fleet",
-  "title": "Kontor — Fleet Overview (RED)",
-  "tags": ["kontor", "overview"],
+  "title": "Services Overview",
+  "tags": [
+    "kontor",
+    "overview"
+  ],
   "timezone": "browser",
   "schemaVersion": 39,
   "version": 1,
   "refresh": "30s",
-  "time": { "from": "now-6h", "to": "now" },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
   "templating": {
     "list": [
       {
         "name": "deployment_environment",
         "label": "Environment",
         "type": "query",
-        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
         "query": "label_values(traces_spanmetrics_calls_total, deployment_environment)",
         "includeAll": true,
         "multi": true,
@@ -24,7 +33,10 @@
         "name": "service",
         "label": "Service",
         "type": "query",
-        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
         "query": "label_values(traces_spanmetrics_calls_total{deployment_environment=~\"$deployment_environment\"}, service)",
         "includeAll": true,
         "multi": true,
@@ -38,9 +50,22 @@
       "id": 1,
       "title": "Request rate (req/s) by service",
       "type": "timeseries",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
-      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
       "targets": [
         {
           "refId": "A",
@@ -53,9 +78,24 @@
       "id": 2,
       "title": "Error ratio by service",
       "type": "timeseries",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
-      "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1 }, "overrides": [] },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      },
       "targets": [
         {
           "refId": "A",
@@ -68,9 +108,22 @@
       "id": 3,
       "title": "Latency p95 (s) by service",
       "type": "timeseries",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
-      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
       "targets": [
         {
           "refId": "A",
@@ -83,8 +136,16 @@
       "id": 4,
       "title": "Top operations by call rate",
       "type": "table",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
       "targets": [
         {
           "refId": "A",

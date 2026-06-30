@@ -1,20 +1,31 @@
 {
   "uid": "kontor-backend-runtime",
-  "title": "Kontor — Backend Runtime (core / ai)",
-  "tags": ["kontor", "jvm", "backend"],
+  "title": "Microservices \u2014 JVM & HTTP",
+  "tags": [
+    "kontor",
+    "jvm",
+    "microservice",
+    "core"
+  ],
   "timezone": "browser",
   "schemaVersion": 39,
   "version": 1,
   "refresh": "30s",
-  "time": { "from": "now-3h", "to": "now" },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
   "templating": {
     "list": [
       {
         "name": "deployment_environment",
         "label": "Environment",
         "type": "query",
-        "datasource": { "type": "prometheus", "uid": "prometheus" },
-        "query": "label_values(jvm_memory_used_bytes, deployment_environment)",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "query": "label_values(jvm_thread_count, deployment_environment)",
         "includeAll": true,
         "multi": true,
         "refresh": 2,
@@ -24,8 +35,11 @@
         "name": "service",
         "label": "Service",
         "type": "query",
-        "datasource": { "type": "prometheus", "uid": "prometheus" },
-        "query": "label_values(http_server_request_duration_seconds_count{deployment_environment=~\"$deployment_environment\"}, service)",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "query": "label_values(jvm_thread_count{deployment_environment=~\"$deployment_environment\"}, service)",
         "includeAll": true,
         "multi": true,
         "refresh": 2,
@@ -35,12 +49,39 @@
   },
   "panels": [
     {
+      "id": 100,
+      "type": "row",
+      "title": "HTTP",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
       "id": 1,
-      "title": "HTTP request rate by service",
+      "title": "Request rate by service",
       "type": "timeseries",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
-      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 0,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
       "targets": [
         {
           "refId": "A",
@@ -51,51 +92,444 @@
     },
     {
       "id": 2,
-      "title": "HTTP p95 latency by service",
+      "title": "Latency p50 / p95 / p99",
       "type": "timeseries",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
-      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 8,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "fillOpacity": 5
+          }
+        },
+        "overrides": []
+      },
       "targets": [
         {
-          "refId": "A",
+          "refId": "p50",
+          "expr": "histogram_quantile(0.50, sum by (service, le) (rate(http_server_request_duration_seconds_bucket{deployment_environment=~\"$deployment_environment\", service=~\"$service\"}[$__rate_interval])))",
+          "legendFormat": "p50 {{service}}"
+        },
+        {
+          "refId": "p95",
           "expr": "histogram_quantile(0.95, sum by (service, le) (rate(http_server_request_duration_seconds_bucket{deployment_environment=~\"$deployment_environment\", service=~\"$service\"}[$__rate_interval])))",
-          "legendFormat": "{{service}}"
+          "legendFormat": "p95 {{service}}"
+        },
+        {
+          "refId": "p99",
+          "expr": "histogram_quantile(0.99, sum by (service, le) (rate(http_server_request_duration_seconds_bucket{deployment_environment=~\"$deployment_environment\", service=~\"$service\"}[$__rate_interval])))",
+          "legendFormat": "p99 {{service}}"
         }
       ]
     },
     {
       "id": 3,
-      "title": "JVM heap used",
+      "title": "Active requests",
       "type": "timeseries",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
-      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (service) (jvm_memory_used_bytes{deployment_environment=~\"$deployment_environment\", service=~\"$service\", jvm_memory_type=\"heap\"})",
+          "expr": "sum by (service) (http_server_active_requests{deployment_environment=~\"$deployment_environment\", service=~\"$service\"})",
           "legendFormat": "{{service}}"
         }
       ]
     },
     {
-      "id": 4,
-      "title": "JVM threads / GC duration rate",
-      "type": "timeseries",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
-      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "id": 200,
+      "type": "row",
+      "title": "JVM",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      }
+    },
+    {
+      "id": 10,
+      "title": "CPU utilization",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 9
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.6
+              },
+              {
+                "color": "red",
+                "value": 0.85
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (service) (jvm_thread_count{deployment_environment=~\"$deployment_environment\", service=~\"$service\"})",
-          "legendFormat": "threads {{service}}"
+          "expr": "max(jvm_cpu_recent_utilization_ratio{deployment_environment=~\"$deployment_environment\", service=~\"$service\"})"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Live threads",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 9
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(jvm_thread_count{deployment_environment=~\"$deployment_environment\", service=~\"$service\"})"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "title": "Classes loaded",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 9
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(jvm_class_count{deployment_environment=~\"$deployment_environment\", service=~\"$service\"})"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "title": "Heap used",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 9
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(jvm_memory_used_bytes{deployment_environment=~\"$deployment_environment\", service=~\"$service\", jvm_memory_type=\"heap\"})"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "title": "Heap used vs committed",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 13
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": {
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "used",
+          "expr": "sum by (service) (jvm_memory_used_bytes{deployment_environment=~\"$deployment_environment\", service=~\"$service\", jvm_memory_type=\"heap\"})",
+          "legendFormat": "used {{service}}"
         },
         {
-          "refId": "B",
-          "expr": "sum by (service) (rate(jvm_gc_duration_seconds_sum{deployment_environment=~\"$deployment_environment\", service=~\"$service\"}[$__rate_interval]))",
-          "legendFormat": "gc s/s {{service}}"
+          "refId": "committed",
+          "expr": "sum by (service) (jvm_memory_committed_bytes{deployment_environment=~\"$deployment_environment\", service=~\"$service\", jvm_memory_type=\"heap\"})",
+          "legendFormat": "committed {{service}}"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "title": "Non-heap used",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 13
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": {
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (jvm_memory_pool_name) (jvm_memory_used_bytes{deployment_environment=~\"$deployment_environment\", service=~\"$service\", jvm_memory_type=\"non_heap\"})",
+          "legendFormat": "{{jvm_memory_pool_name}}"
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "title": "Heap by pool",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 21
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": {
+            "fillOpacity": 10,
+            "stacking": {
+              "mode": "normal"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (jvm_memory_pool_name) (jvm_memory_used_bytes{deployment_environment=~\"$deployment_environment\", service=~\"$service\", jvm_memory_type=\"heap\"})",
+          "legendFormat": "{{jvm_memory_pool_name}}"
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "title": "GC duration rate",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 21
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (jvm_gc_name) (rate(jvm_gc_duration_seconds_sum{deployment_environment=~\"$deployment_environment\", service=~\"$service\"}[$__rate_interval]))",
+          "legendFormat": "{{jvm_gc_name}}"
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "title": "Threads by state",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 29
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "fillOpacity": 10,
+            "stacking": {
+              "mode": "normal"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (jvm_thread_state) (jvm_thread_count{deployment_environment=~\"$deployment_environment\", service=~\"$service\"})",
+          "legendFormat": "{{jvm_thread_state}}"
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "title": "CPU utilization over time",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 29
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "max": 1,
+          "custom": {
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max by (service) (jvm_cpu_recent_utilization_ratio{deployment_environment=~\"$deployment_environment\", service=~\"$service\"})",
+          "legendFormat": "{{service}}"
         }
       ]
     }

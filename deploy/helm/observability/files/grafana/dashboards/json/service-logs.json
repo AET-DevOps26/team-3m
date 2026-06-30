@@ -1,20 +1,33 @@
 {
   "uid": "kontor-logs",
-  "title": "Kontor — Logs",
-  "tags": ["kontor", "logs"],
+  "title": "Logs",
+  "tags": [
+    "kontor",
+    "logs"
+  ],
   "timezone": "browser",
   "schemaVersion": 39,
   "version": 1,
   "refresh": "30s",
-  "time": { "from": "now-1h", "to": "now" },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
   "templating": {
     "list": [
       {
         "name": "deployment_environment",
         "label": "Environment",
         "type": "query",
-        "datasource": { "type": "loki", "uid": "loki" },
-        "query": { "label": "deployment_environment", "stream": "", "type": 1 },
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "deployment_environment",
+          "stream": "",
+          "type": 1
+        },
         "includeAll": true,
         "multi": true,
         "refresh": 2,
@@ -24,8 +37,15 @@
         "name": "service",
         "label": "Service",
         "type": "query",
-        "datasource": { "type": "loki", "uid": "loki" },
-        "query": { "label": "service", "stream": "{deployment_environment=~\"$deployment_environment\"}", "type": 1 },
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": {
+          "label": "service",
+          "stream": "{deployment_environment=~\"$deployment_environment\"}",
+          "type": 1
+        },
         "includeAll": true,
         "multi": true,
         "refresh": 2,
@@ -36,7 +56,10 @@
         "label": "Search",
         "type": "textbox",
         "query": "",
-        "current": { "text": "", "value": "" }
+        "current": {
+          "text": "",
+          "value": ""
+        }
       }
     ]
   },
@@ -45,9 +68,28 @@
       "id": 1,
       "title": "Log volume by service",
       "type": "timeseries",
-      "datasource": { "type": "loki", "uid": "loki" },
-      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 0 },
-      "fieldConfig": { "defaults": { "unit": "logs", "custom": { "drawStyle": "bars", "stacking": { "mode": "normal" } } }, "overrides": [] },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "logs",
+          "custom": {
+            "drawStyle": "bars",
+            "stacking": {
+              "mode": "normal"
+            }
+          }
+        },
+        "overrides": []
+      },
       "targets": [
         {
           "refId": "A",
@@ -60,8 +102,16 @@
       "id": 2,
       "title": "Logs",
       "type": "logs",
-      "datasource": { "type": "loki", "uid": "loki" },
-      "gridPos": { "h": 18, "w": 24, "x": 0, "y": 6 },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 18,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
       "options": {
         "showTime": true,
         "wrapLogMessage": true,

@@ -31,7 +31,7 @@ deploy/teardown never touches it.
   `namespace`, `pod`, `container`, and writes to Loki. Apps print `trace_id` in log
   lines so Grafana pivots logs ↔ traces.
 
-```
+```text
 apps ──OTLP──▶ alloy(gateway) ──▶ Tempo / Loki / Prometheus ──▶ Grafana
 pods ──k8s API──▶ alloy(logs) ──────────────────────────▶ Loki ─┘
 ```

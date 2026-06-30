@@ -14,7 +14,7 @@ metadata:
     {{- include "obs.componentLabels" (dict "root" . "component" "alloy") | nindent 4 }}
 rules:
   - apiGroups: [""]
-    resources: ["pods", "services", "endpoints", "nodes", "nodes/proxy"]
+    resources: ["pods", "services", "endpoints"]
     verbs: ["get", "list", "watch"]
   - apiGroups: [""]
     resources: ["pods/log"]

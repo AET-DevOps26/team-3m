@@ -20,7 +20,7 @@ services:
       - seaweedfs_data:/data
       - ./deploy/helm/observability/files/seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
     ports:
-      - "${SEAWEEDFS_S3_PORT:-8333}:8333"
+      - "127.0.0.1:${SEAWEEDFS_S3_PORT:-8333}:8333"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:9333/cluster/healthz"]
       interval: 10s
@@ -58,7 +58,7 @@ services:
       seaweedfs-init:
         condition: service_completed_successfully
     ports:
-      - "${LOKI_PORT:-3100}:3100"
+      - "127.0.0.1:${LOKI_PORT:-3100}:3100"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3100/ready"]
       interval: 10s
@@ -79,7 +79,7 @@ services:
       seaweedfs-init:
         condition: service_completed_successfully
     ports:
-      - "${TEMPO_PORT:-3200}:3200"
+      - "127.0.0.1:${TEMPO_PORT:-3200}:3200"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3200/ready"]
       interval: 10s
@@ -100,7 +100,7 @@ services:
       - ./deploy/helm/observability/files/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     ports:
-      - "${PROMETHEUS_PORT:-9090}:9090"
+      - "127.0.0.1:${PROMETHEUS_PORT:-9090}:9090"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:9090/-/ready"]
       interval: 10s
@@ -130,10 +130,10 @@ services:
       prometheus:
         condition: service_healthy
     ports:
-      - "${OTLP_GRPC_PORT:-4317}:4317"
-      - "${OTLP_HTTP_PORT:-4318}:4318"
-      - "${FARO_PORT:-12347}:12347"
-      - "${ALLOY_UI_PORT:-12345}:12345"
+      - "127.0.0.1:${OTLP_GRPC_PORT:-4317}:4317"
+      - "127.0.0.1:${OTLP_HTTP_PORT:-4318}:4318"
+      - "127.0.0.1:${FARO_PORT:-12347}:12347"
+      - "127.0.0.1:${ALLOY_UI_PORT:-12345}:12345"
 
   grafana:
     image: grafana/grafana:13.1.0
@@ -157,7 +157,7 @@ services:
       tempo:
         condition: service_healthy
     ports:
-      - "${GRAFANA_PORT:-3001}:3000"
+      - "127.0.0.1:${GRAFANA_PORT:-3001}:3000"
 
   core:
     environment:

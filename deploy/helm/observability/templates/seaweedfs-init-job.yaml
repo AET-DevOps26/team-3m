@@ -32,8 +32,9 @@ spec:
           args:
             - |
               for i in $(seq 1 60); do
-                if echo "s3.bucket.create -name {{ .Values.s3.bucketLoki }}; s3.bucket.create -name {{ .Values.s3.bucketTempo }}" \
-                  | timeout 15 weed shell -master=seaweedfs:9333; then
+                out=$(echo "s3.bucket.create -name {{ .Values.s3.bucketLoki }}; s3.bucket.create -name {{ .Values.s3.bucketTempo }}; s3.bucket.list" \
+                  | timeout 15 weed shell -master=seaweedfs:9333 2>&1) || true
+                if echo "$out" | grep -q "{{ .Values.s3.bucketLoki }}" && echo "$out" | grep -q "{{ .Values.s3.bucketTempo }}"; then
                   echo "buckets ensured"; exit 0
                 fi
                 echo "waiting for seaweedfs master... ($i)"; sleep 3

@@ -1,0 +1,113 @@
+{
+  "uid": "kontor-frontend-rum",
+  "title": "Client RUM",
+  "tags": ["kontor", "rum", "faro", "client"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 2,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "deployment_environment",
+        "label": "Environment",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "query": "label_values(traces_spanmetrics_calls_total{service=\"kontor-client\"}, deployment_environment)",
+        "includeAll": true,
+        "multi": true,
+        "refresh": 2,
+        "sort": 1
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "JS errors (rate)",
+      "type": "stat",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 0 },
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "red" } }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["sum"] } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "loki", "uid": "loki" }, "expr": "sum(count_over_time({service=\"kontor-client\", deployment_environment=~\"$deployment_environment\", kind=\"exception\"} [$__interval]))" }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Client span rate",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 0 },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(rate(traces_spanmetrics_calls_total{service=\"kontor-client\", deployment_environment=~\"$deployment_environment\"}[$__rate_interval]))" }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Client span latency p95",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 0 },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "histogram_quantile(0.95, sum by (le) (rate(traces_spanmetrics_latency_bucket{service=\"kontor-client\", deployment_environment=~\"$deployment_environment\"}[$__rate_interval])))" }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Errors over time",
+      "type": "timeseries",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 15, "drawStyle": "bars" }, "color": { "mode": "fixed", "fixedColor": "red" } }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "loki", "uid": "loki" }, "expr": "sum(count_over_time({service=\"kontor-client\", deployment_environment=~\"$deployment_environment\", kind=\"exception\"} [$__interval]))", "legendFormat": "exceptions" }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Client span latency p50 / p95 by operation",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "fillOpacity": 5 } }, "overrides": [] },
+      "targets": [
+        { "refId": "p50", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "histogram_quantile(0.50, sum by (span_name, le) (rate(traces_spanmetrics_latency_bucket{service=\"kontor-client\", deployment_environment=~\"$deployment_environment\"}[$__rate_interval])))", "legendFormat": "p50 {{span_name}}" },
+        { "refId": "p95", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "histogram_quantile(0.95, sum by (span_name, le) (rate(traces_spanmetrics_latency_bucket{service=\"kontor-client\", deployment_environment=~\"$deployment_environment\"}[$__rate_interval])))", "legendFormat": "p95 {{span_name}}" }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Web Vitals p75 (LCP / INP / CLS / FCP / TTFB)",
+      "type": "timeseries",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 12 },
+      "description": "Best-effort: assumes Faro web-vitals arrive as kind=measurement with values_<vital> fields. Verify/adjust the unwrap field names once real Faro data lands.",
+      "fieldConfig": { "defaults": { "custom": { "fillOpacity": 5 } }, "overrides": [] },
+      "targets": [
+        { "refId": "lcp", "datasource": { "type": "loki", "uid": "loki" }, "expr": "quantile_over_time(0.75, {service=\"kontor-client\", deployment_environment=~\"$deployment_environment\", kind=\"measurement\"} | json | unwrap values_lcp [$__interval]) by ()", "legendFormat": "LCP" },
+        { "refId": "inp", "datasource": { "type": "loki", "uid": "loki" }, "expr": "quantile_over_time(0.75, {service=\"kontor-client\", deployment_environment=~\"$deployment_environment\", kind=\"measurement\"} | json | unwrap values_inp [$__interval]) by ()", "legendFormat": "INP" },
+        { "refId": "cls", "datasource": { "type": "loki", "uid": "loki" }, "expr": "quantile_over_time(0.75, {service=\"kontor-client\", deployment_environment=~\"$deployment_environment\", kind=\"measurement\"} | json | unwrap values_cls [$__interval]) by ()", "legendFormat": "CLS" },
+        { "refId": "fcp", "datasource": { "type": "loki", "uid": "loki" }, "expr": "quantile_over_time(0.75, {service=\"kontor-client\", deployment_environment=~\"$deployment_environment\", kind=\"measurement\"} | json | unwrap values_fcp [$__interval]) by ()", "legendFormat": "FCP" },
+        { "refId": "ttfb", "datasource": { "type": "loki", "uid": "loki" }, "expr": "quantile_over_time(0.75, {service=\"kontor-client\", deployment_environment=~\"$deployment_environment\", kind=\"measurement\"} | json | unwrap values_ttfb [$__interval]) by ()", "legendFormat": "TTFB" }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Recent client errors",
+      "type": "logs",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 11, "w": 24, "x": 0, "y": 20 },
+      "options": { "showTime": true, "wrapLogMessage": true, "dedupStrategy": "none", "sortOrder": "Descending" },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "loki", "uid": "loki" }, "expr": "{service=\"kontor-client\", deployment_environment=~\"$deployment_environment\", kind=\"exception\"}" }
+      ]
+    }
+  ]
+}

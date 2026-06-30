@@ -30,7 +30,7 @@ deploy/teardown never touches it.
   hostPath / no `/var/log` mount), labels them `deployment_environment`, `service`,
   `namespace`, `pod`, `container`, and writes to Loki. Apps print `trace_id` in log
   lines so Grafana pivots logs ↔ traces.
-- **Frontend RUM** — the browser SPA uses Grafana Faro and pushes Web Vitals,
+- **Client RUM** — the browser SPA uses Grafana Faro and pushes Web Vitals,
   errors, sessions, and traces to the gateway's `faro.receiver` (`/collect` on the
   OTLP ingress host), which forwards logs/measurements to Loki and traces to Tempo.
 

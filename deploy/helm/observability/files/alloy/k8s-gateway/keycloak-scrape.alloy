@@ -18,6 +18,12 @@ discovery.relabel "keycloak" {
 
   rule {
     source_labels = ["__meta_kubernetes_namespace"]
+    regex         = "team-3m(-pr-.+)?"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
     regex         = "team-3m"
     target_label  = "deployment_environment"
     replacement   = "prod"

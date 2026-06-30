@@ -102,6 +102,10 @@ spec:
                   key: admin-password
             - name: GF_FEATURE_TOGGLES_ENABLE
               value: traceqlEditor
+            - name: GF_INSTALL_PLUGINS
+              value: grafana-exploretraces-app
+            - name: GF_PLUGINS_PREINSTALL_SYNC
+              value: grafana-exploretraces-app
             - name: GF_USERS_DEFAULT_THEME
               value: light
             {{- if and .Values.grafana.ingress.enabled .Values.grafana.ingress.hosts }}

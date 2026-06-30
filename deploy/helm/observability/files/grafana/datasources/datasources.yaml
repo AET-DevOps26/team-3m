@@ -42,6 +42,11 @@ datasources:
         filterByTraceID: true
         spanStartTimeShift: "-5m"
         spanEndTimeShift: "5m"
+        tags:
+          - key: service.name
+            value: service
+          - key: deployment.environment
+            value: deployment_environment
       tracesToMetrics:
         datasourceUid: prometheus
       serviceMap:

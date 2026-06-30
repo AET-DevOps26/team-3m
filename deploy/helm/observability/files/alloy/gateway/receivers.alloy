@@ -19,6 +19,28 @@ otelcol.receiver.otlp "in" {
   }
 }
 
+faro.receiver "frontend" {
+  server {
+    listen_address           = "0.0.0.0"
+    listen_port              = 12347
+    cors_allowed_origins     = ["*"]
+    max_allowed_payload_size = "10MiB"
+  }
+
+  output {
+    logs   = [loki.process.faro.receiver]
+    traces = [otelcol.processor.batch.in.input]
+  }
+}
+
+loki.process "faro" {
+  stage.static_labels {
+    values = { service = "kontor-client" }
+  }
+
+  forward_to = [loki.write.default.receiver]
+}
+
 otelcol.processor.batch "in" {
   output {
     metrics = [otelcol.processor.transform.labels.input]

@@ -409,7 +409,8 @@ observability:
   # Logical environment tagged on every signal: prod | pr-<N> | local. Filters and
   # switches environments in Grafana. Set per overlay.
   environment: ""
-  # Public OTLP/HTTP endpoint the browser SPA pushes traces to (gateway ingress).
+  # Public gateway ingress host the browser SPA pushes Faro RUM to; the client
+  # appends /collect (Alloy faro.receiver). Also serves OTLP/HTTP at the root.
   clientEndpoint: "https://otlp.team-3m.stud.k8s.aet.cit.tum.de"
   traces:
     # parentbased_traceidratio argument; 1.0 = sample everything.

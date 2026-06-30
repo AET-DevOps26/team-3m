@@ -6,7 +6,7 @@ import { authConfig } from "@/auth/auth-config"
 import { AuthTokenBridge } from "@/auth/auth-token-bridge"
 import { Toaster } from "@/components/ui/sonner"
 import { createQueryClient, RecoveryHost } from "@/network"
-import { initObservability } from "@/observability/otel"
+import { initObservability } from "@/observability/faro"
 
 import "./index.css"
 import { ThemeProvider } from "@/components/theme-provider.tsx"

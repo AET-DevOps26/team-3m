@@ -24,6 +24,7 @@ spec:
   ports:
     - { name: otlp-grpc, port: 4317, targetPort: 4317 }
     - { name: otlp-http, port: 4318, targetPort: 4318 }
+    - { name: faro, port: 12347, targetPort: 12347 }
     - { name: http, port: 12345, targetPort: 12345 }
 ---
 apiVersion: apps/v1
@@ -64,6 +65,7 @@ spec:
           ports:
             - { name: otlp-grpc, containerPort: 4317 }
             - { name: otlp-http, containerPort: 4318 }
+            - { name: faro, containerPort: 12347 }
             - { name: http, containerPort: 12345 }
           readinessProbe:
             httpGet:

@@ -51,7 +51,11 @@ services:
     restart: unless-stopped
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26.0
+    # Custom Keycloak image with the Kontor login theme baked in (built in CI from
+    # infra/keycloak/theme, same image used by k8s/Helm and local compose). The
+    # realm's loginTheme: kontor resolves to this baked-in theme. Tag defaults to
+    # `latest`; override via KONTOR_KEYCLOAK_IMAGE_TAG to pin a PR/sha build.
+    image: ghcr.io/aet-devops26/team-3m/kontor-keycloak:${KONTOR_KEYCLOAK_IMAGE_TAG:-latest}
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
@@ -100,6 +104,11 @@ services:
 
   core:
     image: ghcr.io/aet-devops26/team-3m/kontor-core:latest
+    deploy:
+      replicas: ${CORE_REPLICAS:-2}
+      resources:
+        limits:
+          memory: ${CORE_MEMORY_LIMIT:-1536m}
     depends_on:
       db:
         condition: service_healthy
@@ -115,6 +124,7 @@ services:
       KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/realms/kontor/protocol/openid-connect/certs"
       KEYCLOAK_AUDIENCE: "${KEYCLOAK_AUDIENCE:-kontor-api}"
       APP_CORS_ALLOWED_ORIGINS: "https://${DOMAIN}"
+      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.core.rule=Host(`${DOMAIN}`) && PathPrefix(`/api`)"
@@ -155,6 +165,11 @@ services:
 
   ai:
     image: ghcr.io/aet-devops26/team-3m/kontor-ai:${KONTOR_AI_IMAGE_TAG:-latest}
+    deploy:
+      replicas: ${AI_REPLICAS:-2}
+      resources:
+        limits:
+          memory: ${AI_MEMORY_LIMIT:-512m}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.ai.rule=Host(`${DOMAIN}`) && PathPrefix(`/ai`)"

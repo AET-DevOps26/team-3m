@@ -1,0 +1,17 @@
+Kontor observability stack ({{ .Chart.AppVersion }}) deployed to namespace {{ .Release.Namespace }}.
+
+Components: SeaweedFS (S3), Loki, Tempo, Prometheus, Grafana, Alloy (OTLP gateway + log collector).
+
+OTLP ingest endpoint (apps push here):
+  grpc: alloy.{{ .Release.Namespace }}.svc.cluster.local:4317
+  http: alloy.{{ .Release.Namespace }}.svc.cluster.local:4318
+
+Grafana:
+{{- range .Values.grafana.ingress.hosts }}
+  https://{{ . }}
+{{- end }}
+  user: {{ .Values.grafana.adminUser }} (password from secret {{ include "obs.grafana.secretName" $ }})
+
+Point the kontor app chart at this stack with:
+  --set observability.enabled=true
+  --set observability.collectorEndpoint=http://alloy.{{ .Release.Namespace }}.svc.cluster.local:4317

@@ -1,0 +1,52 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: seaweedfs-bucket-init
+  labels:
+    {{- include "obs.componentLabels" (dict "root" . "component" "seaweedfs-init") | nindent 4 }}
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "0"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 6
+  activeDeadlineSeconds: 600
+  ttlSecondsAfterFinished: 300
+  template:
+    metadata:
+      labels:
+        {{- include "obs.componentLabels" (dict "root" . "component" "seaweedfs-init") | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10000
+        runAsGroup: 10000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: init
+          image: {{ .Values.images.seaweedfs }}
+          imagePullPolicy: {{ .Values.images.pullPolicy }}
+          command: ["sh", "-c"]
+          args:
+            - |
+              for i in $(seq 1 60); do
+                out=$(echo "s3.bucket.create -name {{ .Values.s3.bucketLoki }}; s3.bucket.create -name {{ .Values.s3.bucketTempo }}; s3.bucket.list" \
+                  | timeout 15 weed shell -master=seaweedfs:9333 2>&1) || true
+                if echo "$out" | grep -q "{{ .Values.s3.bucketLoki }}" && echo "$out" | grep -q "{{ .Values.s3.bucketTempo }}"; then
+                  echo "buckets ensured"; exit 0
+                fi
+                echo "waiting for seaweedfs master... ($i)"; sleep 3
+              done
+              echo "failed to create buckets" >&2; exit 1
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - name: tmp
+          emptyDir: {}

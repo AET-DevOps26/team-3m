@@ -1,13 +1,14 @@
 {{- if .Values.keycloak.deploy }}
 {{- $realm := .Values.oidc.realm }}
 apiVersion: v1
-kind: ConfigMap
+kind: Secret
 metadata:
   name: {{ include "kontor.keycloak.fullname" . }}-realm
   labels:
     {{- include "kontor.labels" . | nindent 4 }}
     app.kubernetes.io/component: keycloak
-data:
+type: Opaque
+stringData:
   {{ $realm }}-realm.json: |-
     {
       "realm": {{ $realm | quote }},
@@ -32,6 +33,16 @@ data:
             "description": "Standard user able to manage their own financial data."
           }
         ]
+        {{- if .Values.keycloak.realm.grafanaClient.enabled }},
+        "client": {
+          "grafana": [
+            {
+              "name": "grafana-admin",
+              "description": "Grants the Grafana Admin role via SSO."
+            }
+          ]
+        }
+        {{- end }}
       },
       {{- if .Values.keycloak.realm.seedDevUser }}
       "users": [
@@ -97,6 +108,42 @@ data:
             }
           ]
         }
+        {{- if .Values.keycloak.realm.grafanaClient.enabled }}
+        ,{
+          "clientId": "grafana",
+          "name": "Grafana (observability SSO)",
+          "enabled": true,
+          "publicClient": false,
+          "secret": {{ .Values.keycloak.realm.grafanaClient.secret | quote }},
+          "standardFlowEnabled": true,
+          "directAccessGrantsEnabled": false,
+          "serviceAccountsEnabled": false,
+          "protocol": "openid-connect",
+          {{- with .Values.keycloak.realm.grafanaClient.rootUrl }}
+          "rootUrl": {{ . | quote }},
+          {{- end }}
+          "redirectUris": {{ .Values.keycloak.realm.grafanaClient.redirectUris | toJson }},
+          "webOrigins": ["+"],
+          "defaultClientScopes": ["web-origins", "acr", "profile", "roles", "basic", "email"],
+          "protocolMappers": [
+            {
+              "name": "grafana-client-roles",
+              "protocol": "openid-connect",
+              "protocolMapper": "oidc-usermodel-client-role-mapper",
+              "consentRequired": false,
+              "config": {
+                "usermodel.clientRoleMapping.clientId": "grafana",
+                "claim.name": "resource_access.grafana.roles",
+                "jsonType.label": "String",
+                "multivalued": "true",
+                "id.token.claim": "true",
+                "access.token.claim": "false",
+                "userinfo.token.claim": "true"
+              }
+            }
+          ]
+        }
+        {{- end }}
       ]
     }
 {{- end }}

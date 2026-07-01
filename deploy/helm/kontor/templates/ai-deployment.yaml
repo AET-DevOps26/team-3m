@@ -48,6 +48,19 @@ spec:
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
+            {{- if .Values.observability.enabled }}
+            {{- include "kontor.observability.backendEnv" (dict "root" . "serviceName" "kontor-ai") | nindent 12 }}
+            - name: OTEL_PYTHON_LOG_CORRELATION
+              value: "true"
+            # Don't trace health probes at all (avoids orphaned ASGI child spans).
+            - name: OTEL_PYTHON_EXCLUDED_URLS
+              value: "health"
+            {{- else }}
+            # The image always launches via opentelemetry-instrument; disable the SDK
+            # when no collector is wired so it stays a no-op.
+            - name: OTEL_SDK_DISABLED
+              value: "true"
+            {{- end }}
           {{- if or .Values.ai.logosApiKey .Values.ai.existingSecret }}
           envFrom:
             - secretRef:

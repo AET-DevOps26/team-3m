@@ -1,0 +1,144 @@
+{
+  "uid": "kontor-keycloak",
+  "title": "Keycloak",
+  "tags": ["kontor", "keycloak", "auth", "jvm"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 2,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "deployment_environment",
+        "label": "Environment",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "query": "label_values(jvm_memory_used_bytes{service=\"keycloak\"}, deployment_environment)",
+        "includeAll": true,
+        "multi": true,
+        "refresh": 2,
+        "sort": 1
+      }
+    ]
+  },
+  "panels": [
+    { "id": 100, "type": "row", "title": "HTTP", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 } },
+    {
+      "id": 1, "title": "Request rate by outcome", "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 1 },
+      "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "fillOpacity": 10, "stacking": { "mode": "normal" } } }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "sum by (outcome) (rate(http_server_requests_seconds_count{service=\"keycloak\", deployment_environment=~\"$deployment_environment\"}[$__rate_interval]))", "legendFormat": "{{outcome}}" } ]
+    },
+    {
+      "id": 2, "title": "Error ratio", "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 7, "w": 8, "x": 8, "y": 1 },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "max": 1, "custom": { "fillOpacity": 10 }, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 0.05 } ] } }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "sum(rate(http_server_requests_seconds_count{service=\"keycloak\", deployment_environment=~\"$deployment_environment\", outcome=~\"SERVER_ERROR|CLIENT_ERROR\"}[$__rate_interval])) / clamp_min(sum(rate(http_server_requests_seconds_count{service=\"keycloak\", deployment_environment=~\"$deployment_environment\"}[$__rate_interval])), 0.001)", "legendFormat": "error ratio" } ]
+    },
+    {
+      "id": 3, "title": "Latency (avg / max)", "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 7, "w": 8, "x": 16, "y": 1 },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [
+        { "refId": "avg", "expr": "sum(rate(http_server_requests_seconds_sum{service=\"keycloak\", deployment_environment=~\"$deployment_environment\"}[$__rate_interval])) / clamp_min(sum(rate(http_server_requests_seconds_count{service=\"keycloak\", deployment_environment=~\"$deployment_environment\"}[$__rate_interval])), 0.000001)", "legendFormat": "avg" },
+        { "refId": "max", "expr": "max(http_server_requests_seconds_max{service=\"keycloak\", deployment_environment=~\"$deployment_environment\"})", "legendFormat": "max" }
+      ]
+    },
+    {
+      "id": 4, "title": "Top endpoints by request rate", "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "topk(10, sum by (uri) (rate(http_server_requests_seconds_count{service=\"keycloak\", deployment_environment=~\"$deployment_environment\"}[$__rate_interval])))", "legendFormat": "{{uri}}" } ]
+    },
+    { "id": 200, "type": "row", "title": "JVM (Micrometer)", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 16 } },
+    {
+      "id": 10, "title": "Uptime", "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 17 },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [ { "refId": "A", "expr": "max(process_uptime_seconds{service=\"keycloak\", deployment_environment=~\"$deployment_environment\"})" } ]
+    },
+    {
+      "id": 11, "title": "Process CPU", "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 17 },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.6 }, { "color": "red", "value": 0.85 } ] } }, "overrides": [] },
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [ { "refId": "A", "expr": "max(process_cpu_usage{service=\"keycloak\", deployment_environment=~\"$deployment_environment\"})" } ]
+    },
+    {
+      "id": 12, "title": "Live threads", "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 17 },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [ { "refId": "A", "expr": "max(jvm_threads_live_threads{service=\"keycloak\", deployment_environment=~\"$deployment_environment\"})" } ]
+    },
+    {
+      "id": 13, "title": "Classes loaded", "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 17 },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [ { "refId": "A", "expr": "max(jvm_classes_loaded_classes{service=\"keycloak\", deployment_environment=~\"$deployment_environment\"})" } ]
+    },
+    {
+      "id": 14, "title": "Heap used vs committed", "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 21 },
+      "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        { "refId": "used", "expr": "sum(jvm_memory_used_bytes{service=\"keycloak\", deployment_environment=~\"$deployment_environment\", area=\"heap\"})", "legendFormat": "used" },
+        { "refId": "committed", "expr": "sum(jvm_memory_committed_bytes{service=\"keycloak\", deployment_environment=~\"$deployment_environment\", area=\"heap\"})", "legendFormat": "committed" }
+      ]
+    },
+    {
+      "id": 15, "title": "Non-heap used", "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 21 },
+      "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "sum by (id) (jvm_memory_used_bytes{service=\"keycloak\", deployment_environment=~\"$deployment_environment\", area=\"nonheap\"})", "legendFormat": "{{id}}" } ]
+    },
+    {
+      "id": 16, "title": "Heap by pool", "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 29 },
+      "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "fillOpacity": 10, "stacking": { "mode": "normal" } } }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "sum by (id) (jvm_memory_used_bytes{service=\"keycloak\", deployment_environment=~\"$deployment_environment\", area=\"heap\"})", "legendFormat": "{{id}}" } ]
+    },
+    {
+      "id": 17, "title": "GC pause rate", "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 29 },
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "sum by (action) (rate(jvm_gc_pause_seconds_sum{service=\"keycloak\", deployment_environment=~\"$deployment_environment\"}[$__rate_interval]))", "legendFormat": "{{action}}" } ]
+    },
+    {
+      "id": 18, "title": "Threads", "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 37 },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        { "refId": "live", "expr": "max(jvm_threads_live_threads{service=\"keycloak\", deployment_environment=~\"$deployment_environment\"})", "legendFormat": "live" },
+        { "refId": "daemon", "expr": "max(jvm_threads_daemon_threads{service=\"keycloak\", deployment_environment=~\"$deployment_environment\"})", "legendFormat": "daemon" },
+        { "refId": "peak", "expr": "max(jvm_threads_peak_threads{service=\"keycloak\", deployment_environment=~\"$deployment_environment\"})", "legendFormat": "peak" }
+      ]
+    },
+    {
+      "id": 19, "title": "CPU (process vs system)", "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 37 },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "max": 1, "custom": { "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        { "refId": "proc", "expr": "max(process_cpu_usage{service=\"keycloak\", deployment_environment=~\"$deployment_environment\"})", "legendFormat": "process" },
+        { "refId": "sys", "expr": "max(system_cpu_usage{service=\"keycloak\", deployment_environment=~\"$deployment_environment\"})", "legendFormat": "system" }
+      ]
+    }
+  ]
+}

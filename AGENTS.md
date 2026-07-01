@@ -94,6 +94,33 @@ builds it locally; CI builds and pushes it (`keycloak-docker` job in `pr.yml` /
 prebuilt image. The realm selects it via `loginTheme: kontor`. To change the
 theme, edit the vendored source — see `infra/keycloak/theme/README.md`.
 
+## Observability
+
+A single shared LGTM stack (Loki, Grafana, Tempo, Prometheus) with SeaweedFS object
+storage and a Grafana Alloy OTLP gateway serves **all** environments. It lives in
+its own chart (`deploy/helm/observability/`), namespace (`team-3m-monitoring`), and
+workflow (`.github/workflows/observability.yml`, `workflow_dispatch` — deploy and
+redeploy on demand, no versioning). PR deploy/teardown never touches it.
+
+- **Instrumentation**: OTel Java agent (core, baked into the image),
+  `opentelemetry-distro`/`-instrument` (ai), **Grafana Faro** (`@grafana/faro-react`)
+  for browser RUM on the client, and Keycloak's built-in tracing/metrics.
+- **Signals**: core/ai/client/keycloak send **traces** (the client ships them via
+  Faro → the Alloy `faro.receiver` → Tempo); service **logs** are collected from pod
+  stdout by the Alloy log collector via the Kubernetes API, and Faro also ships
+  browser logs/Web-Vitals to Loki; **metrics** come from core, ai, and Keycloak.
+- **Filtering**: every signal is tagged `deployment_environment` (`prod`, `pr-<N>`,
+  `local`) + `service`, so one Grafana variable switches across environments.
+- **Retention** (auto, strict for PRs): Loki per-stream prod 30d / pr 48h / default
+  14d; Tempo 7d; Prometheus 15d.
+- Config under `deploy/helm/observability/files/` is the single source shared with
+  the local stack (`docker-compose.observability.yml`):
+  `docker compose -f docker-compose.yml -f docker-compose.observability.yml up -d`
+  → Grafana on http://localhost:3001. Enable in the app chart with
+  `observability.enabled=true` (on by default in the prod and PR overlays).
+
+See `deploy/helm/observability/README.md`.
+
 ## Rules
 
 - Do not manually fix formatting or linting errors — run the formatter/linter instead

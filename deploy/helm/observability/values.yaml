@@ -1,0 +1,144 @@
+nameOverride: ""
+fullnameOverride: ""
+
+storageClass: csi-rbd-sc
+
+images:
+  seaweedfs: chrislusf/seaweedfs:4.36
+  loki: grafana/loki:3.7.3
+  tempo: grafana/tempo:2.10.7
+  prometheus: prom/prometheus:v3.12.0
+  grafana: grafana/grafana:13.1.0
+  alloy: grafana/alloy:v1.17.0
+  pullPolicy: IfNotPresent
+
+s3:
+  bucketLoki: loki
+  bucketTempo: tempo
+  accessKey: observability
+  secretKey: observability-secret
+  existingSecret: ""
+
+seaweedfs:
+  persistence:
+    size: 20Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+loki:
+  persistence:
+    size: 5Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+tempo:
+  persistence:
+    size: 5Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+prometheus:
+  retention:
+    time: 15d
+    size: 9GB
+  persistence:
+    size: 10Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 2Gi
+
+grafana:
+  adminUser: admin
+  adminPassword: ""
+  existingSecret: ""
+  # Keycloak SSO via generic OAuth. The admin password stays as a break-glass login.
+  # Needs a confidential `grafana` client in the Keycloak realm (kontor chart:
+  # keycloak.realm.grafanaClient) sharing the same clientSecret. Set enabled +
+  # issuerUrl + clientSecret at deploy time (the workflow wires the secret).
+  oauth:
+    enabled: false
+    name: Keycloak
+    issuerUrl: ""
+    clientId: grafana
+    clientSecret: ""
+    scopes: "openid email profile"
+    # All authenticated users get Viewer; the grafana client role grafana-admin
+    # grants Admin. Client roles are namespaced under resource_access.<clientId>.
+    roleAttributePath: "contains(resource_access.grafana.roles[*], 'grafana-admin') && 'Admin' || 'Viewer'"
+  persistence:
+    size: 2Gi
+  resources:
+    requests:
+      cpu: 50m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+  ingress:
+    enabled: true
+    className: nginx
+    hosts:
+      - grafana.kontor.live
+      - grafana.team-3m.stud.k8s.aet.cit.tum.de
+    tls:
+      enabled: true
+      clusterIssuer: letsencrypt-prod
+      secretName: grafana-tls
+
+alloy:
+  gateway:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: "1"
+        memory: 1Gi
+    # When true, expose the OTLP/HTTP receiver through an ingress so the browser
+    # SPA (client) can push traces from any environment.
+    ingress:
+      enabled: true
+      className: nginx
+      host: otlp.team-3m.stud.k8s.aet.cit.tum.de
+      tls:
+        enabled: true
+        clusterIssuer: letsencrypt-prod
+        secretName: otlp-tls
+  logs:
+    enabled: true
+    # Read pod logs through the Kubernetes API (no hostPath). Requires read access
+    # to pods + pods/log. With clusterRBAC=true the chart ships a ClusterRole +
+    # ClusterRoleBinding covering the prod and all PR namespaces. Set false if the
+    # cluster forbids cluster-scoped RBAC for the team (then bind per-namespace).
+    clusterRBAC: true
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+# Optional defense-in-depth. The app chart opens egress to this stack from its side;
+# enabling here additionally restricts who may reach the backends.
+networkPolicy:
+  enabled: false

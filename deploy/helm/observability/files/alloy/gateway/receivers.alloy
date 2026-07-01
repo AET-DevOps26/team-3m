@@ -1,0 +1,101 @@
+otelcol.receiver.otlp "in" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+
+  http {
+    endpoint = "0.0.0.0:4318"
+
+    cors {
+      allowed_origins = ["*"]
+      allowed_headers = ["content-type", "traceparent", "tracestate", "baggage"]
+    }
+  }
+
+  output {
+    metrics = [otelcol.processor.batch.in.input]
+    logs    = [otelcol.processor.batch.in.input]
+    traces  = [otelcol.processor.batch.in.input]
+  }
+}
+
+faro.receiver "frontend" {
+  server {
+    listen_address           = "0.0.0.0"
+    listen_port              = 12347
+    cors_allowed_origins     = ["*"]
+    max_allowed_payload_size = "10MiB"
+  }
+
+  output {
+    logs   = [loki.process.faro.receiver]
+    traces = [otelcol.processor.batch.in.input]
+  }
+}
+
+loki.process "faro" {
+  stage.logfmt {
+    mapping = { app_environment = "", kind = "" }
+  }
+
+  stage.labels {
+    values = { deployment_environment = "app_environment", kind = "kind" }
+  }
+
+  stage.static_labels {
+    values = { service = "kontor-client" }
+  }
+
+  forward_to = [loki.write.default.receiver]
+}
+
+otelcol.processor.batch "in" {
+  output {
+    metrics = [otelcol.processor.transform.labels.input]
+    logs    = [otelcol.processor.transform.labels.input]
+    traces  = [otelcol.processor.filter.drop_health.input]
+  }
+}
+
+// Drop health/readiness/liveness probe spans (kubelet + actuator) so they don't
+// flood traces or skew the span-metrics RED rates.
+otelcol.processor.filter "drop_health" {
+  error_mode = "ignore"
+
+  traces {
+    span = [
+      `IsMatch(name, ".*/health.*")`,
+      `attributes["url.path"] != nil and IsMatch(attributes["url.path"], ".*/health.*")`,
+      `attributes["http.target"] != nil and IsMatch(attributes["http.target"], ".*/health.*")`,
+      `attributes["http.route"] != nil and IsMatch(attributes["http.route"], ".*/health.*")`,
+    ]
+  }
+
+  output {
+    traces = [otelcol.exporter.otlp.traces.input]
+  }
+}
+
+otelcol.processor.transform "labels" {
+  error_mode = "ignore"
+
+  metric_statements {
+    context = "datapoint"
+    statements = [
+      `set(attributes["deployment_environment"], resource.attributes["deployment.environment"])`,
+      `set(attributes["service"], resource.attributes["service.name"])`,
+    ]
+  }
+
+  log_statements {
+    context = "resource"
+    statements = [
+      `set(attributes["loki.resource.labels"], "service.name, deployment.environment")`,
+    ]
+  }
+
+  output {
+    metrics = [otelcol.exporter.prometheus.metrics.input]
+    logs    = [otelcol.exporter.loki.logs.input]
+  }
+}

@@ -1,0 +1,7 @@
+apiVersion: v2
+name: kontor-observability
+description: Shared LGTM observability stack (Loki, Grafana, Tempo, Prometheus) with SeaweedFS object storage and a Grafana Alloy OTLP gateway for Kontor.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+kubeVersion: ">=1.30.0-0"

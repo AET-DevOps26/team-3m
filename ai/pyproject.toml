@@ -9,6 +9,10 @@ dependencies = [
     "openai>=2.41.1",
     "pydantic-settings>=2.14.1",
     "pyjwt[crypto]>=2.10",
+    "opentelemetry-distro>=0.50b0",
+    "opentelemetry-exporter-otlp>=1.29",
+    "opentelemetry-instrumentation-fastapi>=0.50b0",
+    "opentelemetry-instrumentation-logging>=0.50b0",
 ]
 
 [project.scripts]

@@ -115,7 +115,7 @@ jobs:
           KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
           KEYCLOAK_DB_PASSWORD: ${{ secrets.KEYCLOAK_DB_PASSWORD }}
           LOGOS_API_KEY: ${{ secrets.LOGOS_API_KEY }}
-          AI_DB_PASSWORD: ${{ secrets.AI_DB_PASSWORD || secrets.POSTGRES_PASSWORD }}
+          AI_DB_PASSWORD: ${{ secrets.AI_DB_PASSWORD }}
         run: |
           set -euo pipefail
           helm upgrade --install '${{ inputs.release-name }}' "$CHART" \
@@ -138,7 +138,7 @@ jobs:
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
           LOGOS_API_KEY: ${{ secrets.LOGOS_API_KEY }}
-          AI_DB_PASSWORD: ${{ secrets.AI_DB_PASSWORD || secrets.POSTGRES_PASSWORD }}
+          AI_DB_PASSWORD: ${{ secrets.AI_DB_PASSWORD }}
           PR_NUMBER: ${{ inputs.pr-number }}
           BASE_DOMAIN: ${{ inputs.base-domain }}
         run: |

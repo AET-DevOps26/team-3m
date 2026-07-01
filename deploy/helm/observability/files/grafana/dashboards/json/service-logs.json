@@ -113,11 +113,14 @@
         "y": 6
       },
       "options": {
+        "dedupStrategy": "exact",
         "showTime": true,
+        "timestampResolution": "ms",
+        "enableInfiniteScrolling": false,
         "wrapLogMessage": true,
+        "fontSize": "small",
         "prettifyLogMessage": false,
         "enableLogDetails": true,
-        "dedupStrategy": "none",
         "sortOrder": "Descending"
       },
       "targets": [

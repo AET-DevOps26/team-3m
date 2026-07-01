@@ -34,6 +34,14 @@ faro.receiver "frontend" {
 }
 
 loki.process "faro" {
+  stage.logfmt {
+    mapping = { app_environment = "", kind = "" }
+  }
+
+  stage.labels {
+    values = { deployment_environment = "app_environment", kind = "kind" }
+  }
+
   stage.static_labels {
     values = { service = "kontor-client" }
   }

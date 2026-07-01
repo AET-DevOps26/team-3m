@@ -59,7 +59,6 @@ describe("useDebounce", () => {
       vi.advanceTimersByTime(150)
     })
 
-    // 300ms elapsed overall, but only 150ms since the last change.
     expect(result.current).toBe("a")
 
     act(() => {

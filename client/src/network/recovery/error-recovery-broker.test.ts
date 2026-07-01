@@ -9,8 +9,6 @@ function makeError(message = "boom"): RecoverableError {
   return new RecoverableError({ message })
 }
 
-// The broker holds a module-level set of listeners, so every subscription made
-// in a test is torn down afterwards to keep tests isolated.
 const cleanups: Array<() => void> = []
 
 function subscribe(listener: (error: RecoverableError) => void): void {
@@ -50,8 +48,6 @@ describe("error recovery broker", () => {
   it("stops delivering after unsubscribe", () => {
     const listener = vi.fn()
     const unsubscribe = subscribeToRecoverableErrors(listener)
-    // Track it too, so a throw before the manual unsubscribe can't leak the
-    // listener into later tests (afterEach delete is idempotent).
     cleanups.push(unsubscribe)
 
     unsubscribe()

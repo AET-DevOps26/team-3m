@@ -9,7 +9,6 @@ import {
 
 describe("auth token provider", () => {
   beforeEach(() => {
-    // Reset the module-level state between tests.
     setAuthTokenProvider(() => null)
     setSigninRedirect(() => {})
   })
@@ -35,8 +34,6 @@ describe("triggerSigninRedirect", () => {
 
   beforeEach(() => {
     setSigninRedirect(() => {})
-    // Redirect failures are logged via console.error; silence and observe it
-    // here so the two failure-path tests don't each re-spy it.
     consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
   })
 
@@ -80,7 +77,6 @@ describe("triggerSigninRedirect", () => {
       throw new Error("redirect failed")
     })
 
-    // Must resolve rather than reject.
     await expect(triggerSigninRedirect()).resolves.toBeUndefined()
     expect(consoleError).toHaveBeenCalled()
   })

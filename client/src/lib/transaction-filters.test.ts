@@ -13,8 +13,6 @@ function makeFilters(overrides: Partial<Filters> = {}): Filters {
 describe("filtersToApiParams", () => {
   beforeEach(() => {
     vi.useFakeTimers()
-    // Local-time constructor keeps getFullYear/Month/Date deterministic
-    // regardless of the runner's timezone. 2026-06-15, midday.
     vi.setSystemTime(new Date(2026, 5, 15, 12, 0, 0))
   })
 
@@ -54,7 +52,6 @@ describe("filtersToApiParams", () => {
   })
 
   it("clamps the 3-month start to the last valid day of a shorter month", () => {
-    // From May 31, three months back is February, which has no 31st.
     vi.setSystemTime(new Date(2026, 4, 31, 12, 0, 0))
     const params = filtersToApiParams(makeFilters({ datePreset: "3m" }))
     expect(params.dateFrom).toBe("2026-02-28")

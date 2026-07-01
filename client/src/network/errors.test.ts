@@ -48,7 +48,6 @@ describe("RecoverableError.wrapping", () => {
     })
 
     expect(wrapped.message).toBe("original")
-    // Falls back to the original title when no override is given.
     expect(wrapped.title).toBe("Original title")
     expect(wrapped.recoveryOptions.map((o) => o.label)).toEqual([
       "Retry",

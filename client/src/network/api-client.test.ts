@@ -1,7 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-// A valid absolute base URL so openapi-fetch can build request URLs, and a
-// mockable auth layer so we can assert the Bearer header and 401 redirect.
 vi.mock("./config", () => ({ API_BASE_URL: "http://api.test" }))
 vi.mock("./auth-token", () => ({
   getAuthToken: vi.fn<() => string | null>(() => null),
@@ -32,7 +30,6 @@ function stubFetch(
   return mock
 }
 
-/** Resolves to the error thrown by the request (fails the test if none). */
 async function captureError(promise: Promise<unknown>): Promise<APIError> {
   try {
     await promise
@@ -42,9 +39,6 @@ async function captureError(promise: Promise<unknown>): Promise<APIError> {
   throw new Error("expected the request to reject")
 }
 
-// The getAuthToken mock's return value is a persistent implementation, which
-// vitest's clearMocks does not reset, so default it to null before every test.
-// Mock call history and stubbed globals are reset centrally (see vitest.config).
 beforeEach(() => {
   mockGetAuthToken.mockReturnValue(null)
 })
@@ -137,7 +131,6 @@ describe("apiClient error message extraction", () => {
     )
     const error = await captureError(apiClient.GET(PROFILE_PATH))
     expect(error.message).toBe("plain failure")
-    // The raw body is preserved as details for debugging.
     expect(error.details).toBe("plain failure")
   })
 
@@ -189,8 +182,6 @@ describe("apiClient transport and parse failures", () => {
   it("accepts a 204 No Content response without a parse error", async () => {
     stubFetch(() => new Response(null, { status: 204 }))
 
-    // GET always resolves to an envelope, so assert the request produced no
-    // error rather than merely that it resolved.
     const { error } = await apiClient.GET(PROFILE_PATH)
 
     expect(error).toBeUndefined()

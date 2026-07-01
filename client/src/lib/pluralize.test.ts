@@ -27,14 +27,11 @@ describe("pluralize", () => {
   })
 
   it("falls back to the ambient locale when none is given", () => {
-    // No locale option: resolves via navigator.language (jsdom) / "en".
-    // Pluralization rules are consistent enough here to assert the word form.
     expect(pluralize(1, "file")).toBe("1 file")
     expect(pluralize(4, "file")).toBe("4 files")
   })
 
   it("respects locale-specific plural rules", () => {
-    // French treats 0 and 1 as "one".
     expect(pluralize(0, "élément", { locale: "fr" })).toBe("0 élément")
     expect(pluralize(2, "élément", { locale: "fr" })).toBe("2 éléments")
   })

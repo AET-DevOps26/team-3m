@@ -114,7 +114,10 @@ export function useGenerateRecommendation() {
       }
       return data
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      await queryClient.cancelQueries({
+        queryKey: LATEST_RECOMMENDATION_QUERY_KEY,
+      })
       queryClient.setQueryData(LATEST_RECOMMENDATION_QUERY_KEY, data)
     },
   })

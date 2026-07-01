@@ -25,7 +25,13 @@ export function PortfolioRecommendation({
   overview,
 }: PortfolioRecommendationProps) {
   const { data: profile } = useProfile()
-  const { data: stored, isLoading } = useLatestRecommendation()
+  const {
+    data: stored,
+    isLoading,
+    isError: isLoadError,
+    error: loadError,
+    refetch,
+  } = useLatestRecommendation()
   const { mutate, isPending, isError, error } = useGenerateRecommendation()
 
   return (
@@ -62,7 +68,17 @@ export function PortfolioRecommendation({
         </CardContent>
       )}
       {stored && <RecommendationResult result={stored} />}
-      {isError && !stored && (
+      {isLoadError && !stored && (
+        <CardContent className="space-y-2">
+          <p className="text-sm text-destructive">
+            {loadError?.message ?? "Failed to load your saved recommendation."}
+          </p>
+          <Button variant="outline" size="sm" onClick={() => refetch()}>
+            Retry
+          </Button>
+        </CardContent>
+      )}
+      {isError && !stored && !isLoadError && (
         <CardContent className="space-y-1">
           <p className="text-sm text-destructive">
             {error?.message ?? "Failed to generate recommendation."}

@@ -17,8 +17,9 @@ export type RiskTolerance = "CONSERVATIVE" | "MODERATE" | "AGGRESSIVE"
 
 export const PROFILE_QUERY_KEY = ["profile"] as const
 
-// Jackson serialises unset nullable fields as `null`, but the generated schema
-// uses .optional() which only accepts undefined. Extend to accept null too.
+// The generator emits .optional() for the nullable riskTolerance enum, which
+// rejects the `null` Jackson serialises for an unset value. Extend it to accept
+// null too. (Nullable string fields are already generated as .nullish().)
 const profileResponseSchema = apiResponseUserProfileResponseSchema.extend({
   data: userProfileResponseSchema
     .extend({

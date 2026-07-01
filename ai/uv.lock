@@ -284,7 +284,7 @@ wheels = [
 
 [[package]]
 name = "kontor-ai"
-version = "0.20.0"
+version = "0.21.0"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi" },

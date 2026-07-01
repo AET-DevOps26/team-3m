@@ -44,6 +44,16 @@ spec:
             - name: VITE_OIDC_AUDIENCE
               value: {{ . | quote }}
             {{- end }}
+            {{- if .Values.observability.enabled }}
+            {{- with .Values.observability.clientEndpoint }}
+            - name: VITE_FARO_COLLECTOR_URL
+              value: {{ printf "%s/collect" (trimSuffix "/" .) | quote }}
+            {{- end }}
+            - name: VITE_DEPLOYMENT_ENVIRONMENT
+              value: {{ default "unknown" .Values.observability.environment | quote }}
+            - name: VITE_OTEL_SERVICE_NAME
+              value: kontor-client
+            {{- end }}
           readinessProbe:
             httpGet:
               path: {{ .Values.client.probes.readinessPath }}

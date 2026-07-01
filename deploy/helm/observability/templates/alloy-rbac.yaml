@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: alloy
+  labels:
+    {{- include "obs.componentLabels" (dict "root" . "component" "alloy") | nindent 4 }}
+{{- if .Values.alloy.logs.clusterRBAC }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Release.Name }}-alloy
+  labels:
+    {{- include "obs.componentLabels" (dict "root" . "component" "alloy") | nindent 4 }}
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "services", "endpoints"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Release.Name }}-alloy
+  labels:
+    {{- include "obs.componentLabels" (dict "root" . "component" "alloy") | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .Release.Name }}-alloy
+subjects:
+  - kind: ServiceAccount
+    name: alloy
+    namespace: {{ .Release.Namespace }}
+{{- end }}

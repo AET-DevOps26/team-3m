@@ -84,6 +84,20 @@ spec:
               value: "true"
             - name: KC_HEALTH_ENABLED
               value: "true"
+            {{- if .Values.observability.enabled }}
+            - name: KC_METRICS_ENABLED
+              value: "true"
+            - name: KC_TRACING_ENABLED
+              value: "true"
+            - name: KC_TRACING_ENDPOINT
+              value: {{ .Values.observability.collectorEndpoint | quote }}
+            - name: KC_TRACING_PROTOCOL
+              value: grpc
+            - name: KC_TRACING_SERVICE_NAME
+              value: kontor-keycloak
+            - name: KC_TRACING_RESOURCE_ATTRIBUTES
+              value: {{ printf "deployment.environment=%s" (default "unknown" .Values.observability.environment) | quote }}
+            {{- end }}
           envFrom:
             - secretRef:
                 name: {{ include "kontor.keycloak.secretName" . }}
@@ -111,8 +125,8 @@ spec:
               readOnly: true
       volumes:
         - name: realm-import
-          configMap:
-            name: {{ include "kontor.keycloak.fullname" . }}-realm
+          secret:
+            secretName: {{ include "kontor.keycloak.fullname" . }}-realm
       {{- with .Values.keycloak.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

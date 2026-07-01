@@ -28,4 +28,4 @@ ENV PATH="/app/.venv/bin:$PATH" \
 
 EXPOSE 8000
 
-CMD ["uvicorn", "advisor.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["opentelemetry-instrument", "uvicorn", "advisor.main:app", "--host", "0.0.0.0", "--port", "8000"]

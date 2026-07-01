@@ -1,0 +1,95 @@
+name: Observability
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "GH Environment providing cluster creds"
+        required: false
+        type: choice
+        default: k8s-prod
+        options:
+          - k8s-prod
+
+permissions:
+  contents: read
+
+concurrency:
+  group: observability
+  cancel-in-progress: false
+
+env:
+  CHART: deploy/helm/observability
+  NAMESPACE: team-3m-monitoring
+  RELEASE: kontor-observability
+  NS_TEMPLATE: deploy/rbac/namespace.tpl
+
+jobs:
+  deploy:
+    name: Deploy observability stack
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    timeout-minutes: 12
+
+    steps:
+      - name: Checkout (deploy/ only)
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          sparse-checkout: deploy
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v5
+        with:
+          version: v4.2.0
+
+      - name: Configure kubeconfig
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.kube"
+          echo "${{ secrets.KUBECONFIG_B64 }}" | base64 -d > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+          kubectl auth whoami
+
+      - name: Ensure namespace (in Rancher project)
+        env:
+          NAMESPACE: ${{ env.NAMESPACE }}
+          RANCHER_PROJECT_ID: ${{ vars.RANCHER_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          export RANCHER_PROJECT_LABEL="${RANCHER_PROJECT_ID#*:}"
+          envsubst < "$NS_TEMPLATE" | kubectl apply -f -
+
+      - name: Helm deploy
+        env:
+          GRAFANA_ADMIN_PASSWORD: ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
+          S3_ACCESS_KEY: ${{ secrets.OBSERVABILITY_S3_ACCESS_KEY }}
+          S3_SECRET_KEY: ${{ secrets.OBSERVABILITY_S3_SECRET_KEY }}
+          GRAFANA_OAUTH_CLIENT_SECRET: ${{ secrets.GRAFANA_OAUTH_CLIENT_SECRET }}
+          GRAFANA_OAUTH_ISSUER_URL: ${{ vars.GRAFANA_OAUTH_ISSUER_URL }}
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          [ -n "${GRAFANA_ADMIN_PASSWORD}" ] && EXTRA+=(--set-string "grafana.adminPassword=${GRAFANA_ADMIN_PASSWORD}")
+          [ -n "${S3_ACCESS_KEY}" ] && EXTRA+=(--set-string "s3.accessKey=${S3_ACCESS_KEY}")
+          [ -n "${S3_SECRET_KEY}" ] && EXTRA+=(--set-string "s3.secretKey=${S3_SECRET_KEY}")
+          # Keycloak SSO for Grafana: enabled only when the shared client secret is set.
+          if [ -n "${GRAFANA_OAUTH_CLIENT_SECRET}" ]; then
+            EXTRA+=(--set "grafana.oauth.enabled=true")
+            EXTRA+=(--set-string "grafana.oauth.clientSecret=${GRAFANA_OAUTH_CLIENT_SECRET}")
+            EXTRA+=(--set-string "grafana.oauth.issuerUrl=${GRAFANA_OAUTH_ISSUER_URL:-https://auth.kontor.live/realms/kontor}")
+          fi
+          helm upgrade --install "$RELEASE" "$CHART" \
+            -n "$NAMESPACE" \
+            "${EXTRA[@]}" \
+            --wait --timeout 10m
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "## Observability stack"
+            echo ""
+            echo "Release \`$RELEASE\` in namespace \`$NAMESPACE\`."
+            kubectl get pods -n "$NAMESPACE" -o wide || true
+          } >> "$GITHUB_STEP_SUMMARY"

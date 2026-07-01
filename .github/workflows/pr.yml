@@ -44,6 +44,13 @@ jobs:
             echo "image-tag=sha-${GITHUB_SHA:0:7}"
           } >> "$GITHUB_OUTPUT"
 
+  # Opt-in on PRs via the `test:e2e` label — the suite is slow, so it only runs
+  # when explicitly requested. Prod CI/CD runs it unconditionally as a deploy gate.
+  e2e:
+    needs: preview-gate
+    if: ${{ needs.preview-gate.outputs.teardown != 'true' && contains(github.event.pull_request.labels.*.name, 'test:e2e') }}
+    uses: ./.github/workflows/e2e.yml
+
   client-quality:
     needs: preview-gate
     if: ${{ needs.preview-gate.outputs.teardown != 'true' }}

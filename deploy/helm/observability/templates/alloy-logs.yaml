@@ -1,0 +1,71 @@
+{{- if .Values.alloy.logs.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alloy-logs-config
+  labels:
+    {{- include "obs.componentLabels" (dict "root" . "component" "alloy-logs") | nindent 4 }}
+data:
+  pod-logs.alloy: |
+{{ .Files.Get "files/alloy/k8s-logs/pod-logs.alloy" | indent 4 }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alloy-logs
+  labels:
+    {{- include "obs.componentLabels" (dict "root" . "component" "alloy-logs") | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "obs.selectorLabels" (dict "root" . "component" "alloy-logs") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "obs.componentLabels" (dict "root" . "component" "alloy-logs") | nindent 8 }}
+      annotations:
+        checksum/config: {{ .Files.Get "files/alloy/k8s-logs/pod-logs.alloy" | sha256sum }}
+    spec:
+      serviceAccountName: alloy
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 473
+        runAsGroup: 473
+        fsGroup: 473
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: alloy
+          image: {{ .Values.images.alloy }}
+          imagePullPolicy: {{ .Values.images.pullPolicy }}
+          args:
+            - run
+            - --server.http.listen-addr=0.0.0.0:12345
+            - --storage.path=/var/lib/alloy/data
+            - /etc/alloy-config
+          ports:
+            - { name: http, containerPort: 12345 }
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.alloy.logs.resources | nindent 12 }}
+          volumeMounts:
+            - { name: config, mountPath: /etc/alloy-config }
+            - { name: storage, mountPath: /var/lib/alloy/data }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+      volumes:
+        - name: config
+          configMap:
+            name: alloy-logs-config
+        - name: storage
+          emptyDir: {}
+{{- end }}

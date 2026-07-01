@@ -8,8 +8,8 @@ export const updateRiskToleranceRequestSchema = z.object({
 
 export const userProfileResponseSchema = z.object({
   id: z.uuid(),
-  email: z.string().optional(),
-  preferredUsername: z.string().optional(),
+  email: z.string().nullish(),
+  preferredUsername: z.string().nullish(),
   riskTolerance: z.enum(["CONSERVATIVE", "MODERATE", "AGGRESSIVE"]).optional(),
 })
 

@@ -118,6 +118,7 @@ jobs:
           AI_DB_PASSWORD: ${{ secrets.AI_DB_PASSWORD }}
         run: |
           set -euo pipefail
+          AI_DB_PASSWORD="${AI_DB_PASSWORD:-$POSTGRES_PASSWORD}"
           helm upgrade --install '${{ inputs.release-name }}' "$CHART" \
             -n '${{ inputs.namespace }}' \
             -f "$CHART/values-prod.yaml" \
@@ -143,6 +144,7 @@ jobs:
           BASE_DOMAIN: ${{ inputs.base-domain }}
         run: |
           set -euo pipefail
+          AI_DB_PASSWORD="${AI_DB_PASSWORD:-$POSTGRES_PASSWORD}"
           envsubst '${PR_NUMBER} ${BASE_DOMAIN}' \
             < "$CHART/values-pr.template.yaml" > /tmp/values-pr.yaml
           helm upgrade --install '${{ inputs.release-name }}' "$CHART" \

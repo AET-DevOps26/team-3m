@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import type { MockInstance } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import {
   getAuthToken,
   setAuthTokenProvider,
@@ -30,8 +31,17 @@ describe("auth token provider", () => {
 })
 
 describe("triggerSigninRedirect", () => {
+  let consoleError: MockInstance
+
   beforeEach(() => {
     setSigninRedirect(() => {})
+    // Redirect failures are logged via console.error; silence and observe it
+    // here so the two failure-path tests don't each re-spy it.
+    consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    consoleError.mockRestore()
   })
 
   it("invokes the registered redirect trigger", async () => {
@@ -66,7 +76,6 @@ describe("triggerSigninRedirect", () => {
   })
 
   it("swallows and logs errors thrown by the trigger", async () => {
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
     setSigninRedirect(() => {
       throw new Error("redirect failed")
     })
@@ -74,12 +83,9 @@ describe("triggerSigninRedirect", () => {
     // Must resolve rather than reject.
     await expect(triggerSigninRedirect()).resolves.toBeUndefined()
     expect(consoleError).toHaveBeenCalled()
-
-    consoleError.mockRestore()
   })
 
   it("recovers after a failed redirect and can be triggered again", async () => {
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
     setSigninRedirect(() => {
       throw new Error("redirect failed")
     })
@@ -90,6 +96,5 @@ describe("triggerSigninRedirect", () => {
     await triggerSigninRedirect()
 
     expect(trigger).toHaveBeenCalledTimes(1)
-    consoleError.mockRestore()
   })
 })

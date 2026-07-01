@@ -37,7 +37,7 @@ services:
       start_period: 10s
 
   ai-db:
-    image: pgvector/pgvector:pg18-trixie
+    image: postgres:18-trixie
     environment:
       POSTGRES_DB: "${AI_POSTGRES_DB:-kontor_ai}"
       POSTGRES_USER: "${AI_POSTGRES_USER:-kontor_ai}"

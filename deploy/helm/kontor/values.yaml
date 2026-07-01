@@ -118,8 +118,8 @@ ai:
   db:
     image:
       registry: docker.io
-      repository: pgvector/pgvector
-      tag: pg18-trixie
+      repository: postgres
+      tag: "18-trixie"
       pullPolicy: ""
     database: kontor_ai
     username: kontor_ai
@@ -159,6 +159,9 @@ ai:
     limits:
       cpu: "1"
       memory: 512Mi
+  migrate:
+    retries: 30
+    retryDelaySeconds: 5
   probes:
     livenessPath: /ai/health/liveness
     readinessPath: /ai/health/readiness

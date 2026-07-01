@@ -28,6 +28,34 @@ spec:
     spec:
       securityContext:
         {{- toYaml .Values.ai.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: migrate
+          image: {{ include "kontor.image" (dict "root" . "component" .Values.ai) | quote }}
+          imagePullPolicy: {{ include "kontor.imagePullPolicy" (dict "root" . "component" .Values.ai) }}
+          securityContext:
+            {{- toYaml .Values.ai.containerSecurityContext | nindent 12 }}
+          # ponytail: retry loop doubles as wait-for-db; the DB StatefulSet and this pod
+          # are applied together, so alembic retries until Postgres is reachable.
+          command:
+            - /bin/sh
+            - -c
+            - >
+              i=0;
+              until alembic upgrade head; do
+                i=$((i + 1));
+                if [ "$i" -ge {{ .Values.ai.migrate.retries }} ]; then
+                  echo "migration failed after $i attempts"; exit 1;
+                fi;
+                echo "database not ready, retrying ($i)"; sleep {{ .Values.ai.migrate.retryDelaySeconds }};
+              done
+          envFrom:
+            - secretRef:
+                name: {{ include "kontor.ai.postgres.secretName" . }}
+          resources:
+            {{- toYaml .Values.ai.resources | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
       containers:
         - name: ai
           image: {{ include "kontor.image" (dict "root" . "component" .Values.ai) | quote }}

@@ -135,7 +135,7 @@ spec:
         - protocol: TCP
           port: 8000
 ---
-# AI DB: only accept traffic from the AI service and its migration Job.
+# AI DB: only accept traffic from the AI service (migrations run as an AI init container).
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -156,10 +156,6 @@ spec:
             matchLabels:
               {{- include "kontor.selectorLabels" . | nindent 14 }}
               app.kubernetes.io/component: ai
-        - podSelector:
-            matchLabels:
-              {{- include "kontor.selectorLabels" . | nindent 14 }}
-              app.kubernetes.io/component: ai-migrate
       ports:
         - protocol: TCP
           port: 5432

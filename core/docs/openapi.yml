@@ -258,9 +258,13 @@ components:
           type: string
           format: uuid
         email:
-          type: string
+          type:
+          - string
+          - "null"
         preferredUsername:
-          type: string
+          type:
+          - string
+          - "null"
         riskTolerance:
           type:
           - string

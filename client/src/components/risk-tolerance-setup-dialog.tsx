@@ -1,6 +1,7 @@
 import { CheckIcon, ShieldCheck } from "lucide-react"
 import { Select as SelectPrimitive } from "radix-ui"
 import { Suspense, useState } from "react"
+import { ErrorBoundary } from "@/components/error-boundary"
 import {
   AlertDialog,
   AlertDialogContent,
@@ -129,9 +130,13 @@ function RiskToleranceSetupDialogInner() {
  * tolerance. Renders nothing until the profile query resolves.
  */
 export function RiskToleranceSetupDialog() {
+  // The profile fetch is non-critical UX: if it fails, skip the dialog rather
+  // than letting the suspense-query error reach the root and blank the app.
   return (
-    <Suspense fallback={null}>
-      <RiskToleranceSetupDialogInner />
-    </Suspense>
+    <ErrorBoundary fallback={null}>
+      <Suspense fallback={null}>
+        <RiskToleranceSetupDialogInner />
+      </Suspense>
+    </ErrorBoundary>
   )
 }

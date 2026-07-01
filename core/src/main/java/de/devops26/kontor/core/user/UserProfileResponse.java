@@ -6,8 +6,8 @@ import java.util.UUID;
 
 public record UserProfileResponse(
         @Schema(requiredMode = RequiredMode.REQUIRED) UUID id,
-        @Schema String email,
-        @Schema String preferredUsername,
+        @Schema(nullable = true) String email,
+        @Schema(nullable = true) String preferredUsername,
         @Schema(nullable = true) RiskTolerance riskTolerance) {
 
     public static UserProfileResponse from(AppUser user) {

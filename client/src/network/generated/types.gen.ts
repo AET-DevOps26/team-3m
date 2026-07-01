@@ -10,8 +10,8 @@ export type UpdateRiskToleranceRequest = {
 
 export type UserProfileResponse = {
   id: string
-  email?: string
-  preferredUsername?: string
+  email?: string | null
+  preferredUsername?: string | null
   riskTolerance?: "CONSERVATIVE" | "MODERATE" | "AGGRESSIVE"
 }
 

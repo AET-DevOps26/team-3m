@@ -1,6 +1,7 @@
 import { Banknote, Briefcase, TrendingUp } from "lucide-react"
-import { Component, type ReactNode, Suspense } from "react"
+import { Suspense } from "react"
 import { Link } from "react-router-dom"
+import { ErrorBoundary } from "@/components/error-boundary"
 import { ImportTransactionsDialog } from "@/components/import/import-transactions-dialog"
 import { HoldingsTable } from "@/components/portfolio/portfolio-holdings-table"
 import { PerformanceCard } from "@/components/portfolio/portfolio-performance-card"
@@ -17,32 +18,6 @@ import {
   type PortfolioHolding,
   usePortfolioOverview,
 } from "@/network/endpoints/portfolio"
-
-interface ErrorBoundaryState {
-  error: Error | null
-}
-
-class ErrorBoundary extends Component<
-  { children: ReactNode },
-  ErrorBoundaryState
-> {
-  state: ErrorBoundaryState = { error: null }
-
-  static getDerivedStateFromError(error: Error) {
-    return { error }
-  }
-
-  render() {
-    if (this.state.error) {
-      return (
-        <p className="py-8 text-center text-sm text-destructive">
-          Failed to load portfolio data. Please refresh the page to try again.
-        </p>
-      )
-    }
-    return this.props.children
-  }
-}
 
 function Loading() {
   return (
@@ -183,7 +158,11 @@ function PortfolioContent() {
         </CardContent>
       </Card>
 
-      <PortfolioRecommendation overview={overview} />
+      {/* Profile-dependent and optional: hide it rather than failing the whole
+          page if the profile fetch errors. */}
+      <ErrorBoundary fallback={null}>
+        <PortfolioRecommendation overview={overview} />
+      </ErrorBoundary>
     </div>
   )
 }
@@ -197,7 +176,14 @@ export function PortfolioOverviewPage() {
           <ImportTransactionsDialog />
         </div>
 
-        <ErrorBoundary>
+        <ErrorBoundary
+          fallback={
+            <p className="py-8 text-center text-sm text-destructive">
+              Failed to load portfolio data. Please refresh the page to try
+              again.
+            </p>
+          }
+        >
           <Suspense fallback={<Loading />}>
             <PortfolioContent />
           </Suspense>

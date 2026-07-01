@@ -1,7 +1,7 @@
 {
   "name": "kontor",
   "private": true,
-  "version": "0.19.0",
+  "version": "0.20.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -42,8 +42,8 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.0",
-    "@hey-api/openapi-ts": "0.98.2",
+    "@biomejs/biome": "2.5.1",
+    "@hey-api/openapi-ts": "0.99.0",
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^24.12.0",
     "@types/react": "^19.2.14",

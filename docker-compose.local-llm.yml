@@ -1,0 +1,44 @@
+# Opt-in local LLM (Ollama) for offline AI, layered on top of docker-compose.yml:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.local-llm.yml up --build
+#
+# Use this when you don't have a LOGOS_API_KEY and don't want to run Ollama natively.
+# It runs Ollama in a container, pulls the model once into a named volume, and points the
+# ai service at it over the internal network. Note: containerized Ollama on macOS is
+# CPU-only (no Metal passthrough), so a native host Ollama is much faster — see the README.
+
+services:
+  ollama:
+    image: ollama/ollama:0.30.10
+    volumes:
+      - ollama_models:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # One-shot job: pulls the model into the shared volume, then exits. Idempotent — a
+  # re-pull of an already-present model is a fast no-op. The ai service waits for this to
+  # finish so the first request can't race a half-downloaded model.
+  ollama-pull:
+    image: ollama/ollama:0.30.10
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_HOST: "http://ollama:11434"
+    entrypoint: ["ollama", "pull", "${LOCAL_LLM_MODEL:-llama3.2}"]
+    restart: "no"
+
+  ai:
+    environment:
+      LOCAL_LLM_BASE_URL: "http://ollama:11434/v1"
+      LOCAL_LLM_MODEL: "${LOCAL_LLM_MODEL:-llama3.2}"
+    depends_on:
+      ollama-pull:
+        condition: service_completed_successfully
+
+volumes:
+  ollama_models:

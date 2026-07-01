@@ -16,9 +16,14 @@ spec:
       labels:
         {{- include "kontor.labels" . | nindent 8 }}
         app.kubernetes.io/component: ai
-      {{- if .Values.ai.logosApiKey }}
+      {{- if or (not .Values.ai.db.existingSecret) .Values.ai.logosApiKey }}
       annotations:
+        {{- if not .Values.ai.db.existingSecret }}
+        checksum/ai-postgres-secret: {{ include (print $.Template.BasePath "/ai-postgres-secret.yaml") . | sha256sum }}
+        {{- end }}
+        {{- if .Values.ai.logosApiKey }}
         checksum/secret: {{ include (print $.Template.BasePath "/ai-secret.yaml") . | sha256sum }}
+        {{- end }}
       {{- end }}
     spec:
       securityContext:

@@ -20,9 +20,12 @@ export async function completeRiskToleranceIfPresent(
   page: Page,
 ): Promise<void> {
   const dialog = page.getByRole("alertdialog")
-  await page
-    .waitForLoadState("networkidle", { timeout: SETTLE_TIMEOUT_MS })
-    .catch(() => {})
+  // Wait for the network to settle so the profile query — which decides whether
+  // the dialog mounts — has resolved. The app has no polling or websocket loop,
+  // so a healthy page always reaches network idle; we let a timeout propagate
+  // (e.g. the backend is down) rather than swallow it and run the dialog check
+  // against a broken page, which would silently pass as "already onboarded".
+  await page.waitForLoadState("networkidle", { timeout: SETTLE_TIMEOUT_MS })
   try {
     await dialog.waitFor({
       state: "visible",

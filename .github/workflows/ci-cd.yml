@@ -34,6 +34,9 @@ jobs:
     uses: ./.github/workflows/openapi-sync.yml
 
   e2e:
+    # Gate the slow full-stack build on the fast quality checks so a broken
+    # build fails in seconds instead of after a ~10-minute compose stack build.
+    needs: [client-quality, server-quality, ai-quality, helm-quality, openapi-sync]
     uses: ./.github/workflows/e2e.yml
 
   release:

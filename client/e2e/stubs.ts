@@ -107,7 +107,9 @@ export function performance(count = 40, spanDays = 400) {
 // --- Transactions ----------------------------------------------------------
 
 export interface StubTransaction {
-  id: string
+  // Optional: omit to let transactionsPage assign a distinct id, or set one
+  // explicitly (e.g. to deep-link to a known transaction).
+  id?: string
   datetime: string
   date: string
   accountType: string
@@ -125,7 +127,6 @@ export function transaction(
   overrides: Partial<StubTransaction> = {},
 ): StubTransaction {
   return {
-    id: uuid(1),
     datetime: "2026-02-03T14:30:00+00:00",
     date: "2026-02-03",
     accountType: "DEFAULT",
@@ -142,10 +143,10 @@ export function transaction(
 }
 
 export function transactionsPage(items: StubTransaction[]) {
-  // Assign each item a distinct, valid id so rows never collide on the
-  // React key={tx.id} the transaction list uses, regardless of caller input.
+  // Preserve any id a caller set explicitly; otherwise assign a distinct, valid
+  // id so rows never collide on the React key={tx.id} the transaction list uses.
   return {
-    items: items.map((item, i) => ({ ...item, id: uuid(i + 1) })),
+    items: items.map((item, i) => ({ ...item, id: item.id ?? uuid(i + 1) })),
     nextCursor: null,
   }
 }

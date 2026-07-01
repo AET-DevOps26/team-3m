@@ -32,8 +32,13 @@ test("clicking Total Portfolio navigates to transactions", async ({ page }) => {
     .getByText("Total Portfolio")
     .click({ timeout: DATA_LOAD_TIMEOUT_MS })
 
-  await expect(page).toHaveURL("/transactions")
-  await expect(
-    page.getByRole("heading", { name: "Transactions" }),
-  ).toBeVisible()
+  // The click only resolves once navigation starts; the route change and first
+  // paint of the Transactions page can still exceed the local 5s expect default
+  // on a cold backend, so give these the same generous window as the click.
+  await expect(page).toHaveURL("/transactions", {
+    timeout: DATA_LOAD_TIMEOUT_MS,
+  })
+  await expect(page.getByRole("heading", { name: "Transactions" })).toBeVisible(
+    { timeout: DATA_LOAD_TIMEOUT_MS },
+  )
 })

@@ -187,6 +187,25 @@ jobs:
             --set-string ai.db.password="$AI_DB_PASSWORD" \
             --rollback-on-failure --force-conflicts --wait --timeout 4m
 
+      - name: Diagnose failed deploy
+        if: failure() && inputs.action == 'deploy'
+        env:
+          NAMESPACE: ${{ inputs.namespace }}
+        run: |
+          set -uo pipefail
+          # rollback-on-failure already deleted the release's pods by the time this
+          # runs, so lean on PVCs (survive StatefulSet deletion) and Events (outlive
+          # the objects they describe) rather than pod-scoped commands.
+          echo "::group::Pods"
+          kubectl get pods -n "$NAMESPACE" -o wide || true
+          echo "::endgroup::"
+          echo "::group::PVCs"
+          kubectl get pvc -n "$NAMESPACE" || true
+          echo "::endgroup::"
+          echo "::group::Recent events"
+          kubectl get events -n "$NAMESPACE" --sort-by=.lastTimestamp | tail -100 || true
+          echo "::endgroup::"
+
       - name: Helm teardown
         if: inputs.action == 'teardown'
         run: |

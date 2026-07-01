@@ -16,6 +16,10 @@ export default defineConfig({
     environment: "jsdom",
     include: ["src/**/*.test.{ts,tsx}"],
     setupFiles: ["./vitest.setup.ts"],
+    // Enforce isolation centrally instead of per-file: reset mock call history
+    // and restore any vi.stubGlobal'd globals (e.g. fetch) before every test.
+    clearMocks: true,
+    unstubGlobals: true,
     coverage: {
       provider: "v8",
       // Scope coverage to the pure-logic modules these unit tests target. The

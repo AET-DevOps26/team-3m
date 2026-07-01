@@ -50,6 +50,9 @@ describe("error recovery broker", () => {
   it("stops delivering after unsubscribe", () => {
     const listener = vi.fn()
     const unsubscribe = subscribeToRecoverableErrors(listener)
+    // Track it too, so a throw before the manual unsubscribe can't leak the
+    // listener into later tests (afterEach delete is idempotent).
+    cleanups.push(unsubscribe)
 
     unsubscribe()
     publishRecoverableError(makeError())

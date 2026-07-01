@@ -7,21 +7,31 @@ import { formatCurrency } from "./format"
 // fallback and two-decimal precision — rather than a locale-specific string.
 describe("formatCurrency", () => {
   it("always renders exactly two fraction digits", () => {
-    expect(formatCurrency(5, "")).toMatch(/5\D?00/)
-    expect(formatCurrency(5.1, "")).toMatch(/5\D?10/)
+    // Anchored with a single separator so a change to 1 or 3 fraction digits
+    // (e.g. "5" or "5.000") would fail rather than slip through.
+    expect(formatCurrency(5, "")).toMatch(/^5\D00$/)
+    expect(formatCurrency(5.1, "")).toMatch(/^5\D10$/)
   })
 
   it("rounds to two fraction digits", () => {
-    expect(formatCurrency(1.005, "")).toMatch(/1\D?01|1\D?00/)
+    // Values well clear of the .xx5 float-representation edge so the rounding
+    // direction is unambiguous: 1.567 -> .57 (up), 1.562 -> .56 (down).
+    expect(formatCurrency(1.567, "")).toMatch(/^1\D57$/)
+    expect(formatCurrency(1.562, "")).toMatch(/^1\D56$/)
   })
 
   it("groups thousands regardless of the separator character", () => {
-    // Both "1,234,567.00" and "1.234.567,00" match this shape.
-    expect(formatCurrency(1234567, "")).toMatch(/^1\D?234\D?567\D?00$/)
+    const formatted = formatCurrency(1234567, "")
+    // The digits are preserved...
+    expect(formatted.replace(/\D/g, "")).toBe("123456700")
+    // ...and grouping separators are actually inserted, so the output is not a
+    // bare digit run with a single decimal separator ("1234567.00").
+    expect(formatted).not.toMatch(/^\d+\D\d{2}$/)
   })
 
   it("adds currency styling when a valid currency is given", () => {
-    // Currency style adds a symbol/code the plain fallback does not have.
+    // The currency branch adds a $/USD marker the plain fallback lacks.
+    expect(formatCurrency(1000, "USD")).toMatch(/\$|USD/)
     expect(formatCurrency(1000, "USD")).not.toBe(formatCurrency(1000, ""))
   })
 

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 
 // A valid absolute base URL so openapi-fetch can build request URLs, and a
 // mockable auth layer so we can assert the Bearer header and 401 redirect.
@@ -42,16 +42,14 @@ async function captureError(promise: Promise<unknown>): Promise<APIError> {
   throw new Error("expected the request to reject")
 }
 
+// The getAuthToken mock's return value is a persistent implementation, which
+// vitest's clearMocks does not reset, so default it to null before every test.
+// Mock call history and stubbed globals are reset centrally (see vitest.config).
+beforeEach(() => {
+  mockGetAuthToken.mockReturnValue(null)
+})
+
 describe("apiClient auth header", () => {
-  beforeEach(() => {
-    mockGetAuthToken.mockReturnValue(null)
-  })
-
-  afterEach(() => {
-    vi.unstubAllGlobals()
-    vi.clearAllMocks()
-  })
-
   it("attaches a Bearer token when one is available", async () => {
     mockGetAuthToken.mockReturnValue("token-abc")
     const fetchMock = stubFetch(() => jsonResponse({ success: true }))
@@ -73,11 +71,6 @@ describe("apiClient auth header", () => {
 })
 
 describe("apiClient HTTP error mapping", () => {
-  afterEach(() => {
-    vi.unstubAllGlobals()
-    vi.clearAllMocks()
-  })
-
   it("maps a 401 to an unauthenticated error and triggers a sign-in", async () => {
     stubFetch(() => jsonResponse({ message: "expired" }, 401))
 
@@ -111,11 +104,6 @@ describe("apiClient HTTP error mapping", () => {
 })
 
 describe("apiClient error message extraction", () => {
-  afterEach(() => {
-    vi.unstubAllGlobals()
-    vi.clearAllMocks()
-  })
-
   it("uses a FastAPI string detail", async () => {
     stubFetch(() => jsonResponse({ detail: "field is required" }, 400))
     const error = await captureError(apiClient.GET(PROFILE_PATH))
@@ -161,11 +149,6 @@ describe("apiClient error message extraction", () => {
 })
 
 describe("apiClient transport and parse failures", () => {
-  afterEach(() => {
-    vi.unstubAllGlobals()
-    vi.clearAllMocks()
-  })
-
   it("maps a fetch rejection to a network error", async () => {
     stubFetch(() => Promise.reject(new TypeError("Failed to fetch")))
 
@@ -206,6 +189,10 @@ describe("apiClient transport and parse failures", () => {
   it("accepts a 204 No Content response without a parse error", async () => {
     stubFetch(() => new Response(null, { status: 204 }))
 
-    await expect(apiClient.GET(PROFILE_PATH)).resolves.toBeDefined()
+    // GET always resolves to an envelope, so assert the request produced no
+    // error rather than merely that it resolved.
+    const { error } = await apiClient.GET(PROFILE_PATH)
+
+    expect(error).toBeUndefined()
   })
 })

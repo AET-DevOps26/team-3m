@@ -56,6 +56,9 @@
               }
             }
           },
+          "401": {
+            "description": "Authentication required"
+          },
           "404": {
             "description": "No recommendation has been generated yet"
           }
@@ -89,6 +92,9 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Authentication required"
           },
           "502": {
             "description": "AI service request failed or returned an unparsable response"

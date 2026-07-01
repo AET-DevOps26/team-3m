@@ -159,6 +159,10 @@ export type LatestRecommendationAiAdvisorRecommendationGetData = {
 
 export type LatestRecommendationAiAdvisorRecommendationGetErrors = {
   /**
+   * Authentication required
+   */
+  401: unknown
+  /**
    * No recommendation has been generated yet
    */
   404: unknown
@@ -182,6 +186,10 @@ export type GenerateRecommendationAiAdvisorRecommendationPostData = {
 }
 
 export type GenerateRecommendationAiAdvisorRecommendationPostErrors = {
+  /**
+   * Authentication required
+   */
+  401: unknown
   /**
    * Validation Error
    */

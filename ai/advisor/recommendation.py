@@ -87,6 +87,7 @@ def _build_prompt(portfolio: PortfolioInput) -> str:
     "/advisor/recommendation",
     response_model=RecommendationResponse,
     responses={
+        401: {"description": "Authentication required"},
         502: {"description": "AI service request failed or returned an unparsable response"},
         503: {"description": "AI service is not configured"},
     },
@@ -158,7 +159,7 @@ async def generate_recommendation(
             risk_tolerance=portfolio.risk_tolerance,
         )
     except Exception as exc:
-        logger.error("Failed to persist recommendation for user %s", user_id, exc_info=exc)
+        logger.error("Failed to persist recommendation", exc_info=exc)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Could not save recommendation",
@@ -174,7 +175,10 @@ async def generate_recommendation(
 @router.get(
     "/advisor/recommendation",
     response_model=RecommendationResponse,
-    responses={404: {"description": "No recommendation has been generated yet"}},
+    responses={
+        401: {"description": "Authentication required"},
+        404: {"description": "No recommendation has been generated yet"},
+    },
 )
 async def latest_recommendation(
     user_id: Annotated[str, Depends(require_authenticated_user)],

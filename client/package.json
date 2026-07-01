@@ -13,7 +13,8 @@
     "format": "biome format . --fix",
     "typecheck": "tsc -b --noEmit",
     "preview": "vite preview",
-    "generate:api": "openapi-ts && openapi-ts -f openapi-ts.ai.config.ts && biome check --write --no-errors-on-unmatched src/network/generated src/network/generated-ai"
+    "generate:api": "openapi-ts && openapi-ts -f openapi-ts.ai.config.ts && biome check --write --no-errors-on-unmatched src/network/generated src/network/generated-ai",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@fontsource-variable/roboto": "^5.2.10",
@@ -41,6 +42,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.5.1",
     "@hey-api/openapi-ts": "0.99.0",
+    "@playwright/test": "^1.61.0",
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^24.12.0",
     "@types/react": "^19.2.14",

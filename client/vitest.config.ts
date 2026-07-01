@@ -23,8 +23,10 @@ export default defineConfig({
       // Playwright E2E suite instead, not by unit tests.
       include: [
         "src/lib/**",
-        "src/network/errors.ts",
+        "src/network/api-client.ts",
         "src/network/auth-token.ts",
+        "src/network/errors.ts",
+        "src/network/recovery/error-recovery-broker.ts",
       ],
     },
   },

@@ -78,7 +78,7 @@ export function PortfolioRecommendation({
           </Button>
         </CardContent>
       )}
-      {isError && !stored && !isLoadError && (
+      {isError && !isLoadError && (
         <CardContent className="space-y-1">
           <p className="text-sm text-destructive">
             {error?.message ?? "Failed to generate recommendation."}

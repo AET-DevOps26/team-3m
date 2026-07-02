@@ -95,6 +95,7 @@ services:
       POSTGRES_USER: "${POSTGRES_USER:-team3m}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-change-me-local}"
       SPRING_PROFILES_ACTIVE: seed
+      TWELVE_DATA_API_KEY: "${TWELVE_DATA_API_KEY:-}"
     ports:
       - "8080:8080"
     healthcheck:

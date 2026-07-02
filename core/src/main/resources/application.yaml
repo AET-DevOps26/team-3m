@@ -30,6 +30,9 @@ kontor:
   security:
     issuer: ${KEYCLOAK_ISSUER:http://localhost:8081/realms/kontor}
     audience: ${KEYCLOAK_AUDIENCE:kontor-api}
+  market-data:
+    base-url: ${MARKET_DATA_BASE_URL:https://api.twelvedata.com}
+    api-key: ${TWELVE_DATA_API_KEY:}
 
 management:
   endpoints:

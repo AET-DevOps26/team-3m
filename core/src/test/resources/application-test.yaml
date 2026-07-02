@@ -19,3 +19,8 @@ kontor:
   security:
     issuer: http://localhost:0/realms/test
     audience: kontor-api-test
+  market-data:
+    # Tests replace TwelveDataClient with a mock or a bound MockRestServiceServer;
+    # this URL is never contacted.
+    base-url: http://localhost:0
+    api-key: test-key

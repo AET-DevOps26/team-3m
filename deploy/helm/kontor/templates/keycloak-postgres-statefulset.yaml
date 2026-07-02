@@ -9,6 +9,9 @@ metadata:
 spec:
   serviceName: {{ include "kontor.keycloak.postgres.fullname" . }}
   replicas: 1
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: {{ .Values.pvcRetentionWhenDeleted }}
+    whenScaled: Retain
   selector:
     matchLabels:
       {{- include "kontor.selectorLabels" . | nindent 6 }}

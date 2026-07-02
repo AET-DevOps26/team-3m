@@ -92,6 +92,29 @@ test("shows the upstream error message when market data is unavailable", async (
   ).toBeVisible()
 })
 
+test("shows a not-found message for an unknown symbol", async ({ page }) => {
+  const errorBody = {
+    success: false,
+    data: null,
+    error: "No instrument found for symbol 'NOPE'",
+    details: null,
+  }
+  await page.route(QUOTE_ROUTE, async (route) => {
+    await route.fulfill({ status: 404, json: errorBody })
+  })
+  await page.route(HISTORY_ROUTE, async (route) => {
+    await route.fulfill({ status: 404, json: errorBody })
+  })
+
+  await primeSession(page)
+  await page.goto("/markets/NOPE")
+
+  await expect(page.getByText("Could not load market data")).toBeVisible()
+  await expect(
+    page.getByText("No instrument found for symbol 'NOPE'"),
+  ).toBeVisible()
+})
+
 test("shows an empty state when no instruments match", async ({ page }) => {
   await page.route(SEARCH_ROUTE, async (route) => {
     await fulfillOk(route, instrumentSearch([]))

@@ -6,34 +6,34 @@
       "ref": "main",
       "sourceType": "github",
       "skillPath": "skills/api-design/SKILL.md",
-      "computedHash": "718b7be2b2c0798d4da7f79d860cc2af8ca114f55b5ff508e93c2feb468d20c2"
+      "computedHash": "d8b77fa51cee40f3747bfa1b8584d3027bb90ece07f70877b6ba004fa3482192"
     },
     "docker-patterns": {
       "source": "affaan-m/everything-claude-code",
       "ref": "main",
       "sourceType": "github",
       "skillPath": "skills/docker-patterns/SKILL.md",
-      "computedHash": "2750c564c7b600fbbfd44de2c693955c677c18c872d06019fa896ab770c69ed9"
+      "computedHash": "b9b2764274bb4e4d1c398bf0214b528b547edc4847690b861b0b1ef5d8900934"
     },
     "shadcn": {
       "source": "shadcn/ui",
       "sourceType": "github",
       "skillPath": "skills/shadcn/SKILL.md",
-      "computedHash": "80a6226e78f6d1fe464214ae0ef449d49d8ffaa3e7704f011e9b418c678ad4d1"
+      "computedHash": "d81caa0f86aabab65b25e302d454f23a3328760386ed9078345584c0d5c8058e"
     },
     "springboot-patterns": {
       "source": "affaan-m/everything-claude-code",
       "ref": "main",
       "sourceType": "github",
       "skillPath": "skills/springboot-patterns/SKILL.md",
-      "computedHash": "bc422225a6b9f72cc69c45b2c4b8828d8a2c35c2fe2a893700932178f49e3900"
+      "computedHash": "d2c003485e50a3e0f7ca325df55ea72c2810e9a0ab099313bd350b979733015c"
     },
     "springboot-security": {
       "source": "affaan-m/everything-claude-code",
       "ref": "main",
       "sourceType": "github",
       "skillPath": "skills/springboot-security/SKILL.md",
-      "computedHash": "85450647da9a2d1390da8c75c04cad6b56e48158af1de1862329ebcffec2e199"
+      "computedHash": "8658b8f195491f52487298e7b50fb6bb05ad5c9f64708dbbdaefa5f0540b4d39"
     }
   }
 }

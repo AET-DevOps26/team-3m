@@ -1,5 +1,8 @@
 package de.devops26.kontor.core.web;
 
+import de.devops26.kontor.core.marketdata.InvalidMarketRangeException;
+import de.devops26.kontor.core.marketdata.MarketDataUnavailableException;
+import de.devops26.kontor.core.marketdata.UnknownSymbolException;
 import de.devops26.kontor.core.transaction.CsvParsingException;
 import java.io.IOException;
 import org.slf4j.Logger;
@@ -58,5 +61,21 @@ public class ApiExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleIllegalState(IllegalStateException ex) {
         log.warn("Portfolio validation error", ex);
         return ResponseEntity.unprocessableEntity().body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidMarketRangeException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidMarketRange(InvalidMarketRangeException ex) {
+        return ResponseEntity.badRequest().body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(UnknownSymbolException.class)
+    public ResponseEntity<ApiResponse<Void>> handleUnknownSymbol(UnknownSymbolException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(MarketDataUnavailableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMarketDataUnavailable(MarketDataUnavailableException ex) {
+        log.warn("Market data upstream failure", ex);
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(ApiResponse.error(ex.getMessage()));
     }
 }

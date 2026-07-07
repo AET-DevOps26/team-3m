@@ -62,6 +62,12 @@ export const livenessAiHealthLivenessGetResponseSchema = z.string()
  */
 export const readinessAiHealthReadinessGetResponseSchema = z.string()
 
+/**
+ * Successful Response
+ */
+export const latestRecommendationAiAdvisorRecommendationGetResponseSchema =
+  recommendationResponseSchema
+
 export const zGenerateRecommendationAiAdvisorRecommendationPostBody =
   portfolioInputSchema
 

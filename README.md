@@ -199,7 +199,7 @@ Coding rules live in `.claude/rules/` and are automatically loaded based on the 
 └── typescript/          # Apply to *.ts, *.tsx, *.js, *.jsx
     ├── coding-style.md  # Biome, kebab-case files, React patterns, Zod, shadcn/ui
     ├── patterns.md      # Custom hooks, data fetching, repository pattern
-    └── testing.md       # Playwright for E2E testing
+    └── testing.md       # Vitest for unit tests, Playwright for E2E
 ```
 
 - **Common rules** apply to all code. Language-specific rules extend them — they don't replace them.

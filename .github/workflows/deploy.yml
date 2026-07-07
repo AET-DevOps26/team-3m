@@ -137,9 +137,11 @@ jobs:
           KEYCLOAK_DB_PASSWORD: ${{ secrets.KEYCLOAK_DB_PASSWORD }}
           LOGOS_API_KEY: ${{ secrets.LOGOS_API_KEY }}
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
+          AI_DB_PASSWORD: ${{ secrets.AI_DB_PASSWORD }}
           GRAFANA_OAUTH_CLIENT_SECRET: ${{ secrets.GRAFANA_OAUTH_CLIENT_SECRET }}
         run: |
           set -euo pipefail
+          AI_DB_PASSWORD="${AI_DB_PASSWORD:-$POSTGRES_PASSWORD}"
           EXTRA=()
           # Grafana SSO client secret (shared with the observability stack); only set
           # when configured, so the realm's grafana client matches Grafana's generic_oauth.
@@ -156,6 +158,7 @@ jobs:
             --set-string keycloak.db.password="$KEYCLOAK_DB_PASSWORD" \
             --set-string ai.logosApiKey="$LOGOS_API_KEY" \
             --set-string core.twelveDataApiKey="$TWELVE_DATA_API_KEY" \
+            --set-string ai.db.password="$AI_DB_PASSWORD" \
             "${EXTRA[@]}" \
             --rollback-on-failure --force-conflicts --wait --timeout 4m
 
@@ -166,10 +169,12 @@ jobs:
           KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
           LOGOS_API_KEY: ${{ secrets.LOGOS_API_KEY }}
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
+          AI_DB_PASSWORD: ${{ secrets.AI_DB_PASSWORD }}
           PR_NUMBER: ${{ inputs.pr-number }}
           BASE_DOMAIN: ${{ inputs.base-domain }}
         run: |
           set -euo pipefail
+          AI_DB_PASSWORD="${AI_DB_PASSWORD:-$POSTGRES_PASSWORD}"
           envsubst '${PR_NUMBER} ${BASE_DOMAIN}' \
             < "$CHART/values-pr.template.yaml" > /tmp/values-pr.yaml
           helm upgrade --install '${{ inputs.release-name }}' "$CHART" \
@@ -183,7 +188,27 @@ jobs:
             --set-string keycloak.admin.password="$KEYCLOAK_ADMIN_PASSWORD" \
             --set-string ai.logosApiKey="$LOGOS_API_KEY" \
             --set-string core.twelveDataApiKey="$TWELVE_DATA_API_KEY" \
+            --set-string ai.db.password="$AI_DB_PASSWORD" \
             --rollback-on-failure --force-conflicts --wait --timeout 4m
+
+      - name: Diagnose failed deploy
+        if: failure() && inputs.action == 'deploy'
+        env:
+          NAMESPACE: ${{ inputs.namespace }}
+        run: |
+          set -uo pipefail
+          # rollback-on-failure already deleted the release's pods by the time this
+          # runs, so lean on PVCs (survive StatefulSet deletion) and Events (outlive
+          # the objects they describe) rather than pod-scoped commands.
+          echo "::group::Pods"
+          kubectl get pods -n "$NAMESPACE" -o wide || true
+          echo "::endgroup::"
+          echo "::group::PVCs"
+          kubectl get pvc -n "$NAMESPACE" || true
+          echo "::endgroup::"
+          echo "::group::Recent events"
+          kubectl get events -n "$NAMESPACE" --sort-by=.lastTimestamp | tail -100 || true
+          echo "::endgroup::"
 
       - name: Helm teardown
         if: inputs.action == 'teardown'

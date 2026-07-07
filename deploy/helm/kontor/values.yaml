@@ -3,6 +3,12 @@ nameOverride: ""
 # -- Fully override the chart name used in resource names.
 fullnameOverride: ""
 
+# -- StatefulSet PVC retention on delete. Retain keeps DB volumes when the
+# release is uninstalled (prod default); previews override to Delete so a
+# failed-deploy rollback (which uninstalls the release) can't strand a PVC
+# whose Postgres was initialized with a now-stale password.
+pvcRetentionWhenDeleted: Retain
+
 # Common image pull configuration.
 image:
   # -- Default container registry; overridden per service below if set.
@@ -119,6 +125,46 @@ ai:
     # -- Max request body accepted on /ai. Recommendation payloads are small JSON;
     # keep this well below the global ingress limit.
     proxyBodySize: 1m
+  # Dedicated Postgres for the AI service (recommendation history). Separate
+  # failure/backup domain from the core app DB, and keeps the AI service
+  # independent — it owns its own schema + Alembic migrations.
+  db:
+    image:
+      registry: docker.io
+      repository: postgres
+      tag: "18-trixie"
+      pullPolicy: ""
+    database: kontor_ai
+    username: kontor_ai
+    # REQUIRED when ai.db.existingSecret is empty — the render fails otherwise.
+    password: ""
+    # Existing Secret with keys: POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD, DATABASE_URL.
+    existingSecret: ""
+    persistence:
+      enabled: true
+      size: 8Gi
+      storageClass: "csi-rbd-sc"
+      accessModes:
+        - ReadWriteOnce
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 999
+      runAsGroup: 999
+      fsGroup: 999
+      seccompProfile:
+        type: RuntimeDefault
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop: ["ALL"]
   resources:
     requests:
       cpu: 100m
@@ -126,6 +172,9 @@ ai:
     limits:
       cpu: "1"
       memory: 512Mi
+  migrate:
+    retries: 30
+    retryDelaySeconds: 5
   probes:
     livenessPath: /ai/health/liveness
     readinessPath: /ai/health/readiness

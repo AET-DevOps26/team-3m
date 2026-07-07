@@ -42,6 +42,33 @@
       }
     },
     "/ai/advisor/recommendation": {
+      "get": {
+        "summary": "Latest Recommendation",
+        "operationId": "latest_recommendation_ai_advisor_recommendation_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendationResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "No recommendation has been generated yet"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
       "post": {
         "summary": "Generate Recommendation",
         "operationId": "generate_recommendation_ai_advisor_recommendation_post",
@@ -65,6 +92,9 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Authentication required"
           },
           "502": {
             "description": "AI service request failed or returned an unparsable response"

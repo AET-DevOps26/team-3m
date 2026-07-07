@@ -127,6 +127,21 @@ Name of the Secret holding AI service credentials (LOGOS_API_KEY).
 {{- end -}}
 {{- end -}}
 
+{{- define "kontor.ai.postgres.fullname" -}}
+{{- printf "%s-ai-db" (include "kontor.fullname" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
+Name of the Secret holding the AI Postgres credentials.
+*/}}
+{{- define "kontor.ai.postgres.secretName" -}}
+{{- if .Values.ai.db.existingSecret -}}
+{{- .Values.ai.db.existingSecret -}}
+{{- else -}}
+{{- include "kontor.ai.postgres.fullname" . -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "kontor.keycloak.fullname" -}}
 {{- printf "%s-keycloak" (include "kontor.fullname" .) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}

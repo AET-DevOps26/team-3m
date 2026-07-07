@@ -29,5 +29,5 @@ playwright-report/
 test-results/
 playwright/.cache/
 
-# generated coverage output
-coverage
+# Vitest coverage output
+coverage/

@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    database_url: str = "postgresql+asyncpg://kontor_ai:change-me-local@localhost:5432/kontor_ai"
     logos_api_key: str = ""
     logos_base_url: str = "https://logos.aet.cit.tum.de/v1"
     logos_model: str = "openai/gpt-oss-120b"

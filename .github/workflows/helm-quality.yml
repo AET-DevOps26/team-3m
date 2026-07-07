@@ -15,6 +15,7 @@ env:
     --set postgres.password=ci
     --set keycloak.admin.password=ci
     --set keycloak.db.password=ci
+    --set ai.db.password=ci
 
 jobs:
   quality:

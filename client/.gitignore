@@ -28,3 +28,6 @@ e2e/.auth/
 playwright-report/
 test-results/
 playwright/.cache/
+
+# Vitest coverage output
+coverage/

@@ -5,6 +5,14 @@ import { InstrumentPriceCard } from "@/components/markets/instrument-price-card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { APIError } from "@/network/errors"
 
+function safeDecodeURIComponent(value: string): string {
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
+
 function marketDataErrorFallback(error: Error) {
   return (
     <Alert variant="destructive">
@@ -20,7 +28,7 @@ function marketDataErrorFallback(error: Error) {
 
 export function MarketDetailPage() {
   const { symbol } = useParams<{ symbol: string }>()
-  const decodedSymbol = symbol ? decodeURIComponent(symbol) : ""
+  const decodedSymbol = symbol ? safeDecodeURIComponent(symbol) : ""
 
   return (
     <div className="flex flex-col items-center bg-background p-4 sm:p-6">
@@ -38,7 +46,10 @@ export function MarketDetailPage() {
           </h1>
         </div>
 
-        <ErrorBoundary renderFallback={marketDataErrorFallback}>
+        <ErrorBoundary
+          key={decodedSymbol}
+          renderFallback={marketDataErrorFallback}
+        >
           <InstrumentPriceCard symbol={decodedSymbol} />
         </ErrorBoundary>
       </div>

@@ -93,7 +93,7 @@ public class TwelveDataClient {
     }
 
     private static boolean isNotFoundStatus(int status) {
-        return status == 400 || status == 404;
+        return status == 404;
     }
 
     public interface TwelveDataPayload {

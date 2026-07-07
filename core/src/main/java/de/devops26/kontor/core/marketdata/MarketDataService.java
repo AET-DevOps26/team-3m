@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 public class MarketDataService {
 
     private static final DateTimeFormatter INTRADAY_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static final int DATE_ONLY_LENGTH = 10;
 
     private final TwelveDataClient client;
 
@@ -71,12 +70,13 @@ public class MarketDataService {
 
     private static OffsetDateTime parseTimestamp(String datetime) {
         try {
-            if (datetime.length() == DATE_ONLY_LENGTH) {
-                return LocalDate.parse(datetime).atStartOfDay().atOffset(ZoneOffset.UTC);
+            return LocalDate.parse(datetime).atStartOfDay().atOffset(ZoneOffset.UTC);
+        } catch (DateTimeParseException dateOnly) {
+            try {
+                return LocalDateTime.parse(datetime, INTRADAY_FORMAT).atOffset(ZoneOffset.UTC);
+            } catch (DateTimeParseException intraday) {
+                throw new MarketDataUnavailableException(intraday);
             }
-            return LocalDateTime.parse(datetime, INTRADAY_FORMAT).atOffset(ZoneOffset.UTC);
-        } catch (DateTimeParseException e) {
-            throw new MarketDataUnavailableException(e);
         }
     }
 }

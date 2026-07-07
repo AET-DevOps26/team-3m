@@ -597,6 +597,7 @@ components:
         success:
           type: boolean
         data:
+          type: "null"
           $ref: "#/components/schemas/InstrumentQuoteResult"
         error:
           type:

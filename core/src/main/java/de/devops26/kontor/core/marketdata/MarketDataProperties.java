@@ -9,4 +9,9 @@ public record MarketDataProperties(String baseUrl, String apiKey) {
         baseUrl = baseUrl == null ? "" : baseUrl;
         apiKey = apiKey == null ? "" : apiKey;
     }
+
+    @Override
+    public String toString() {
+        return "MarketDataProperties[baseUrl=" + baseUrl + ", apiKey=***]";
+    }
 }

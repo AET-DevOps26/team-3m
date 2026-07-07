@@ -13,7 +13,7 @@ import java.util.List;
  */
 public record InstrumentQuoteApiResponse(
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean success,
-        InstrumentQuoteResult data,
+        @Schema(nullable = true) InstrumentQuoteResult data,
         @Schema(nullable = true) String error,
         @Schema(nullable = true) List<?> details) {
 

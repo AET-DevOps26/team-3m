@@ -10,24 +10,13 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class LlmProvider:
-    """A resolved LLM backend: the OpenAI-compatible client plus the model to call.
-
-    ``is_local`` distinguishes the local fallback (Ollama) from Logos so callers can
-    tune the request (e.g. lower temperature) and surface a provider-specific error.
-    """
-
     client: AsyncOpenAI
     model: str
     is_local: bool
 
 
 def resolve_llm_provider(settings: Settings) -> LlmProvider | None:
-    """Pick the active LLM backend.
-
-    Logos is used when an API key is configured; otherwise the service falls back to a
-    local OpenAI-compatible LLM (Ollama) when ``local_llm_base_url`` is set. Returns
-    ``None`` when neither is configured, signalling that the AI feature is unavailable.
-    """
+    """Logos when a key is set, else local Ollama when configured, else None (feature off)."""
     if settings.logos_api_key:
         logger.info("LLM provider: logos (%s)", settings.logos_model)
         return LlmProvider(

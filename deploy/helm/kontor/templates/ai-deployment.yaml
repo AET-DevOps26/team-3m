@@ -16,13 +16,46 @@ spec:
       labels:
         {{- include "kontor.labels" . | nindent 8 }}
         app.kubernetes.io/component: ai
-      {{- if .Values.ai.logosApiKey }}
+      {{- if or (not .Values.ai.db.existingSecret) .Values.ai.logosApiKey }}
       annotations:
+        {{- if not .Values.ai.db.existingSecret }}
+        checksum/ai-postgres-secret: {{ include (print $.Template.BasePath "/ai-postgres-secret.yaml") . | sha256sum }}
+        {{- end }}
+        {{- if .Values.ai.logosApiKey }}
         checksum/secret: {{ include (print $.Template.BasePath "/ai-secret.yaml") . | sha256sum }}
+        {{- end }}
       {{- end }}
     spec:
       securityContext:
         {{- toYaml .Values.ai.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: migrate
+          image: {{ include "kontor.image" (dict "root" . "component" .Values.ai) | quote }}
+          imagePullPolicy: {{ include "kontor.imagePullPolicy" (dict "root" . "component" .Values.ai) }}
+          securityContext:
+            {{- toYaml .Values.ai.containerSecurityContext | nindent 12 }}
+          # ponytail: retry loop doubles as wait-for-db; the DB StatefulSet and this pod
+          # are applied together, so alembic retries until Postgres is reachable.
+          command:
+            - /bin/sh
+            - -c
+            - >
+              i=0;
+              until alembic upgrade head; do
+                i=$((i + 1));
+                if [ "$i" -ge {{ .Values.ai.migrate.retries }} ]; then
+                  echo "migration failed after $i attempts"; exit 1;
+                fi;
+                echo "database not ready, retrying ($i)"; sleep {{ .Values.ai.migrate.retryDelaySeconds }};
+              done
+          envFrom:
+            - secretRef:
+                name: {{ include "kontor.ai.postgres.secretName" . }}
+          resources:
+            {{- toYaml .Values.ai.resources | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
       containers:
         - name: ai
           image: {{ include "kontor.image" (dict "root" . "component" .Values.ai) | quote }}
@@ -61,11 +94,13 @@ spec:
             - name: OTEL_SDK_DISABLED
               value: "true"
             {{- end }}
-          {{- if or .Values.ai.logosApiKey .Values.ai.existingSecret }}
           envFrom:
             - secretRef:
+                name: {{ include "kontor.ai.postgres.secretName" . }}
+            {{- if or .Values.ai.logosApiKey .Values.ai.existingSecret }}
+            - secretRef:
                 name: {{ include "kontor.ai.secretName" . }}
-          {{- end }}
+            {{- end }}
           readinessProbe:
             httpGet:
               path: {{ .Values.ai.probes.readinessPath }}

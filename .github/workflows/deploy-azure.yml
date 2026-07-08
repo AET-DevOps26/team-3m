@@ -92,6 +92,9 @@ jobs:
             DOMAIN=${{ env.DOMAIN }}
             ACME_EMAIL=${{ vars.AZURE_ACME_EMAIL }}
             POSTGRES_PASSWORD=${{ secrets.AZURE_POSTGRES_PASSWORD }}
+            AI_POSTGRES_DB=kontor_ai
+            AI_POSTGRES_USER=kontor_ai
+            AI_POSTGRES_PASSWORD=${{ secrets.AZURE_AI_POSTGRES_PASSWORD }}
             KEYCLOAK_POSTGRES_PASSWORD=${{ secrets.AZURE_KEYCLOAK_POSTGRES_PASSWORD }}
             KEYCLOAK_ADMIN_USER=${{ vars.AZURE_KEYCLOAK_ADMIN_USER }}
             KEYCLOAK_ADMIN_PASSWORD=${{ secrets.AZURE_KEYCLOAK_ADMIN_PASSWORD }}

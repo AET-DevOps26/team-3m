@@ -9,6 +9,48 @@ paths:
 
 > This file extends [common/testing.md](../common/testing.md) with TypeScript/JavaScript specific content.
 
+## Unit Testing
+
+Use **Vitest** for client unit tests. Config lives in `client/vitest.config.ts`
+(jsdom environment, `@testing-library/react` for hooks/components). Run with
+`npm test` (from `client/`); `npm run test:watch` and `npm run test:coverage`
+are also available. Unit tests run in CI as part of `client-quality.yml`.
+
+### Keep unit tests in sync with the app (REQUIRED)
+
+Unit tests are part of "done" for logic changes, not an afterthought. In the
+**same change** that touches testable logic:
+
+- **New pure logic / hook / utility** (`src/lib/**`, formatters, filters, error
+  mapping, custom hooks) → add a co-located `*.test.ts` covering its behavior and
+  edge cases (empty input, boundaries, error/fallback branches). Follow TDD where
+  practical: write the failing test first, then the implementation.
+- **Changed behavior of tested code** (renamed/removed exports, new branches,
+  altered return shapes) → update the affected specs so they reflect the new
+  behavior. Do not weaken an assertion just to make it pass — confirm the new
+  behavior is correct first.
+- **Removed logic** → delete the now-dead specs rather than leaving them skipped.
+- Keep coverage on the unit-tested surface at or above the 80% bar
+  (`npm run test:coverage`).
+
+If you are unsure whether your change affects a unit-tested module, run
+`npm test` locally: if it breaks, the tests need updating as part of your change.
+
+### Conventions
+
+- Co-locate specs with the code as `*.test.ts` / `*.test.tsx`. Only files under
+  `src/` matching that pattern are picked up — Playwright's `e2e/*.spec.ts`
+  suite stays separate.
+- Import test globals explicitly from `vitest` (`import { describe, it, expect }
+  from "vitest"`); globals are disabled.
+- Target pure logic and hooks (`src/lib/**`, error/formatting/filter utilities).
+  The HTTP client, endpoints and React-Query wiring are covered by the E2E suite,
+  not unit tests.
+- Keep assertions deterministic: `Intl`-based output depends on the runtime
+  locale, so assert behavior (currency-styled vs. plain, precision) rather than
+  exact strings; use `vi.useFakeTimers()` / `vi.setSystemTime()` for anything
+  date- or debounce-driven.
+
 ## E2E Testing
 
 Use **Playwright** as the E2E testing framework for critical user flows. The

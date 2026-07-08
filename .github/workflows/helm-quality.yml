@@ -15,6 +15,7 @@ env:
     --set postgres.password=ci
     --set keycloak.admin.password=ci
     --set keycloak.db.password=ci
+    --set ai.db.password=ci
 
 jobs:
   quality:
@@ -48,7 +49,7 @@ jobs:
       - name: Install Trivy
         uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567 # v0.3.1
         with:
-          version: v0.71.2
+          version: v0.72.0
 
       - name: Lint & schema-validate each values file
         run: |

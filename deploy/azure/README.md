@@ -140,8 +140,8 @@ in the `azure` GitHub environment and needs the following configuration:
 
 **Secrets:** `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, `AZURE_TENANT_ID`,
 `AZURE_SUBSCRIPTION_ID` (service principal), `AZURE_POSTGRES_PASSWORD`,
-`AZURE_KEYCLOAK_POSTGRES_PASSWORD`, `AZURE_KEYCLOAK_ADMIN_PASSWORD`,
-`AZURE_KEYCLOAK_DEV_PASSWORD`.
+`AZURE_AI_POSTGRES_PASSWORD`, `AZURE_KEYCLOAK_POSTGRES_PASSWORD`,
+`AZURE_KEYCLOAK_ADMIN_PASSWORD`, `AZURE_KEYCLOAK_DEV_PASSWORD`.
 
 **Variables:** `AZURE_SSH_PUBLIC_KEY` (contents of the `.pub` key from the
 prerequisites), `AZURE_ACME_EMAIL`, `AZURE_KEYCLOAK_ADMIN_USER`, `AZURE_DOMAIN`
@@ -167,6 +167,7 @@ az vm run-command invoke \
 DOMAIN=azure.kontor.live
 ACME_EMAIL=you@example.com
 POSTGRES_PASSWORD=change-me
+AI_POSTGRES_PASSWORD=change-me
 KEYCLOAK_POSTGRES_PASSWORD=change-me
 KEYCLOAK_ADMIN_USER=admin
 KEYCLOAK_ADMIN_PASSWORD=change-me
@@ -226,25 +227,26 @@ replica (stateful stores, or Traefik binds the host ports).
 
 ## AI service & LLM
 
-The `ai` service is deployed and routed at `/ai`, but the Azure compose file
-does not currently configure an LLM backend for it: `docker-compose.azure.yml`
-passes no environment to the `ai` service, so neither an LLM provider nor the
-Keycloak settings reach the container (setting them in `.env` has no effect).
-With the built-in defaults the service falls back to `http://localhost:11434/v1`
-inside its own container, where nothing listens, so `/ai/advisor/*` requests
-fail (503 from auth, 502 from the LLM call) even though the health checks
-report ready.
+The `ai` service is deployed and routed at `/ai`, and its compose block already
+wires `DATABASE_URL`, the `KEYCLOAK_*` settings, and `LOGOS_API_KEY`
+(`LOGOS_API_KEY: "${LOGOS_API_KEY:-}"`). A `LOGOS_API_KEY` set in `.env`
+therefore reaches the container and switches the provider to Logos (see
+`ai/advisor/llm.py`). The gap is narrower: `LOGOS_BASE_URL` and `LOGOS_MODEL`
+are **not** forwarded, so they stay at the built-in TUM default
+(`https://logos.aet.cit.tum.de/v1`). That gateway is reachable only from the
+TUM network, which the Azure VM is not on, so a key alone just points a valid
+credential at an unreachable URL; with no key at all the service falls back to
+`http://localhost:11434/v1` inside its own container, where nothing listens.
+Either way `/ai/advisor/*` calls that hit the LLM fail even though the health
+checks report ready.
 
-TUM's Logos gateway (used by the k8s deployment) is reachable only from the
-TUM network, and the Azure VM is not in it, so wiring `LOGOS_API_KEY` alone
-cannot work here. The provider settings are plain env vars, and any
-OpenAI-compatible API works: point `LOGOS_BASE_URL` / `LOGOS_MODEL` /
-`LOGOS_API_KEY` at a publicly reachable provider (e.g. Groq serves the same
-`openai/gpt-oss-120b` model that Logos does, with a free tier). Enabling this
-needs an `environment` block on the `ai` service wiring those three variables
-plus the `KEYCLOAK_*` ones, mirroring `core`. Running Ollama on the VM instead
-is not viable on the default `Standard_D2s_v3` (2 vCPUs, CPU-only inference,
-8 GB shared with the whole stack).
+The provider settings are plain env vars and any OpenAI-compatible API works,
+so the fix is to add `LOGOS_BASE_URL` and `LOGOS_MODEL` to the `ai` service's
+`environment` block and point all three variables at a publicly reachable
+provider (e.g. Groq serves the same `openai/gpt-oss-120b` model that Logos does,
+with a free tier). Running Ollama on the VM instead is not viable on the default
+`Standard_D2s_v3` (2 vCPUs, CPU-only inference, 8 GB shared with the whole
+stack).
 
 ---
 

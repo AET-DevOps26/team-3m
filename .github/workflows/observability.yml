@@ -67,12 +67,15 @@ jobs:
           S3_SECRET_KEY: ${{ secrets.OBSERVABILITY_S3_SECRET_KEY }}
           GRAFANA_OAUTH_CLIENT_SECRET: ${{ secrets.GRAFANA_OAUTH_CLIENT_SECRET }}
           GRAFANA_OAUTH_ISSUER_URL: ${{ vars.GRAFANA_OAUTH_ISSUER_URL }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           set -euo pipefail
           EXTRA=()
           [ -n "${GRAFANA_ADMIN_PASSWORD}" ] && EXTRA+=(--set-string "grafana.adminPassword=${GRAFANA_ADMIN_PASSWORD}")
           [ -n "${S3_ACCESS_KEY}" ] && EXTRA+=(--set-string "s3.accessKey=${S3_ACCESS_KEY}")
           [ -n "${S3_SECRET_KEY}" ] && EXTRA+=(--set-string "s3.secretKey=${S3_SECRET_KEY}")
+          # Discord alerting: provisioned only when the webhook secret is set.
+          [ -n "${DISCORD_WEBHOOK_URL}" ] && EXTRA+=(--set-string "alerting.discordWebhookUrl=${DISCORD_WEBHOOK_URL}")
           # Keycloak SSO for Grafana: enabled only when the shared client secret is set.
           if [ -n "${GRAFANA_OAUTH_CLIENT_SECRET}" ]; then
             EXTRA+=(--set "grafana.oauth.enabled=true")

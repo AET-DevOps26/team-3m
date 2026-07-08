@@ -50,6 +50,36 @@ browser ──Faro──▶ alloy(gateway:/collect) ──▶ Tempo (traces) + L
 - **Prometheus** — global 15d + size cap (no per-label retention; PR series age out
   after teardown).
 
+## Alerting (Grafana → Discord)
+
+Grafana-managed alerting is provisioned from `files/grafana/alerting/` — a Discord
+contact point, a root notification policy routing everything to it, and the alert
+rules. It only activates when a webhook is supplied (`alerting.discordWebhookUrl`,
+or `alerting.existingSecret` pointing to a secret with key `discord-webhook-url`);
+without it the chart renders exactly as before. The webhook lands in the
+`grafana-alerting` Secret and reaches the provisioned contact point via the
+`DISCORD_WEBHOOK_URL` env var (Grafana expands env vars in provisioning files).
+
+Setup: create a webhook in the Discord channel (Channel settings → Integrations →
+Webhooks), store it as the `DISCORD_WEBHOOK_URL` repo secret, and re-run the
+**Observability** workflow — it passes the secret through automatically.
+
+Provisioned rules (evaluated every 1m, prod only — PR previews stay silent):
+
+| Alert | Condition | Severity |
+|-------|-----------|----------|
+| Core / AI / Keycloak down | No HTTP telemetry for 10m (probes generate steady traffic, so absence ≈ down) | critical |
+| High server error rate | > 5% errored server spans per service for 10m | warning |
+| High p95 latency | p95 server-span latency > 2s per service for 10m | warning |
+| Error log spike | > 30 error/exception log lines per service within 5m | warning |
+| JVM heap pressure | Heap > 90% of its limit for 10m | warning |
+| JVM CPU saturation | JVM CPU > 90% for 15m | warning |
+| Alloy OTLP gateway down | Prometheus can't scrape the gateway for 5m (ingestion outage — other alerts may be blind) | critical |
+
+Provisioned resources are read-only in the Grafana UI; tune thresholds in
+`files/grafana/alerting/rules.yaml` and redeploy. Notifications group by alert name
+and repeat every 4h while firing; resolved notifications are sent automatically.
+
 ## Deploy
 
 Via the workflow (recommended): run **Observability** in GitHub Actions

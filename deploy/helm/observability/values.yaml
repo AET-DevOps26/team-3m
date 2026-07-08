@@ -104,6 +104,13 @@ grafana:
       clusterIssuer: letsencrypt-prod
       secretName: grafana-tls
 
+# Grafana-managed alerting with Discord notifications (files/grafana/alerting/).
+# Provisioned only when a webhook URL (or an existing secret with key
+# discord-webhook-url) is set at deploy time; the workflow wires the secret.
+alerting:
+  discordWebhookUrl: ""
+  existingSecret: ""
+
 alloy:
   gateway:
     resources:

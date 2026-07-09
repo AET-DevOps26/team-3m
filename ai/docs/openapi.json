@@ -136,6 +136,61 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "NewsReference": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "symbols": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Symbols",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "title": "NewsReference"
+      },
       "PortfolioHoldingInput": {
         "properties": {
           "symbol": {
@@ -236,6 +291,19 @@
           "disclaimer": {
             "type": "string",
             "title": "Disclaimer"
+          },
+          "news_summary": {
+            "type": "string",
+            "title": "News Summary",
+            "default": ""
+          },
+          "news_references": {
+            "items": {
+              "$ref": "#/components/schemas/NewsReference"
+            },
+            "type": "array",
+            "title": "News References",
+            "default": []
           }
         },
         "type": "object",

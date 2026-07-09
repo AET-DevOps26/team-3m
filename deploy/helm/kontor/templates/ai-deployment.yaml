@@ -77,6 +77,20 @@ spec:
             {{- end }}
             - name: KEYCLOAK_AUDIENCE
               value: {{ .Values.oidc.audience | quote }}
+            - name: LOCAL_EMBEDDING_MODEL
+              value: {{ .Values.ai.embedding.localModel | quote }}
+            {{- with .Values.ai.embedding.logosModel }}
+            - name: LOGOS_EMBEDDING_MODEL
+              value: {{ . | quote }}
+            {{- end }}
+            {{- if .Values.ai.newsConsumer.enabled }}
+            {{- with .Values.ai.rabbitmqUrl }}
+            - name: RABBITMQ_URL
+              value: {{ . | quote }}
+            {{- end }}
+            - name: NEWS_QUEUE
+              value: {{ .Values.ai.newsQueue | quote }}
+            {{- end }}
             {{- range $key, $value := .Values.ai.env }}
             - name: {{ $key }}
               value: {{ $value | quote }}

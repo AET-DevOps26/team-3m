@@ -19,9 +19,9 @@ services:
       retries: 10
       start_period: 10s
 
-  # One-shot job: pulls the model into the shared volume, then exits. Idempotent — a
-  # re-pull of an already-present model is a fast no-op. The ai service waits for this to
-  # finish so the first request can't race a half-downloaded model.
+  # One-shot job: pulls the chat + embedding models into the shared volume, then exits.
+  # Idempotent — a re-pull of an already-present model is a fast no-op. The ai service
+  # waits for this to finish so the first request can't race a half-downloaded model.
   ollama-pull:
     image: ollama/ollama:0.31.1
     depends_on:
@@ -29,13 +29,18 @@ services:
         condition: service_healthy
     environment:
       OLLAMA_HOST: "http://ollama:11434"
-    entrypoint: ["ollama", "pull", "${LOCAL_LLM_MODEL:-llama3.2}"]
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >
+        ollama pull "${LOCAL_LLM_MODEL:-llama3.2}" &&
+        ollama pull "${LOCAL_EMBEDDING_MODEL:-nomic-embed-text}"
     restart: "no"
 
   ai:
     environment:
       LOCAL_LLM_BASE_URL: "http://ollama:11434/v1"
       LOCAL_LLM_MODEL: "${LOCAL_LLM_MODEL:-llama3.2}"
+      LOCAL_EMBEDDING_MODEL: "${LOCAL_EMBEDDING_MODEL:-nomic-embed-text}"
     depends_on:
       ollama-pull:
         condition: service_completed_successfully

@@ -54,6 +54,13 @@ core:
   # CORS allowed origins, propagated as APP_CORS_ALLOWED_ORIGINS (comma-separated).
   # Leave empty to let the application defaults apply.
   corsAllowedOrigins: []
+  # -- Twelve Data API key (https://twelvedata.com). Stored in a Secret and
+  # injected as TWELVE_DATA_API_KEY. Required for live market data; when empty,
+  # the market-data endpoints return 502. Supply via secrets.yaml or --set.
+  twelveDataApiKey: ""
+  # -- When set, skip creating the core market-data Secret and mount this
+  # existing Secret instead. Expected key: TWELVE_DATA_API_KEY.
+  existingMarketDataSecret: ""
   # Escape hatch for arbitrary extra non-secret env vars merged into the pod,
   # for config not covered by the typed values above.
   env: {}

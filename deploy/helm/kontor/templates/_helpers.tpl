@@ -106,6 +106,17 @@ Component-scoped resource names.
 {{- end -}}
 
 {{/*
+Name of the Secret holding core market-data credentials (TWELVE_DATA_API_KEY).
+*/}}
+{{- define "kontor.core.marketDataSecretName" -}}
+{{- if .Values.core.existingMarketDataSecret -}}
+{{- .Values.core.existingMarketDataSecret -}}
+{{- else -}}
+{{- printf "%s-core-market-data" (include "kontor.fullname" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Name of the Secret holding AI service credentials (LOGOS_API_KEY).
 */}}
 {{- define "kontor.ai.secretName" -}}

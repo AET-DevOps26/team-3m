@@ -16,6 +16,8 @@ dependencies = [
     "opentelemetry-exporter-otlp>=1.29",
     "opentelemetry-instrumentation-fastapi>=0.50b0",
     "opentelemetry-instrumentation-logging>=0.50b0",
+    "aio-pika>=10.0.1",
+    "pgvector>=0.5.0",
 ]
 
 [project.scripts]

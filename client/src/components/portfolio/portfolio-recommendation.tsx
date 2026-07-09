@@ -9,7 +9,9 @@ import {
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
+import { isSafeHttpUrl } from "@/lib/url"
 import {
+  type NewsReference,
   type RecommendationResponse,
   useGenerateRecommendation,
   useLatestRecommendation,
@@ -99,10 +101,60 @@ function RecommendationResult({ result }: { result: RecommendationResponse }) {
       <p className="text-sm leading-relaxed text-muted-foreground">
         {result.rationale}
       </p>
+      {result.news_summary && (
+        <NewsSummary
+          summary={result.news_summary}
+          references={result.news_references ?? []}
+        />
+      )}
       <Separator />
       <p className="text-xs italic text-muted-foreground">
         {result.disclaimer}
       </p>
     </CardContent>
+  )
+}
+
+function NewsSummary({
+  summary,
+  references,
+}: {
+  summary: string
+  references: NewsReference[]
+}) {
+  return (
+    <>
+      <Separator />
+      <div className="space-y-2">
+        <p className="text-sm font-medium">In the news</p>
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          {summary}
+        </p>
+        {references.length > 0 && (
+          <ul className="space-y-1">
+            {references.map((reference) => (
+              <li
+                key={`${reference.title}|${reference.source ?? ""}|${reference.published_at ?? ""}`}
+                className="text-xs text-muted-foreground"
+              >
+                {isSafeHttpUrl(reference.url) ? (
+                  <a
+                    href={reference.url ?? undefined}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline underline-offset-2 hover:text-foreground"
+                  >
+                    {reference.title}
+                  </a>
+                ) : (
+                  <span>{reference.title}</span>
+                )}
+                {reference.source && <span> · {reference.source}</span>}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </>
   )
 }

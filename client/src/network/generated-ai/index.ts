@@ -15,6 +15,7 @@ export type {
   LivenessAiHealthLivenessGetData,
   LivenessAiHealthLivenessGetResponse,
   LivenessAiHealthLivenessGetResponses,
+  NewsReference,
   PortfolioHoldingInput,
   PortfolioInput,
   ReadinessAiHealthReadinessGetData,

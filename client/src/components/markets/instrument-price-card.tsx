@@ -1,13 +1,7 @@
 import { Suspense, startTransition, useState } from "react"
 import { Area, AreaChart, XAxis } from "recharts"
 import { RangeSelector } from "@/components/charts/range-selector"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardTitle } from "@/components/ui/card"
 import {
   type ChartConfig,
   ChartContainer,
@@ -153,27 +147,28 @@ function PriceChart({ symbol, range }: PriceChartProps) {
   )
 }
 
-interface InstrumentPriceCardProps {
+interface InstrumentPriceViewProps {
   symbol: string
   name?: string
 }
 
 /**
- * Live price card for the market detail page: current quote with day change
- * and a historical price chart over a selectable time range, both backed by
- * the core market-data endpoints.
+ * Card-less live price view: current quote with day change and a historical
+ * price chart over a selectable time range, both backed by the core
+ * market-data endpoints. Rendered inside a `Card` by `InstrumentPriceCard` on
+ * the market detail page, and directly inside the holdings chart dialog.
  */
-export function InstrumentPriceCard({
+export function InstrumentPriceView({
   symbol,
   name,
-}: InstrumentPriceCardProps) {
+}: InstrumentPriceViewProps) {
   const [range, setRange] = useState<TimeRange>("1M")
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-start justify-between pb-2">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-row items-start justify-between">
         <div className="flex flex-col gap-1">
-          <CardDescription>{name ?? symbol}</CardDescription>
+          <p className="text-sm text-muted-foreground">{name ?? symbol}</p>
           <Suspense
             fallback={
               <div className="h-14 w-40 animate-pulse rounded bg-muted" />
@@ -186,15 +181,35 @@ export function InstrumentPriceCard({
           selected={range}
           onSelect={(r) => startTransition(() => setRange(r))}
         />
-      </CardHeader>
-      <CardContent className="pb-4">
-        <Suspense
-          fallback={
-            <div className="h-48 w-full animate-pulse rounded bg-muted" />
-          }
-        >
-          <PriceChart symbol={symbol} range={range} />
-        </Suspense>
+      </div>
+      <Suspense
+        fallback={
+          <div className="h-48 w-full animate-pulse rounded bg-muted" />
+        }
+      >
+        <PriceChart symbol={symbol} range={range} />
+      </Suspense>
+    </div>
+  )
+}
+
+interface InstrumentPriceCardProps {
+  symbol: string
+  name?: string
+}
+
+/**
+ * Live price card for the market detail page: wraps `InstrumentPriceView` in a
+ * `Card` surface.
+ */
+export function InstrumentPriceCard({
+  symbol,
+  name,
+}: InstrumentPriceCardProps) {
+  return (
+    <Card>
+      <CardContent className="py-4">
+        <InstrumentPriceView symbol={symbol} name={name} />
       </CardContent>
     </Card>
   )

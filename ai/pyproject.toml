@@ -1,6 +1,6 @@
 [project]
 name = "kontor-ai"
-version = "0.22.0"
+version = "0.24.0"
 requires-python = ">=3.14"
 dependencies = [
     "fastapi>=0.136",
@@ -9,6 +9,9 @@ dependencies = [
     "openai>=2.41.1",
     "pydantic-settings>=2.14.1",
     "pyjwt[crypto]>=2.10",
+    "sqlalchemy[asyncio]>=2.0",
+    "asyncpg>=0.30",
+    "alembic>=1.13",
     "opentelemetry-distro>=0.50b0",
     "opentelemetry-exporter-otlp>=1.29",
     "opentelemetry-instrumentation-fastapi>=0.50b0",
@@ -20,6 +23,7 @@ export-openapi = "advisor.openapi:main"
 
 [dependency-groups]
 ci = [
+    "aiosqlite>=0.20",
     "httpx>=0.28",
     "pytest>=9",
     "pytest-asyncio>=1.4",

@@ -1,10 +1,12 @@
 import json
 from collections.abc import Generator
+from datetime import UTC
 from typing import cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from advisor.auth import require_authenticated_user
 from advisor.config import Settings, get_settings
@@ -257,6 +259,84 @@ async def test_recommendation_rejects_invalid_risk_tolerance(transport: ASGITran
             json={**SAMPLE_PORTFOLIO, "risk_tolerance": "YOLO"},
         )
     assert response.status_code == 422
+
+
+async def test_post_persists_and_get_returns_latest(transport: ASGITransport, authenticated: None) -> None:
+    mock_llm = LLMRecommendation(recommendation="Buy bonds.", rationale="Too much equity.")
+
+    with patch("advisor.recommendation.resolve_llm_provider") as mock_resolve:
+        mock_resolve.return_value = _make_provider(_make_chat_client(mock_llm))
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            post = await client.post("/ai/advisor/recommendation", json=SAMPLE_PORTFOLIO)
+            assert post.status_code == 200
+            get = await client.get("/ai/advisor/recommendation")
+
+    assert get.status_code == 200
+    data = get.json()
+    assert data["recommendation"] == "Buy bonds."
+    assert data["rationale"] == "Too much equity."
+    assert "financial advice" in data["disclaimer"]
+
+
+async def test_get_returns_404_when_none(transport: ASGITransport, authenticated: None) -> None:
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/ai/advisor/recommendation")
+    assert response.status_code == 404
+
+
+async def test_get_requires_authentication(transport: ASGITransport) -> None:
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/ai/advisor/recommendation")
+    assert response.status_code == 401
+
+
+async def test_get_latest_returns_most_recent_by_created_at(
+    authenticated: None, db: async_sessionmaker[AsyncSession]
+) -> None:
+    from datetime import datetime
+
+    from advisor.models import Recommendation
+    from advisor.repository import get_latest_recommendation
+
+    older = Recommendation(
+        user_id="test-user",
+        recommendation="old",
+        rationale="old",
+        risk_tolerance=None,
+        created_at=datetime(2026, 1, 1, tzinfo=UTC),
+    )
+    newer = Recommendation(
+        user_id="test-user",
+        recommendation="new",
+        rationale="new",
+        risk_tolerance=None,
+        created_at=datetime(2026, 6, 1, tzinfo=UTC),
+    )
+    async with db() as session:
+        session.add_all([older, newer])
+        await session.commit()
+
+    async with db() as session:
+        latest = await get_latest_recommendation(session, "test-user")
+
+    assert latest is not None
+    assert latest.recommendation == "new"
+
+
+async def test_post_returns_503_when_persistence_fails(transport: ASGITransport, authenticated: None) -> None:
+    mock_llm = LLMRecommendation(recommendation="r", rationale="r")
+
+    with (
+        patch("advisor.recommendation.resolve_llm_provider") as mock_resolve,
+        patch("advisor.recommendation.save_recommendation", AsyncMock(side_effect=RuntimeError("db down"))),
+    ):
+        mock_resolve.return_value = _make_provider(_make_chat_client(mock_llm))
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.post("/ai/advisor/recommendation", json=SAMPLE_PORTFOLIO)
+
+    assert response.status_code == 503
+    assert response.json()["detail"] == "Could not save recommendation"
+    assert "db down" not in response.text
 
 
 def _make_chat_response(llm: LLMRecommendation) -> MagicMock:

@@ -54,6 +54,23 @@ services:
       retries: 5
       start_period: 10s
 
+  ai-db:
+    image: postgres:18-trixie
+    environment:
+      POSTGRES_DB: "${AI_POSTGRES_DB:-kontor_ai}"
+      POSTGRES_USER: "${AI_POSTGRES_USER:-kontor_ai}"
+      POSTGRES_PASSWORD: "${AI_POSTGRES_PASSWORD:-change-me-local}"
+    ports:
+      - "${AI_POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - ai_postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
   keycloak:
     # Built from the vendored Keycloakify theme so the Kontor login theme is
     # baked in (no stock image + sibling-repo jar). First `up` builds the image,
@@ -113,6 +130,7 @@ services:
       POSTGRES_USER: "${POSTGRES_USER:-team3m}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-change-me-local}"
       SPRING_PROFILES_ACTIVE: seed
+      TWELVE_DATA_API_KEY: "${TWELVE_DATA_API_KEY:-}"
     ports:
       - "8080:8080"
     healthcheck:
@@ -186,15 +204,32 @@ services:
       retries: 5
       start_period: 10s
 
+  ai-migrate:
+    image: kontor-ai:local
+    build:
+      context: ./ai
+    command: ["alembic", "upgrade", "head"]
+    restart: "no"
+    depends_on:
+      ai-db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://${AI_POSTGRES_USER:-kontor_ai}:${AI_POSTGRES_PASSWORD:-change-me-local}@ai-db:5432/${AI_POSTGRES_DB:-kontor_ai}"
+
   ai:
+    image: kontor-ai:local
     build:
       context: ./ai
     # Without LOGOS_API_KEY the service falls back to a local OpenAI-compatible LLM. This
     # default targets a *native* host Ollama (fast, uses the Mac GPU); host.docker.internal
     # is resolved on Linux via the host-gateway alias below. The compose-managed Ollama is
     # opt-in through docker-compose.local-llm.yml, which overrides LOCAL_LLM_BASE_URL.
+    depends_on:
+      ai-migrate:
+        condition: service_completed_successfully
     environment:
       <<: *keycloak-oidc-env
+      DATABASE_URL: "postgresql+asyncpg://${AI_POSTGRES_USER:-kontor_ai}:${AI_POSTGRES_PASSWORD:-change-me-local}@ai-db:5432/${AI_POSTGRES_DB:-kontor_ai}"
       LOGOS_API_KEY: "${LOGOS_API_KEY:-}"
       LOCAL_LLM_BASE_URL: "${LOCAL_LLM_BASE_URL:-http://host.docker.internal:11434/v1}"
       LOCAL_LLM_MODEL: "${LOCAL_LLM_MODEL:-llama3.2}"
@@ -213,3 +248,4 @@ volumes:
   postgres_data:
   keycloak_postgres_data:
   rabbitmq_data:
+  ai_postgres_data:

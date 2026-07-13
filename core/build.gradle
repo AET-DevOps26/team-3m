@@ -3,13 +3,13 @@ plugins {
 	id 'checkstyle'
 	id 'org.springframework.boot' version '4.1.0'
 	id 'io.spring.dependency-management' version '1.1.7'
-	id 'com.diffplug.spotless' version '8.7.0'
+	id 'com.diffplug.spotless' version '8.8.0'
 	id 'net.ltgt.errorprone' version '5.1.0'
 	id 'org.jooq.jooq-codegen-gradle' version '3.21.6'
 }
 
 group = 'de.devops26.kontor'
-version = '0.22.0'
+version = '0.24.0'
 
 ext['jooq.version'] = '3.21.5'
 
@@ -139,7 +139,7 @@ spotless {
 }
 
 checkstyle {
-	toolVersion = '13.6.0'
+	toolVersion = '13.7.0'
 	configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
 	maxWarnings = 0
 }

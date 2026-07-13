@@ -21,6 +21,9 @@ _Kontor_ is a Progressive Web App (mobile and desktop) that consolidates persona
 | Dev server | `npm run dev` |
 | Build | `npm run build` |
 | Type check | `npm run typecheck` |
+| Unit tests | `npm test` |
+| Unit tests (watch) | `npm run test:watch` |
+| Unit tests (coverage) | `npm run test:coverage` |
 | Lint | `npm run lint` |
 | Lint (autofix) | `npm run lint:fix` |
 | Format (autofix) | `npm run format` |

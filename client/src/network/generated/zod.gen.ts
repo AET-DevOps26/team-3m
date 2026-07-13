@@ -84,6 +84,60 @@ export const apiResponsePortfolioOverviewSchema = z.object({
   details: z.array(z.unknown()).nullish(),
 })
 
+export const matchSchema = z.object({
+  symbol: z.string().optional(),
+  name: z.string().optional(),
+  exchange: z.string().optional(),
+  type: z.string().optional(),
+  currency: z.string().optional(),
+})
+
+export const instrumentSearchResultSchema = z.object({
+  matches: z.array(matchSchema).optional(),
+})
+
+export const instrumentSearchApiResponseSchema = z.object({
+  success: z.boolean(),
+  data: instrumentSearchResultSchema.optional(),
+  error: z.string().nullish(),
+  details: z.array(z.unknown()).nullish(),
+})
+
+export const instrumentQuoteResultSchema = z.object({
+  symbol: z.string().optional(),
+  name: z.string().optional(),
+  currency: z.string().optional(),
+  price: z.number().optional(),
+  change: z.number().optional(),
+  changePercent: z.number().optional(),
+})
+
+export const instrumentQuoteApiResponseSchema = z.object({
+  success: z.boolean(),
+  data: instrumentQuoteResultSchema.optional(),
+  error: z.string().nullish(),
+  details: z.array(z.unknown()).nullish(),
+})
+
+export const pricePointSchema = z.object({
+  timestamp: z.iso.datetime().optional(),
+  close: z.number().optional(),
+})
+
+export const instrumentHistoryResultSchema = z.object({
+  symbol: z.string().optional(),
+  currency: z.string().optional(),
+  range: z.string().optional(),
+  series: z.array(pricePointSchema).optional(),
+})
+
+export const instrumentHistoryApiResponseSchema = z.object({
+  success: z.boolean(),
+  data: instrumentHistoryResultSchema.optional(),
+  error: z.string().nullish(),
+  details: z.array(z.unknown()).nullish(),
+})
+
 export const financialTransactionResponseSchema = z.object({
   id: z.uuid(),
   datetime: z.iso.datetime(),
@@ -160,6 +214,37 @@ export const zImportCsvBody = z.object({
  * CSV imported successfully
  */
 export const importCsvResponseSchema = csvImportApiResponseSchema
+
+export const zSearchInstrumentsQuery = z.object({
+  q: z.string().optional().default(""),
+})
+
+/**
+ * Instruments matching the query
+ */
+export const searchInstrumentsResponseSchema = instrumentSearchApiResponseSchema
+
+export const zGetQuotePath = z.object({
+  symbol: z.string(),
+})
+
+/**
+ * Current quote for the instrument
+ */
+export const getQuoteResponseSchema = instrumentQuoteApiResponseSchema
+
+export const zGetQuoteHistoryPath = z.object({
+  symbol: z.string(),
+})
+
+export const zGetQuoteHistoryQuery = z.object({
+  range: z.enum(["1D", "1W", "1M", "1Y", "MAX"]).optional(),
+})
+
+/**
+ * Historical prices for the instrument
+ */
+export const getQuoteHistoryResponseSchema = instrumentHistoryApiResponseSchema
 
 /**
  * Server is up

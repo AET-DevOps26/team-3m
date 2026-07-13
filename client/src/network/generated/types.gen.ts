@@ -84,6 +84,60 @@ export type PortfolioOverview = {
   totalValue?: number
 }
 
+export type InstrumentSearchApiResponse = {
+  success: boolean
+  data?: InstrumentSearchResult
+  error?: string | null
+  details?: Array<unknown> | null
+}
+
+export type InstrumentSearchResult = {
+  matches?: Array<Match>
+}
+
+export type Match = {
+  symbol?: string
+  name?: string
+  exchange?: string
+  type?: string
+  currency?: string
+}
+
+export type InstrumentQuoteApiResponse = {
+  success: boolean
+  data?: InstrumentQuoteResult
+  error?: string | null
+  details?: Array<unknown> | null
+}
+
+export type InstrumentQuoteResult = {
+  symbol?: string
+  name?: string
+  currency?: string
+  price?: number
+  change?: number
+  changePercent?: number
+}
+
+export type InstrumentHistoryApiResponse = {
+  success: boolean
+  data?: InstrumentHistoryResult
+  error?: string | null
+  details?: Array<unknown> | null
+}
+
+export type InstrumentHistoryResult = {
+  symbol?: string
+  currency?: string
+  range?: string
+  series?: Array<PricePoint>
+}
+
+export type PricePoint = {
+  timestamp?: string
+  close?: number
+}
+
 export type FinancialTransactionResponse = {
   id: string
   datetime: string
@@ -254,6 +308,117 @@ export type GetOverviewErrors = {
 }
 
 export type GetOverviewError = GetOverviewErrors[keyof GetOverviewErrors]
+
+export type SearchInstrumentsData = {
+  body?: never
+  path?: never
+  query?: {
+    q?: string
+  }
+  url: "/api/v1/market-data/search"
+}
+
+export type SearchInstrumentsErrors = {
+  /**
+   * Unauthorized
+   */
+  401: InstrumentSearchApiResponse
+  /**
+   * Market data provider unavailable
+   */
+  502: ApiResponse
+}
+
+export type SearchInstrumentsError =
+  SearchInstrumentsErrors[keyof SearchInstrumentsErrors]
+
+export type SearchInstrumentsResponses = {
+  /**
+   * Instruments matching the query
+   */
+  200: InstrumentSearchApiResponse
+}
+
+export type SearchInstrumentsResponse =
+  SearchInstrumentsResponses[keyof SearchInstrumentsResponses]
+
+export type GetQuoteData = {
+  body?: never
+  path: {
+    symbol: string
+  }
+  query?: never
+  url: "/api/v1/market-data/quotes/{symbol}"
+}
+
+export type GetQuoteErrors = {
+  /**
+   * Unauthorized
+   */
+  401: InstrumentQuoteApiResponse
+  /**
+   * Unknown symbol
+   */
+  404: ApiResponse
+  /**
+   * Market data provider unavailable
+   */
+  502: ApiResponse
+}
+
+export type GetQuoteError = GetQuoteErrors[keyof GetQuoteErrors]
+
+export type GetQuoteResponses = {
+  /**
+   * Current quote for the instrument
+   */
+  200: InstrumentQuoteApiResponse
+}
+
+export type GetQuoteResponse = GetQuoteResponses[keyof GetQuoteResponses]
+
+export type GetQuoteHistoryData = {
+  body?: never
+  path: {
+    symbol: string
+  }
+  query?: {
+    range?: "1D" | "1W" | "1M" | "1Y" | "MAX"
+  }
+  url: "/api/v1/market-data/quotes/{symbol}/history"
+}
+
+export type GetQuoteHistoryErrors = {
+  /**
+   * Invalid range parameter
+   */
+  400: ApiResponse
+  /**
+   * Unauthorized
+   */
+  401: InstrumentHistoryApiResponse
+  /**
+   * Unknown symbol
+   */
+  404: ApiResponse
+  /**
+   * Market data provider unavailable
+   */
+  502: ApiResponse
+}
+
+export type GetQuoteHistoryError =
+  GetQuoteHistoryErrors[keyof GetQuoteHistoryErrors]
+
+export type GetQuoteHistoryResponses = {
+  /**
+   * Historical prices for the instrument
+   */
+  200: InstrumentHistoryApiResponse
+}
+
+export type GetQuoteHistoryResponse =
+  GetQuoteHistoryResponses[keyof GetQuoteHistoryResponses]
 
 export type ServerData = {
   body?: never

@@ -3,6 +3,7 @@ import { Suspense } from "react"
 import { Link } from "react-router-dom"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { ImportTransactionsDialog } from "@/components/import/import-transactions-dialog"
+import { MarketsLink } from "@/components/markets/markets-link"
 import { HoldingsTable } from "@/components/portfolio/portfolio-holdings-table"
 import { PerformanceCard } from "@/components/portfolio/portfolio-performance-card"
 import { PortfolioRecommendation } from "@/components/portfolio/portfolio-recommendation"
@@ -173,7 +174,10 @@ export function PortfolioOverviewPage() {
       <div className="flex w-full max-w-4xl flex-col gap-4">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold">Portfolio Overview</h1>
-          <ImportTransactionsDialog />
+          <div className="flex items-center gap-2">
+            <MarketsLink />
+            <ImportTransactionsDialog />
+          </div>
         </div>
 
         <ErrorBoundary

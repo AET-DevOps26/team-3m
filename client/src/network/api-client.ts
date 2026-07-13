@@ -6,6 +6,9 @@ import type {
   ApiResponsePortfolioOverview,
   ApiResponsePortfolioPerformance,
   ApiResponseUserProfileResponse,
+  InstrumentHistoryApiResponse,
+  InstrumentQuoteApiResponse,
+  InstrumentSearchApiResponse,
   ListTransactionsApiResponse,
   TransactionMetadataApiResponse,
   UpdateRiskToleranceRequest,
@@ -14,6 +17,7 @@ import type {
   GenerateRecommendationAiAdvisorRecommendationPostData,
   GenerateRecommendationAiAdvisorRecommendationPostError,
   GenerateRecommendationAiAdvisorRecommendationPostResponse,
+  LatestRecommendationAiAdvisorRecommendationGetResponse,
 } from "./generated-ai"
 
 interface JsonGetOperation<T> {
@@ -48,6 +52,7 @@ interface JsonPostOperation<TBody, TResponse, TError = never> {
 
 interface ApiPaths {
   "/ai/advisor/recommendation": {
+    get: JsonGetOperation<LatestRecommendationAiAdvisorRecommendationGetResponse>
     post: JsonPostOperation<
       GenerateRecommendationAiAdvisorRecommendationPostData["body"],
       GenerateRecommendationAiAdvisorRecommendationPostResponse,
@@ -102,6 +107,57 @@ interface ApiPaths {
   }
   "/api/v1/financial-transactions/metadata": {
     get: JsonGetOperation<TransactionMetadataApiResponse>
+  }
+  "/api/v1/market-data/search": {
+    get: {
+      parameters: {
+        query: {
+          q: string
+        }
+      }
+      responses: {
+        200: {
+          content: {
+            "application/json": InstrumentSearchApiResponse
+          }
+        }
+      }
+    }
+  }
+  "/api/v1/market-data/quotes/{symbol}": {
+    get: {
+      parameters: {
+        path: {
+          symbol: string
+        }
+      }
+      responses: {
+        200: {
+          content: {
+            "application/json": InstrumentQuoteApiResponse
+          }
+        }
+      }
+    }
+  }
+  "/api/v1/market-data/quotes/{symbol}/history": {
+    get: {
+      parameters: {
+        path: {
+          symbol: string
+        }
+        query?: {
+          range?: string
+        }
+      }
+      responses: {
+        200: {
+          content: {
+            "application/json": InstrumentHistoryApiResponse
+          }
+        }
+      }
+    }
   }
 }
 

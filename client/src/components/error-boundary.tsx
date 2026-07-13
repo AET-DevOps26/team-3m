@@ -4,6 +4,8 @@ interface ErrorBoundaryProps {
   children: ReactNode
   /** Rendered when the subtree throws. Defaults to a generic message. */
   fallback?: ReactNode
+  /** Like `fallback`, but receives the caught error. Takes precedence over `fallback`. */
+  renderFallback?: (error: Error) => ReactNode
 }
 
 interface ErrorBoundaryState {
@@ -29,6 +31,9 @@ export class ErrorBoundary extends Component<
 
   render() {
     if (this.state.error) {
+      if (this.props.renderFallback) {
+        return this.props.renderFallback(this.state.error)
+      }
       // Distinguish an explicit `fallback={null}` (render nothing) from an
       // omitted fallback (undefined → show the default message). `??` would
       // collapse both, defeating intentional silent fallbacks.

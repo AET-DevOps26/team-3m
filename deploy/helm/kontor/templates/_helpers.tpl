@@ -106,6 +106,17 @@ Component-scoped resource names.
 {{- end -}}
 
 {{/*
+Name of the Secret holding core market-data credentials (TWELVE_DATA_API_KEY).
+*/}}
+{{- define "kontor.core.marketDataSecretName" -}}
+{{- if .Values.core.existingMarketDataSecret -}}
+{{- .Values.core.existingMarketDataSecret -}}
+{{- else -}}
+{{- printf "%s-core-market-data" (include "kontor.fullname" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Name of the Secret holding AI service credentials (LOGOS_API_KEY).
 */}}
 {{- define "kontor.ai.secretName" -}}
@@ -137,6 +148,21 @@ release name + chart name; our release names never contain "rabbitmq").
 */}}
 {{- define "kontor.rabbitmq.fullname" -}}
 {{- printf "%s-rabbitmq" .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{- define "kontor.ai.postgres.fullname" -}}
+{{- printf "%s-ai-db" (include "kontor.fullname" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
+Name of the Secret holding the AI Postgres credentials.
+*/}}
+{{- define "kontor.ai.postgres.secretName" -}}
+{{- if .Values.ai.db.existingSecret -}}
+{{- .Values.ai.db.existingSecret -}}
+{{- else -}}
+{{- include "kontor.ai.postgres.fullname" . -}}
+{{- end -}}
 {{- end -}}
 
 {{- define "kontor.keycloak.fullname" -}}

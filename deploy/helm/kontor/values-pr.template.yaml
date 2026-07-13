@@ -6,6 +6,10 @@
 # Requires -f secrets.yaml with postgres.password (app DB) and
 # keycloak.admin.password.
 
+# Throwaway env: let `helm uninstall` (incl. failed-deploy rollback) reclaim DB
+# PVCs so the next deploy starts from a clean volume.
+pvcRetentionWhenDeleted: Delete
+
 client:
   apiBaseUrl: ""
   resources:

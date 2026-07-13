@@ -8,7 +8,7 @@ x-otel-backend-env: &otel-backend-env
 
 services:
   seaweedfs:
-    image: chrislusf/seaweedfs:4.37
+    image: chrislusf/seaweedfs:4.38
     command:
       - server
       - -dir=/data
@@ -29,7 +29,7 @@ services:
       start_period: 10s
 
   seaweedfs-init:
-    image: chrislusf/seaweedfs:4.37
+    image: chrislusf/seaweedfs:4.38
     depends_on:
       seaweedfs:
         condition: service_healthy

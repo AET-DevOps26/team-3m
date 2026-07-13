@@ -42,6 +42,25 @@ Each microservice lives in its own directory with a Gradle wrapper.
 | Lint | `./gradlew checkstyleMain checkstyleTest` |
 | Regenerate OpenAPI spec | `./gradlew generateOpenApiDocs` |
 
+#### News (`news/`)
+
+Market-news aggregator: crawls RSS feeds and publishes new articles to the
+RabbitMQ queue `news.articles` (contract: `news/docs/asyncapi.yml`) for the
+future news processor; stores only crawl/push metadata in its own `news`
+database in the shared Postgres. Same Gradle toolchain and commands as core:
+
+| Task | Command |
+|------|---------|
+| Build | `./gradlew build` |
+| Test | `./gradlew test` |
+| Compile check | `./gradlew compileJava` |
+| Format check | `./gradlew spotlessCheck` |
+| Format fix | `./gradlew spotlessApply` |
+| Lint | `./gradlew checkstyleMain checkstyleTest` |
+
+See `news/README.md` for the aggregation design and the storage contract for
+the future news processor (no embeddings/chunking here by design).
+
 ### AI Service (`ai/`)
 
 | Task | Command |
@@ -72,7 +91,7 @@ committed files are out of sync.
 
 ## Deployment
 
-Helm chart at `deploy/helm/kontor/` (client, core, Postgres, Keycloak), deployed
+Helm chart at `deploy/helm/kontor/` (client, core, news, ai, Postgres, Keycloak), deployed
 by CI: push to `main` → prod in namespace `team-3m`; PR + `deploy:preview` label →
 ephemeral preview in `team-3m-pr-<N>`. See `deploy/helm/kontor/README.md` and
 `deploy/rbac/README.md`.

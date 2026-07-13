@@ -108,6 +108,10 @@ jobs:
               ;;
           esac
 
+      - name: Build chart dependencies
+        if: inputs.action == 'deploy'
+        run: helm dependency build "$CHART"
+
       - name: Prepare AI ingress migration
         if: inputs.action == 'deploy'
         env:
@@ -133,6 +137,7 @@ jobs:
         if: inputs.action == 'deploy' && inputs.environment == 'k8s-prod'
         env:
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          NEWS_POSTGRES_PASSWORD: ${{ secrets.NEWS_POSTGRES_PASSWORD }}
           KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
           KEYCLOAK_DB_PASSWORD: ${{ secrets.KEYCLOAK_DB_PASSWORD }}
           LOGOS_API_KEY: ${{ secrets.LOGOS_API_KEY }}
@@ -148,25 +153,30 @@ jobs:
             -f "$CHART/values-prod.yaml" \
             --set-string core.image.tag='${{ inputs.image-tag }}' \
             --set-string client.image.tag='${{ inputs.image-tag }}' \
+            --set-string news.image.tag='${{ inputs.image-tag }}' \
             --set-string ai.image.tag='${{ inputs.image-tag }}' \
             --set-string keycloak.image.tag='${{ inputs.image-tag }}' \
             --set-string postgres.password="$POSTGRES_PASSWORD" \
+            --set-string news.db.password="$NEWS_POSTGRES_PASSWORD" \
             --set-string keycloak.admin.password="$KEYCLOAK_ADMIN_PASSWORD" \
             --set-string keycloak.db.password="$KEYCLOAK_DB_PASSWORD" \
             --set-string ai.logosApiKey="$LOGOS_API_KEY" \
             "${EXTRA[@]}" \
-            --rollback-on-failure --force-conflicts --wait --timeout 4m
+            --rollback-on-failure --force-conflicts --wait --wait-for-jobs --timeout 4m
 
       - name: Helm deploy (preview)
         if: inputs.action == 'deploy' && inputs.environment == 'k8s-preview'
         env:
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          NEWS_POSTGRES_PASSWORD: ${{ secrets.NEWS_POSTGRES_PASSWORD }}
           KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
           LOGOS_API_KEY: ${{ secrets.LOGOS_API_KEY }}
           PR_NUMBER: ${{ inputs.pr-number }}
           BASE_DOMAIN: ${{ inputs.base-domain }}
         run: |
           set -euo pipefail
+          # envsubst expects literal variable names in its first argument.
+          # shellcheck disable=SC2016
           envsubst '${PR_NUMBER} ${BASE_DOMAIN}' \
             < "$CHART/values-pr.template.yaml" > /tmp/values-pr.yaml
           helm upgrade --install '${{ inputs.release-name }}' "$CHART" \
@@ -174,12 +184,14 @@ jobs:
             -f /tmp/values-pr.yaml \
             --set-string core.image.tag='${{ inputs.image-tag }}' \
             --set-string client.image.tag='${{ inputs.image-tag }}' \
+            --set-string news.image.tag='${{ inputs.image-tag }}' \
             --set-string ai.image.tag='${{ inputs.image-tag }}' \
             --set-string keycloak.image.tag='${{ inputs.image-tag }}' \
             --set-string postgres.password="$POSTGRES_PASSWORD" \
+            --set-string news.db.password="$NEWS_POSTGRES_PASSWORD" \
             --set-string keycloak.admin.password="$KEYCLOAK_ADMIN_PASSWORD" \
             --set-string ai.logosApiKey="$LOGOS_API_KEY" \
-            --rollback-on-failure --force-conflicts --wait --timeout 4m
+            --rollback-on-failure --force-conflicts --wait --wait-for-jobs --timeout 4m
 
       - name: Helm teardown
         if: inputs.action == 'teardown'

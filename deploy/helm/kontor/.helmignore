@@ -4,7 +4,6 @@
 .gitignore
 .idea/
 .vscode/
-*.tgz
 *.bak
 *.swp
 *~

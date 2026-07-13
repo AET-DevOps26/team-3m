@@ -1,0 +1,130 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kontor.news.fullname" . }}
+  labels:
+    {{- include "kontor.labels" . | nindent 4 }}
+    app.kubernetes.io/component: news
+spec:
+  replicas: {{ .Values.news.replicaCount }}
+  # Prevent overlap with the pre-lock service version on the first upgrade.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "kontor.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: news
+  template:
+    metadata:
+      labels:
+        {{- include "kontor.labels" . | nindent 8 }}
+        app.kubernetes.io/component: news
+      annotations:
+        # Roll the pods when the DB secret changes so new creds take effect.
+        checksum/secret: {{ printf "%s|%s" (include (print $.Template.BasePath "/news-postgres-secret.yaml") .) .Values.news.db.provisioningRevision | sha256sum }}
+    spec:
+      securityContext:
+        {{- toYaml .Values.news.podSecurityContext | nindent 8 }}
+      containers:
+        - name: news
+          image: {{ include "kontor.image" (dict "root" . "component" .Values.news) | quote }}
+          imagePullPolicy: {{ include "kontor.imagePullPolicy" (dict "root" . "component" .Values.news) }}
+          securityContext:
+            {{- toYaml .Values.news.containerSecurityContext | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: APP_VERSION
+              value: {{ default .Chart.AppVersion .Values.news.image.tag | quote }}
+            - name: NEWS_POSTGRES_HOST
+              value: {{ include "kontor.postgres.fullname" . | quote }}
+            - name: NEWS_POSTGRES_PORT
+              value: {{ .Values.postgres.service.port | quote }}
+            - name: RABBITMQ_HOST
+              value: {{ include "kontor.rabbitmq.fullname" . | quote }}
+            - name: RABBITMQ_PORT
+              value: {{ dig "service" "amqpPort" 5672 .Values.rabbitmq | quote }}
+            - name: RABBITMQ_USERNAME
+              value: {{ .Values.rabbitmq.auth.username | quote }}
+            - name: NEWS_AGGREGATION_SCHEDULER_ENABLED
+              value: {{ .Values.news.aggregation.schedulerEnabled | quote }}
+            - name: NEWS_AGGREGATION_INTERVAL
+              value: {{ .Values.news.aggregation.interval | quote }}
+            - name: NEWS_AGGREGATION_INITIAL_DELAY
+              value: {{ .Values.news.aggregation.initialDelay | quote }}
+            - name: NEWS_AGGREGATION_FETCH_FULL_TEXT
+              value: {{ .Values.news.aggregation.fetchFullText | quote }}
+            {{- range $index, $feed := .Values.news.aggregation.feeds }}
+            - name: NEWS_AGGREGATION_FEEDS_{{ $index }}_NAME
+              value: {{ $feed.name | quote }}
+            - name: NEWS_AGGREGATION_FEEDS_{{ $index }}_URL
+              value: {{ $feed.url | quote }}
+            {{- end }}
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ default (include "kontor.rabbitmq.fullname" .) .Values.rabbitmq.auth.existingSecret }}
+                  key: password
+            {{- with (include "kontor.oidc.issuerUrl" .) }}
+            - name: KEYCLOAK_ISSUER
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with (include "kontor.oidc.jwkSetUri" .) }}
+            - name: KEYCLOAK_JWK_SET_URI
+              value: {{ . | quote }}
+            {{- end }}
+            {{- range $key, $value := .Values.news.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- if .Values.observability.enabled }}
+            {{- include "kontor.observability.backendEnv" (dict "root" . "serviceName" "kontor-news") | nindent 12 }}
+            # Print the OTel-populated MDC trace/span ids so scraped logs link to traces.
+            - name: LOGGING_PATTERN_CORRELATION
+              value: "[trace_id=%X{trace_id} span_id=%X{span_id}] "
+            {{- end }}
+            # /tmp lands on an emptyDir so readOnlyRootFilesystem stays on. The OTel
+            # Java agent (baked into the image) is attached only when observability is on.
+            - name: JAVA_TOOL_OPTIONS
+              value: {{ if .Values.observability.enabled }}"-javaagent:/app/otel/opentelemetry-javaagent.jar -Djava.io.tmpdir=/tmp -XX:MaxRAMPercentage=75"{{ else }}"-Djava.io.tmpdir=/tmp -XX:MaxRAMPercentage=75"{{ end }}
+          envFrom:
+            - secretRef:
+                name: {{ include "kontor.news.postgres.secretName" . }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.news.probes.readinessPath }}
+              port: http
+            initialDelaySeconds: {{ .Values.news.probes.initialDelaySeconds }}
+            periodSeconds: {{ .Values.news.probes.periodSeconds }}
+            timeoutSeconds: {{ .Values.news.probes.timeoutSeconds }}
+            failureThreshold: {{ .Values.news.probes.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.news.probes.livenessPath }}
+              port: http
+            initialDelaySeconds: {{ .Values.news.probes.initialDelaySeconds }}
+            periodSeconds: {{ .Values.news.probes.periodSeconds }}
+            timeoutSeconds: {{ .Values.news.probes.timeoutSeconds }}
+            failureThreshold: {{ .Values.news.probes.failureThreshold }}
+          resources:
+            {{- toYaml .Values.news.resources | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      {{- with .Values.news.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.news.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.news.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

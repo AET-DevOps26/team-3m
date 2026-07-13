@@ -166,6 +166,13 @@ services:
       JAVA_TOOL_OPTIONS: "-javaagent:/app/otel/opentelemetry-javaagent.jar -Djava.io.tmpdir=/tmp"
       LOGGING_PATTERN_CORRELATION: "[trace_id=%X{trace_id} span_id=%X{span_id}] "
 
+  news:
+    environment:
+      <<: *otel-backend-env
+      OTEL_SERVICE_NAME: kontor-news
+      JAVA_TOOL_OPTIONS: "-javaagent:/app/otel/opentelemetry-javaagent.jar -Djava.io.tmpdir=/tmp"
+      LOGGING_PATTERN_CORRELATION: "[trace_id=%X{trace_id} span_id=%X{span_id}] "
+
   ai:
     environment:
       <<: *otel-backend-env

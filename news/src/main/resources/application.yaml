@@ -1,0 +1,80 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: news
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    url: jdbc:postgresql://${NEWS_POSTGRES_HOST:localhost}:${NEWS_POSTGRES_PORT:5432}/${NEWS_POSTGRES_DB:news}
+    username: ${NEWS_POSTGRES_USER:news}
+    password: ${NEWS_POSTGRES_PASSWORD:change-me-news-local}
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:news}
+    password: ${RABBITMQ_PASSWORD:change-me-rabbit-local}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8081/realms/kontor/protocol/openid-connect/certs}
+
+kontor:
+  security:
+    issuer: ${KEYCLOAK_ISSUER:http://localhost:8081/realms/kontor}
+    audience: ${KEYCLOAK_AUDIENCE:kontor-api}
+
+# Static defaults (exchange/queue/routing key, timeouts, item caps) live in the
+# @DefaultValue annotations of NewsMessagingProperties / NewsFeedProperties —
+# only env-overridable values and the feed list are configured here.
+news:
+  http:
+    timeout: ${NEWS_HTTP_TIMEOUT:PT10S}
+    max-feed-bytes: ${NEWS_HTTP_MAX_FEED_BYTES:1048576}
+    max-article-bytes: ${NEWS_HTTP_MAX_ARTICLE_BYTES:2097152}
+    max-content-characters: ${NEWS_HTTP_MAX_CONTENT_CHARACTERS:100000}
+    max-redirects: ${NEWS_HTTP_MAX_REDIRECTS:3}
+  aggregation:
+    interval: ${NEWS_AGGREGATION_INTERVAL:PT15M}
+    initial-delay: ${NEWS_AGGREGATION_INITIAL_DELAY:PT1M}
+    fetch-full-text: ${NEWS_AGGREGATION_FETCH_FULL_TEXT:true}
+    feeds:
+      - name: yahoo-finance
+        url: https://finance.yahoo.com/news/rssindex
+      - name: marketwatch-top-stories
+        url: https://feeds.content.dowjones.io/public/rss/mw_topstories
+
+management:
+  endpoints:
+    web:
+      base-path: /api
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+      group:
+        database:
+          include: db
+  info:
+    build:
+      enabled: true
+    env:
+      enabled: true
+
+info:
+  app:
+    name: ${spring.application.name}
+    version: ${APP_VERSION:dev}

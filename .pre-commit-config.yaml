@@ -29,9 +29,15 @@ repos:
         language: system
         files: ^core/.*\.java$
         pass_filenames: false
+      - id: gradle-news-quality
+        name: Spotless and Checkstyle (news)
+        entry: bash -c 'cd news && ./gradlew spotlessCheck checkstyleMain checkstyleTest'
+        language: system
+        files: ^news/.*\.java$
+        pass_filenames: false
       - id: helm-lint
         name: Helm Lint
-        entry: bash -c 'c=deploy/helm/kontor; s="--set postgres.password=ci --set keycloak.admin.password=ci --set keycloak.db.password=ci"; for v in values.yaml values-prod.yaml values-pr.template.yaml; do o=""; [ "$v" = values.yaml ] || o="-f $c/$v"; helm lint --strict "$c" $o $s || exit 1; done'
+        entry: bash -c 'c=deploy/helm/kontor; s="--set postgres.password=ci --set news.db.password=ci --set keycloak.admin.password=ci --set keycloak.db.password=ci"; helm dependency build "$c" >/dev/null || exit 1; for v in values.yaml values-prod.yaml values-pr.template.yaml; do o=""; [ "$v" = values.yaml ] || o="-f $c/$v"; helm lint --strict "$c" $o $s || exit 1; done'
         language: system
         files: ^deploy/helm/
         pass_filenames: false

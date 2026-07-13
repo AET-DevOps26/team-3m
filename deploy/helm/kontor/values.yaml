@@ -82,6 +82,97 @@ core:
   tolerations: []
   affinity: {}
 
+# Spring Boot market-news aggregator service. ClusterIP-only, no ingress —
+# consumers are in-cluster (the future news processor / debugging via
+# port-forward). Public HTTPS egress is explicitly allowed when egress is
+# restricted.
+news:
+  image:
+    repository: aet-devops26/team-3m/kontor-news
+    tag: ""              # defaults to .Chart.AppVersion
+    pullPolicy: ""       # falls back to image.pullPolicy
+  # Runs coordinate through a Postgres advisory lock across replicas.
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8080
+  # Dedicated database + role inside the shared Postgres instance. An
+  # idempotent provisioning Job reconciles it on every credential revision.
+  db:
+    database: news
+    username: news
+    # REQUIRED when existingSecret is empty. Supply via secrets.yaml or --set.
+    password: ""
+    # Existing Secret with keys: NEWS_POSTGRES_DB, NEWS_POSTGRES_USER,
+    # NEWS_POSTGRES_PASSWORD.
+    existingSecret: ""
+    # Bump when an externally managed Secret changes so the provisioner Job
+    # gets a new immutable name and reruns.
+    provisioningRevision: ""
+  aggregation:
+    schedulerEnabled: true
+    interval: PT15M
+    initialDelay: PT1M
+    fetchFullText: true
+    feeds:
+      - name: yahoo-finance
+        url: https://finance.yahoo.com/news/rssindex
+      - name: marketwatch-top-stories
+        url: https://feeds.content.dowjones.io/public/rss/mw_topstories
+  # Escape hatch for arbitrary extra non-secret env vars.
+  env: {}
+  resources:
+    requests:
+      cpu: 100m
+      memory: 384Mi
+    limits:
+      cpu: "1"
+      memory: 768Mi
+  probes:
+    livenessPath: /api/health/liveness
+    readinessPath: /api/health/readiness
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 6
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop: ["ALL"]
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# RabbitMQ message broker (CloudPirates subchart, official rabbitmq image).
+# The news aggregator publishes crawled articles to the durable queue
+# `news.articles`; the future news processor consumes from it. The subchart
+# auto-generates the password + erlang cookie into a Secret named
+# `<release>-rabbitmq` (helm.sh/resource-policy: keep, values preserved across
+# upgrades); the news deployment reads RABBITMQ_PASSWORD from that Secret.
+rabbitmq:
+  auth:
+    username: news
+  replicaCount: 1
+  persistence:
+    enabled: true
+    size: 2Gi
+    storageClass: "csi-rbd-sc"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
 # Python/FastAPI AI service.
 ai:
   image:
@@ -420,6 +511,5 @@ observability:
 networkPolicy:
   enabled: true
   # -- When true, the only egress allowed from app pods is to in-cluster
-  # services + DNS + the configured Postgres pod. Set to false if your app
-  # needs to reach Yahoo Finance / OpenAI / etc. directly from the cluster.
+  # services + DNS + the configured Postgres pod and explicitly public HTTPS.
   restrictEgress: false

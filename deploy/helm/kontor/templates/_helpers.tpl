@@ -116,6 +116,29 @@ Name of the Secret holding AI service credentials (LOGOS_API_KEY).
 {{- end -}}
 {{- end -}}
 
+{{- define "kontor.news.fullname" -}}
+{{- printf "%s-news" (include "kontor.fullname" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
+Name of the Secret holding the news service's Postgres credentials.
+*/}}
+{{- define "kontor.news.postgres.secretName" -}}
+{{- if .Values.news.db.existingSecret -}}
+{{- .Values.news.db.existingSecret -}}
+{{- else -}}
+{{- printf "%s-news-postgres" (include "kontor.fullname" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Name of the RabbitMQ subchart's Service and Secret (standard subchart fullname:
+release name + chart name; our release names never contain "rabbitmq").
+*/}}
+{{- define "kontor.rabbitmq.fullname" -}}
+{{- printf "%s-rabbitmq" .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
 {{- define "kontor.keycloak.fullname" -}}
 {{- printf "%s-keycloak" (include "kontor.fullname" .) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}

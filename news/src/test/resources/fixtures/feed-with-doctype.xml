@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE rss [
+  <!ENTITY xxe SYSTEM "file:///etc/passwd">
+]>
+<rss version="2.0">
+  <channel>
+    <title>Untrusted feed</title>
+    <link>https://example.com/</link>
+    <description>Feed with an external entity</description>
+    <item>
+      <title>&xxe;</title>
+      <link>https://example.com/articles/1</link>
+    </item>
+  </channel>
+</rss>

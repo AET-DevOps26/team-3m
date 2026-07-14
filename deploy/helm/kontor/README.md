@@ -82,13 +82,18 @@ repository secret (see `deploy/rbac/`). Passwords are passed via
 |------|------|-------|
 | Variable | `RANCHER_PROJECT_ID` | `c-f49m7:p-xj8vv` — places namespaces in the team project (quota + RBAC). |
 | Secret (repo) | `KUBECONFIG_B64` | base64 of `deploy/rbac/extract-kubeconfig.sh` output. |
-| Secret (env `k8s-prod`) | `POSTGRES_PASSWORD`, `NEWS_POSTGRES_PASSWORD`, `KEYCLOAK_ADMIN_PASSWORD`, `KEYCLOAK_DB_PASSWORD` | Independent core/news credentials; the news role is reconciled on deploy. |
-| Secret (env `k8s-preview`) | `POSTGRES_PASSWORD`, `NEWS_POSTGRES_PASSWORD`, `KEYCLOAK_ADMIN_PASSWORD` | Throwaway; `dev-mem` Keycloak needs no DB password. |
+| Secret (env `k8s-prod`) | `POSTGRES_PASSWORD`, `NEWS_POSTGRES_PASSWORD`, `KEYCLOAK_ADMIN_PASSWORD`, `KEYCLOAK_DB_PASSWORD` | `NEWS_POSTGRES_PASSWORD` is the dedicated news-DB credential. |
+| Secret (env `k8s-preview`) | `POSTGRES_PASSWORD`, `NEWS_POSTGRES_PASSWORD`, `KEYCLOAK_ADMIN_PASSWORD` | `dev-mem` Keycloak needs no DB password. |
 
 The `k8s-prod` / `k8s-preview` GitHub Environments can be created with the
 `Bootstrap Environments` workflow (`workflow_dispatch`, takes the environment
 name as input). One-time RBAC bootstrap and the Rancher-project verification are
 documented in [`deploy/rbac/README.md`](../../rbac/README.md).
+
+`news.db.password` is required unless `news.db.existingSecret` is set — the
+chart fails the render otherwise, like the other database passwords. The news
+Postgres instance is independent from core's database and credentials; CI
+supplies the password from the `NEWS_POSTGRES_PASSWORD` secret.
 
 ## Client runtime configuration
 
@@ -180,7 +185,7 @@ Required secret values (the render `fail`s if these are empty, unless
 | Value | When required |
 |-------|---------------|
 | `postgres.password` | Always (the app DB). |
-| `news.db.password` | Always (the independent news DB role). |
+| `news.db.password` | Always (the dedicated news Postgres). |
 | `keycloak.admin.password` | When `keycloak.deploy=true`. |
 | `keycloak.db.password` | When `keycloak.deploy=true` and `keycloak.database=postgres`. |
 
@@ -214,15 +219,13 @@ article is marked pushed.
 
 ## News service database
 
-The news aggregator uses a **separate database and role** (`news`) inside the
-shared Postgres instance (see `news.db.*` values; password comes from
-secrets.yaml / `--set news.db.password=`). An idempotent provisioning Job runs
-for fresh and existing volumes and safely creates or updates the role, database,
-and password before Helm reports success. Its reconciliation script is mounted
-from a Secret because it references credential environment variables, although
-the script itself contains no credential values. When `news.db.existingSecret` is
-managed outside Helm, bump `news.db.provisioningRevision` after rotating it so
-both the Job and news Deployment rerun.
+The news aggregator owns a **dedicated Postgres StatefulSet, Service, Secret,
+and PVC** (see `news.db.*` values); it never connects to core's Postgres. Set
+the required `news.db.password` via secrets.yaml / `--set`, or point
+`news.db.existingSecret` at an externally managed Secret. Flyway
+inside the news service owns schema migrations. When `news.db.existingSecret`
+is managed outside Helm, bump `news.db.secretRevision` after rotating it to roll
+the database and news pods.
 
 The news Service is ClusterIP-only with no ingress route — consumers are
 in-cluster (the future news processor); use `kubectl port-forward` to poke it.

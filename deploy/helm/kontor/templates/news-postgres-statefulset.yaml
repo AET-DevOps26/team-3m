@@ -1,0 +1,143 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "kontor.news.postgres.fullname" . }}
+  labels:
+    {{- include "kontor.labels" . | nindent 4 }}
+    app.kubernetes.io/component: news-db
+spec:
+  serviceName: {{ include "kontor.news.postgres.fullname" . }}
+  replicas: 1
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: {{ .Values.pvcRetentionWhenDeleted }}
+    whenScaled: Retain
+  selector:
+    matchLabels:
+      {{- include "kontor.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: news-db
+  template:
+    metadata:
+      labels:
+        {{- include "kontor.labels" . | nindent 8 }}
+        app.kubernetes.io/component: news-db
+      annotations:
+        checksum/secret: {{ printf "%s|%s" (include (print $.Template.BasePath "/news-postgres-secret.yaml") .) .Values.news.db.secretRevision | sha256sum }}
+    spec:
+      securityContext:
+        {{- toYaml .Values.news.db.podSecurityContext | nindent 8 }}
+      containers:
+        - name: postgres
+          image: {{ include "kontor.image" (dict "root" . "component" .Values.news.db) | quote }}
+          imagePullPolicy: {{ include "kontor.imagePullPolicy" (dict "root" . "component" .Values.news.db) }}
+          securityContext:
+            {{- toYaml .Values.news.db.containerSecurityContext | nindent 12 }}
+          lifecycle:
+            # The upstream image only applies POSTGRES_PASSWORD during initdb.
+            # Reconcile it on every restart so Secret rotation also works with
+            # an existing PVC. Local socket authentication stays pod-internal.
+            postStart:
+              exec:
+                command:
+                  - /bin/sh
+                  - -ec
+                  - |
+                    attempts=0
+                    until pg_isready -q -U "$POSTGRES_USER" -d "$POSTGRES_DB" -h 127.0.0.1; do
+                      attempts=$((attempts + 1))
+                      if [ "$attempts" -ge 120 ]; then
+                        exit 1
+                      fi
+                      sleep 1
+                    done
+                    printf '%s\n' '\getenv password POSTGRES_PASSWORD' \
+                      "ALTER ROLE CURRENT_USER WITH PASSWORD :'password';" \
+                      | psql --username "$POSTGRES_USER" --dbname "$POSTGRES_DB"
+          ports:
+            - name: postgres
+              containerPort: 5432
+              protocol: TCP
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kontor.news.postgres.secretName" . }}
+                  key: NEWS_POSTGRES_DB
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kontor.news.postgres.secretName" . }}
+                  key: NEWS_POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kontor.news.postgres.secretName" . }}
+                  key: NEWS_POSTGRES_PASSWORD
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - exec pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" -h 127.0.0.1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - exec pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" -h 127.0.0.1
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
+          resources:
+            {{- toYaml .Values.news.db.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            - name: run
+              mountPath: /var/run/postgresql
+            - name: tmp
+              mountPath: /tmp
+      {{- with .Values.news.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.news.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.news.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: run
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+        {{- if not .Values.news.db.persistence.enabled }}
+        - name: data
+          emptyDir: {}
+        {{- end }}
+  {{- if .Values.news.db.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          {{- include "kontor.selectorLabels" . | nindent 10 }}
+          app.kubernetes.io/component: news-db
+      spec:
+        accessModes:
+          {{- toYaml .Values.news.db.persistence.accessModes | nindent 10 }}
+        {{- with .Values.news.db.persistence.storageClass }}
+        storageClassName: {{ . | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.news.db.persistence.size | quote }}
+  {{- end }}

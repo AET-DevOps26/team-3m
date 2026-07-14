@@ -34,24 +34,21 @@ services:
       start_period: 10s
     restart: unless-stopped
 
-  news-db-init:
-    image: pgvector/pgvector:pg18-trixie
-    depends_on:
-      db:
-        condition: service_healthy
-    command: ["sh", "/scripts/init-news-db.sh"]
+  news-db:
+    image: postgres:18-trixie
     environment:
-      POSTGRES_HOST: db
-      POSTGRES_PORT: "5432"
-      POSTGRES_DB: "${POSTGRES_DB:-team3m}"
-      POSTGRES_USER: "${POSTGRES_USER:-team3m}"
-      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
-      NEWS_POSTGRES_DB: "${NEWS_POSTGRES_DB:-news}"
-      NEWS_POSTGRES_USER: "${NEWS_POSTGRES_USER:-news}"
-      NEWS_POSTGRES_PASSWORD: "${NEWS_POSTGRES_PASSWORD:?NEWS_POSTGRES_PASSWORD is required}"
+      POSTGRES_DB: "${NEWS_POSTGRES_DB:-news}"
+      POSTGRES_USER: "${NEWS_POSTGRES_USER:-news}"
+      POSTGRES_PASSWORD: "${NEWS_POSTGRES_PASSWORD:?NEWS_POSTGRES_PASSWORD is required}"
     volumes:
-      - ./deploy/helm/kontor/files/postgres/init-news-db.sh:/scripts/init-news-db.sh:ro
-    restart: "no"
+      - news_postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
 
   keycloak-db:
     image: postgres:18-trixie
@@ -197,16 +194,14 @@ services:
         limits:
           memory: ${NEWS_MEMORY_LIMIT:-768m}
     depends_on:
-      db:
+      news-db:
         condition: service_healthy
-      news-db-init:
-        condition: service_completed_successfully
       keycloak:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
     environment:
-      NEWS_POSTGRES_HOST: db
+      NEWS_POSTGRES_HOST: news-db
       NEWS_POSTGRES_PORT: "5432"
       NEWS_POSTGRES_DB: "${NEWS_POSTGRES_DB:-news}"
       NEWS_POSTGRES_USER: "${NEWS_POSTGRES_USER:-news}"
@@ -293,6 +288,7 @@ services:
 
 volumes:
   postgres_data:
+  news_postgres_data:
   keycloak_postgres_data:
   rabbitmq_data:
   ai_postgres_data:

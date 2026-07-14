@@ -26,9 +26,9 @@ source, meant to be replaced later.
   durable queue `news.articles` (topic exchange `kontor.news`, routing key
   `news.article.crawled`), `messageId` = URL hash. The metadata row is marked
   `pushed_at` **only after the broker confirms and the mandatory publish was
-  routable**; unconfirmed or returned articles are
-  re-crawled and re-published on the next run (at-least-once delivery — the
-  consumer dedups on `messageId`).
+  routable**. If persisting `pushed_at` then fails, the confirmed message may be
+  published again on the next run. This is deliberately at-least-once delivery;
+  the consumer must deduplicate on `messageId`.
 
 ## Contract for the news processor
 
@@ -45,10 +45,8 @@ embedding model the processor will choose.
 
 `crawled_article` holds metadata only (url, url_hash, source, title,
 timestamps, `pushed_at`); `aggregation_run` tracks run status and counts. The
-service uses its **own database and role** (`news`) in the shared Postgres
-instance. The Compose init service and Helm provisioning Job reconcile the role
-and database on every deployment, including existing volumes and password
-changes.
+service owns a **dedicated Postgres instance** and persistent volume, isolated
+from the core service's database. Flyway creates and upgrades the news schema.
 
 ## Configuration
 
@@ -65,12 +63,18 @@ changes.
 | `news.http.max-article-bytes` | `NEWS_HTTP_MAX_ARTICLE_BYTES` | 2 MiB |
 | `news.messaging.*` (exchange/queue/routing key) | — | `kontor.news` / `news.articles` / `news.article.crawled` |
 | RabbitMQ | `RABBITMQ_HOST/PORT/USERNAME/PASSWORD` | `localhost:5672`, `news` |
-| Database | `NEWS_POSTGRES_HOST/PORT/DB/USER/PASSWORD` | `localhost:5432/news` |
+| Database | `NEWS_POSTGRES_HOST/PORT/DB/USER/PASSWORD` | `localhost:5434/news` |
 | Keycloak | `KEYCLOAK_ISSUER/JWK_SET_URI/AUDIENCE` | local dev realm |
 
 Helm exposes `news.aggregation.schedulerEnabled`, `interval`, `initialDelay`,
 `fetchFullText`, and the complete `feeds` list as typed values. Set
 `schedulerEnabled: false` for manual-only operation.
+
+Each aggregation run holds one JDBC connection for its Postgres advisory lock
+until the run finishes. Feed work runs concurrently, so deployments with a large
+feed list must leave at least one additional pool connection for repository
+operations (Spring Boot's default Hikari pool of 10 has ample headroom for the
+two default feeds).
 
 ## Commands
 
@@ -82,7 +86,7 @@ Helm exposes `news.aggregation.schedulerEnabled`, `interval`, `initialDelay`,
 | Format check | `./gradlew spotlessCheck` |
 | Format fix | `./gradlew spotlessApply` |
 | Lint | `./gradlew checkstyleMain checkstyleTest` |
-| Run locally | `./gradlew bootRun --args='--spring.profiles.active=local'` (needs compose `db`, `keycloak`, `rabbitmq`) |
+| Run locally | `./gradlew bootRun --args='--spring.profiles.active=local'` (needs compose `news-db`, `keycloak`, `rabbitmq`) |
 
 The shared configuration requires database and RabbitMQ passwords from the
 environment. The `local` profile supplies only the documented throwaway local
@@ -90,18 +94,18 @@ defaults; deployed environments always inject their credentials from secrets.
 
 ## Manual testing
 
-Everything runs locally with compose. If ports 5432/8081 are taken on your
-machine, override them: `POSTGRES_PORT=15432 KEYCLOAK_PORT=18081 docker compose up -d news`
+Everything runs locally with compose. If ports 5434/8081 are taken on your
+machine, override them: `NEWS_POSTGRES_PORT=15434 KEYCLOAK_PORT=18081 docker compose up -d news`
 (the values below assume the defaults).
 
-1. **Start the stack** (db, keycloak, rabbitmq, news):
+1. **Start the stack** (dedicated news DB, Keycloak, RabbitMQ, news):
 
    ```bash
    docker compose up -d --build news
    ```
 
-   The `news-db-init` dependency creates or updates the news role before the
-   service starts, including on an existing volume.
+   The `news-db` dependency becomes healthy before the service starts. Flyway
+   then migrates the news-owned schema.
 
 2. **Get a token.** The `kontor-spa` client has direct access grants disabled by
    default; for local testing either enable them once in the Keycloak admin UI
@@ -131,7 +135,7 @@ machine, override them: `POSTGRES_PORT=15432 KEYCLOAK_PORT=18081 docker compose 
 
 5. **Verify dedup**: trigger a second run — it finishes with
    `itemsPublished: 0` and the queue depth is unchanged. The metadata is in
-   Postgres: `docker compose exec db psql -U news -d news -c
+   Postgres: `docker compose exec news-db psql -U news -d news -c
    'SELECT source, title, pushed_at FROM crawled_article LIMIT 5'`.
 
 6. **Overlap guard**: fire two `POST` requests back-to-back — the second

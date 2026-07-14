@@ -50,7 +50,7 @@ Each microservice lives in its own directory with a Gradle wrapper.
 Market-news aggregator: crawls RSS feeds and publishes new articles to the
 RabbitMQ queue `news.articles` (contract: `news/docs/asyncapi.yml`) for the
 future news processor; stores only crawl/push metadata in its own `news`
-database in the shared Postgres. Same Gradle toolchain and commands as core:
+Postgres instance. Same Gradle toolchain and commands as core:
 
 | Task | Command |
 |------|---------|

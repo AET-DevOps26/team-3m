@@ -1,6 +1,6 @@
 {{- if .Values.networkPolicy.enabled }}
 ---
-# Postgres: only accept traffic from the core and news deployments in this release.
+# Core Postgres: only accept traffic from the core deployment in this release.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -21,14 +21,6 @@ spec:
             matchLabels:
               {{- include "kontor.selectorLabels" . | nindent 14 }}
               app.kubernetes.io/component: core
-        - podSelector:
-            matchLabels:
-              {{- include "kontor.selectorLabels" . | nindent 14 }}
-              app.kubernetes.io/component: news
-        - podSelector:
-            matchLabels:
-              {{- include "kontor.selectorLabels" . | nindent 14 }}
-              app.kubernetes.io/component: news-db-provisioner
       ports:
         - protocol: TCP
           port: 5432
@@ -75,7 +67,7 @@ spec:
           port: 53
         - protocol: TCP
           port: 53
-    # Postgres in this release
+    # Core Postgres in this release
     - to:
         - podSelector:
             matchLabels:
@@ -195,12 +187,12 @@ spec:
           port: 53
         - protocol: TCP
           port: 53
-    # Postgres in this release
+    # Dedicated news Postgres in this release
     - to:
         - podSelector:
             matchLabels:
               {{- include "kontor.selectorLabels" . | nindent 14 }}
-              app.kubernetes.io/component: postgres
+              app.kubernetes.io/component: news-db
       ports:
         - protocol: TCP
           port: 5432
@@ -263,42 +255,31 @@ spec:
           port: 443
   {{- end }}
 ---
-{{- if and .Values.postgres.enabled .Values.networkPolicy.restrictEgress }}
-# Database provisioning Job: DNS plus the shared Postgres pod only.
+# News DB: only accept traffic from the news deployment in this release.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ include "kontor.fullname" . }}-news-db-provisioner
+  name: {{ include "kontor.news.postgres.fullname" . }}
   labels:
     {{- include "kontor.labels" . | nindent 4 }}
-    app.kubernetes.io/component: news-db-provisioner
+    app.kubernetes.io/component: news-db
 spec:
   podSelector:
     matchLabels:
       {{- include "kontor.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: news-db-provisioner
+      app.kubernetes.io/component: news-db
   policyTypes:
-    - Egress
-  egress:
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: kube-system
-      ports:
-        - protocol: UDP
-          port: 53
-        - protocol: TCP
-          port: 53
-    - to:
+    - Ingress
+  ingress:
+    - from:
         - podSelector:
             matchLabels:
               {{- include "kontor.selectorLabels" . | nindent 14 }}
-              app.kubernetes.io/component: postgres
+              app.kubernetes.io/component: news
       ports:
         - protocol: TCP
           port: 5432
 ---
-{{- end }}
 # Client: ingress from ingress-nginx only.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy

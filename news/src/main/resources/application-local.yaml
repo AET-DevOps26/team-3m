@@ -3,6 +3,7 @@ spring:
     activate:
       on-profile: local
   datasource:
+    url: jdbc:postgresql://${NEWS_POSTGRES_HOST:localhost}:${NEWS_POSTGRES_PORT:5434}/${NEWS_POSTGRES_DB:news}
     password: change-me-news-local
   rabbitmq:
     password: change-me-rabbit-local

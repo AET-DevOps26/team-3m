@@ -198,12 +198,12 @@ class NewsAggregationIntegrationTest {
     @Test
     @DisplayName("runs list rejects out-of-range limits with 400")
     void listRuns_invalidLimit_returns400() throws Exception {
-        mockMvc.perform(get("/api/v1/news/aggregation/runs").param("limit", "0").with(jwt()))
+        mockMvc.perform(get("/api/v1/news/aggregation/runs").param("limit", "0").with(adminJwt()))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false));
         mockMvc.perform(get("/api/v1/news/aggregation/runs")
                         .param("limit", "101")
-                        .with(jwt()))
+                        .with(adminJwt()))
                 .andExpect(status().isBadRequest());
     }
 
@@ -235,6 +235,15 @@ class NewsAggregationIntegrationTest {
     @DisplayName("manual trigger requires the kontor-admin role")
     void trigger_authenticatedNonAdmin_returns403() throws Exception {
         mockMvc.perform(post("/api/v1/news/aggregation/runs").with(jwt())).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("aggregation run details require the kontor-admin role")
+    void runDetails_authenticatedNonAdmin_returns403() throws Exception {
+        mockMvc.perform(get("/api/v1/news/aggregation/runs").with(jwt())).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/news/aggregation/runs/{id}", UUID.randomUUID())
+                        .with(jwt()))
+                .andExpect(status().isForbidden());
     }
 
     @Test

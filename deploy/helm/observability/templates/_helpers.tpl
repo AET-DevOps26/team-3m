@@ -46,14 +46,10 @@ grafana-admin
 
 {{- define "obs.alerting.enabled" -}}
 {{- $alerting := .Values.alerting | default dict -}}
-{{- if or $alerting.discordWebhookUrl $alerting.existingSecret -}}true{{- end -}}
+{{- if $alerting.existingSecret -}}true{{- end -}}
 {{- end -}}
 
 {{- define "obs.alerting.secretName" -}}
 {{- $alerting := .Values.alerting | default dict -}}
-{{- if $alerting.existingSecret -}}
 {{- $alerting.existingSecret -}}
-{{- else -}}
-grafana-alerting
-{{- end -}}
 {{- end -}}

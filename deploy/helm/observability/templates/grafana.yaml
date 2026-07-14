@@ -80,6 +80,9 @@ spec:
         checksum/dashboards: {{ (.Files.Glob "files/grafana/dashboards/json/*.json").AsConfig | sha256sum }}
         {{- if include "obs.alerting.enabled" . }}
         checksum/alerting: {{ (.Files.Glob "files/grafana/alerting/*.yaml").AsConfig | sha256sum }}
+        {{- with .Values.alerting.secretChecksum }}
+        checksum/alerting-secret: {{ . }}
+        {{- end }}
         {{- end }}
     spec:
       securityContext:

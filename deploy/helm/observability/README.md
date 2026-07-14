@@ -54,15 +54,19 @@ browser ──Faro──▶ alloy(gateway:/collect) ──▶ Tempo (traces) + L
 
 Grafana-managed alerting is provisioned from `files/grafana/alerting/` — a Discord
 contact point, a root notification policy routing everything to it, and the alert
-rules. It only activates when a webhook is supplied (`alerting.discordWebhookUrl`,
-or `alerting.existingSecret` pointing to a secret with key `discord-webhook-url`);
-without it the chart renders exactly as before. The webhook lands in the
-`grafana-alerting` Secret and reaches the provisioned contact point via the
-`DISCORD_WEBHOOK_URL` env var (Grafana expands env vars in provisioning files).
+rules. It only activates when `alerting.existingSecret` names a Kubernetes Secret
+with key `discord-webhook-url`; without it the chart renders exactly as before.
+The webhook is never passed as a Helm value (it would be retained in release
+history) — the workflow creates the `grafana-alerting-webhook` Secret with
+`kubectl` before the Helm deploy and passes only the secret name plus
+`alerting.secretChecksum`, a digest of the webhook that rolls the Grafana pod
+when the webhook rotates. Grafana reads it via the `DISCORD_WEBHOOK_URL` env var
+(env vars are expanded in provisioning files).
 
 Setup: create a webhook in the Discord channel (Channel settings → Integrations →
 Webhooks), store it as the `DISCORD_WEBHOOK_URL` repo secret, and re-run the
-**Observability** workflow — it passes the secret through automatically.
+**Observability** workflow — it creates the Kubernetes Secret and wires the chart
+automatically.
 
 Provisioned rules (evaluated every 1m, prod only — PR previews stay silent):
 

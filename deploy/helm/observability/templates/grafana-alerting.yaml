@@ -10,16 +10,4 @@ data:
   {{ base $path }}: |
 {{ $.Files.Get $path | indent 4 }}
 {{- end }}
-{{- if not .Values.alerting.existingSecret }}
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: grafana-alerting
-  labels:
-    {{- include "obs.componentLabels" (dict "root" . "component" "grafana") | nindent 4 }}
-type: Opaque
-stringData:
-  discord-webhook-url: {{ .Values.alerting.discordWebhookUrl | quote }}
-{{- end }}
 {{- end }}

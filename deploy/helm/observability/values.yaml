@@ -105,11 +105,13 @@ grafana:
       secretName: grafana-tls
 
 # Grafana-managed alerting with Discord notifications (files/grafana/alerting/).
-# Provisioned only when a webhook URL (or an existing secret with key
-# discord-webhook-url) is set at deploy time; the workflow wires the secret.
+# Provisioned only when existingSecret names a Secret with key
+# discord-webhook-url; the workflow creates that secret outside Helm so the
+# webhook never enters Helm release history. secretChecksum (any digest of the
+# webhook value) rolls the Grafana pod when the webhook rotates.
 alerting:
-  discordWebhookUrl: ""
   existingSecret: ""
+  secretChecksum: ""
 
 alloy:
   gateway:

@@ -74,8 +74,12 @@ public class TwelveDataClient {
         try {
             payload = call.get();
         } catch (RestClientResponseException e) {
-            if (symbol != null && isNotFoundStatus(e.getStatusCode().value())) {
+            var status = e.getStatusCode().value();
+            if (symbol != null && isNotFoundStatus(status)) {
                 throw new UnknownSymbolException(symbol);
+            }
+            if (isRateLimited(status)) {
+                throw new MarketDataRateLimitException(e);
             }
             throw new MarketDataUnavailableException(e);
         } catch (RestClientException e) {
@@ -89,6 +93,10 @@ public class TwelveDataClient {
             if (symbol != null && payload.code() != null && isNotFoundStatus(payload.code())) {
                 throw new UnknownSymbolException(symbol);
             }
+            if (payload.code() != null && isRateLimited(payload.code())) {
+                throw new MarketDataRateLimitException(
+                        new IllegalStateException("Twelve Data rate limit: " + payload.message()));
+            }
             throw new MarketDataUnavailableException(
                     new IllegalStateException("Twelve Data error " + payload.code() + ": " + payload.message()));
         }
@@ -97,6 +105,10 @@ public class TwelveDataClient {
 
     private static boolean isNotFoundStatus(int status) {
         return status == 404;
+    }
+
+    private static boolean isRateLimited(int status) {
+        return status == 429;
     }
 
     public interface TwelveDataPayload {

@@ -6,14 +6,20 @@ import { APIError } from "@/network/errors"
  * unavailable). Shared by the market detail page and the holdings chart dialog.
  */
 export function marketDataErrorFallback(error: Error) {
+  const isRateLimited = error instanceof APIError && error.status === 429
+  const message =
+    error instanceof APIError
+      ? error.message
+      : "Something went wrong. Please try again later."
+
   return (
-    <Alert variant="destructive">
-      <AlertTitle>Could not load market data</AlertTitle>
-      <AlertDescription>
-        {error instanceof APIError
-          ? error.message
-          : "Something went wrong. Please try again later."}
-      </AlertDescription>
+    <Alert variant={isRateLimited ? "default" : "destructive"}>
+      <AlertTitle>
+        {isRateLimited
+          ? "Live market data paused"
+          : "Could not load market data"}
+      </AlertTitle>
+      <AlertDescription>{message}</AlertDescription>
     </Alert>
   )
 }

@@ -1,6 +1,7 @@
 package de.devops26.kontor.core.web;
 
 import de.devops26.kontor.core.marketdata.InvalidMarketRangeException;
+import de.devops26.kontor.core.marketdata.MarketDataRateLimitException;
 import de.devops26.kontor.core.marketdata.MarketDataUnavailableException;
 import de.devops26.kontor.core.marketdata.UnknownSymbolException;
 import de.devops26.kontor.core.transaction.CsvParsingException;
@@ -71,6 +72,12 @@ public class ApiExceptionHandler {
     @ExceptionHandler(UnknownSymbolException.class)
     public ResponseEntity<ApiResponse<Void>> handleUnknownSymbol(UnknownSymbolException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(MarketDataRateLimitException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMarketDataRateLimit(MarketDataRateLimitException ex) {
+        log.warn("Market data provider rate limit reached", ex);
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(ApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(MarketDataUnavailableException.class)

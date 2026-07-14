@@ -162,7 +162,7 @@ export function InstrumentPriceView({
   symbol,
   name,
 }: InstrumentPriceViewProps) {
-  const [range, setRange] = useState<TimeRange>("1M")
+  const [range, setRange] = useState<TimeRange>("MAX")
 
   return (
     <div className="flex flex-col gap-4">

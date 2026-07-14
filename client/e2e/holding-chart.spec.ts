@@ -42,7 +42,7 @@ test("opens a holding's live price chart in a dialog", async ({ page }) => {
   await expect(dialog.getByText("$308.24")).toBeVisible()
   await expect(dialog.getByText("+$13.86 (+4.71%)")).toBeVisible()
   await expect(
-    dialog.getByRole("button", { name: "1M", exact: true }),
+    dialog.getByRole("button", { name: "MAX", exact: true }),
   ).toHaveAttribute("aria-pressed", "true")
 })
 

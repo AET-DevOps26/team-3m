@@ -94,20 +94,6 @@ public class SecurityConfig {
             }
         }
 
-        Object resourceAccess = jwt.getClaim("resource_access");
-        if (resourceAccess instanceof Map<?, ?> resourceAccessMap) {
-            for (Map.Entry<?, ?> entry : resourceAccessMap.entrySet()) {
-                if (entry.getValue() instanceof Map<?, ?> clientAccess
-                        && clientAccess.get("roles") instanceof List<?> clientRoles) {
-                    for (Object role : clientRoles) {
-                        if (role instanceof String roleName && !roleName.isBlank()) {
-                            authorities.add(new SimpleGrantedAuthority("ROLE_" + roleName));
-                        }
-                    }
-                }
-            }
-        }
-
         return List.copyOf(authorities);
     }
 }

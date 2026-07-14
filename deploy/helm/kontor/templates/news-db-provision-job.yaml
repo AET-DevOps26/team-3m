@@ -41,7 +41,7 @@ spec:
               readOnly: true
       volumes:
         - name: script
-          configMap:
-            name: {{ include "kontor.postgres.fullname" . }}-init
+          secret:
+            secretName: {{ include "kontor.postgres.fullname" . }}-init
             defaultMode: 0555
 {{- end }}

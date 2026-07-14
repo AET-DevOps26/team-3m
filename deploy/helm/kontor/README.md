@@ -218,7 +218,9 @@ The news aggregator uses a **separate database and role** (`news`) inside the
 shared Postgres instance (see `news.db.*` values; password comes from
 secrets.yaml / `--set news.db.password=`). An idempotent provisioning Job runs
 for fresh and existing volumes and safely creates or updates the role, database,
-and password before Helm reports success. When `news.db.existingSecret` is
+and password before Helm reports success. Its reconciliation script is mounted
+from a Secret because it references credential environment variables, although
+the script itself contains no credential values. When `news.db.existingSecret` is
 managed outside Helm, bump `news.db.provisioningRevision` after rotating it so
 both the Job and news Deployment rerun.
 

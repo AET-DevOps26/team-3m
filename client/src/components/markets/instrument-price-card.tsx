@@ -1,6 +1,8 @@
 import { Suspense, startTransition, useState } from "react"
 import { Area, AreaChart, XAxis, YAxis } from "recharts"
 import { RangeSelector } from "@/components/charts/range-selector"
+import { ErrorBoundary } from "@/components/error-boundary"
+import { marketDataErrorFallback } from "@/components/markets/market-data-error"
 import { Card, CardContent, CardTitle } from "@/components/ui/card"
 import {
   type ChartConfig,
@@ -177,26 +179,33 @@ export function InstrumentPriceView({
       <div className="flex flex-row items-start justify-between">
         <div className="flex flex-col gap-1">
           <p className="text-sm text-muted-foreground">{name ?? symbol}</p>
-          <Suspense
-            fallback={
-              <div className="h-14 w-40 animate-pulse rounded bg-muted" />
-            }
-          >
-            <QuoteSummary symbol={symbol} />
-          </Suspense>
+          <ErrorBoundary key={symbol} fallback={null}>
+            <Suspense
+              fallback={
+                <div className="h-14 w-40 animate-pulse rounded bg-muted" />
+              }
+            >
+              <QuoteSummary symbol={symbol} />
+            </Suspense>
+          </ErrorBoundary>
         </div>
         <RangeSelector
           selected={range}
           onSelect={(r) => startTransition(() => setRange(r))}
         />
       </div>
-      <Suspense
-        fallback={
-          <div className="h-48 w-full animate-pulse rounded bg-muted" />
-        }
+      <ErrorBoundary
+        key={`${symbol}-${range}`}
+        renderFallback={marketDataErrorFallback}
       >
-        <PriceChart symbol={symbol} range={range} />
-      </Suspense>
+        <Suspense
+          fallback={
+            <div className="h-48 w-full animate-pulse rounded bg-muted" />
+          }
+        >
+          <PriceChart symbol={symbol} range={range} />
+        </Suspense>
+      </ErrorBoundary>
     </div>
   )
 }

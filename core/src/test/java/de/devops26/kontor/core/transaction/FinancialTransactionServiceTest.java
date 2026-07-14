@@ -13,6 +13,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -76,6 +78,23 @@ class FinancialTransactionServiceTest {
         assertThat(row.counterpartyIban()).isEqualTo("DE89370400440532013000");
         assertThat(row.fee()).isNull();
         assertThat(row.tax()).isNull();
+    }
+
+    @Test
+    @DisplayName("importCsv parses the repository example resource without validation errors")
+    void importCsv_repoExampleResource_parsesAllRows() throws IOException {
+        when(repository.upsertAll(anyList(), any(UUID.class))).thenReturn(52);
+
+        var exampleCsv = Path.of("..", "resources", "example-data", "transaction-csv.example.csv");
+        try (var input = Files.newInputStream(exampleCsv)) {
+            var result = service.importCsv(input, USER_ID);
+            assertThat(result.importedCount()).isEqualTo(52);
+        }
+
+        verify(repository).upsertAll(rowsCaptor.capture(), eq(USER_ID));
+        var rows = rowsCaptor.getValue();
+        assertThat(rows).hasSize(52);
+        assertThat(rows).allSatisfy(row -> assertThat(row.amount()).isNotNull());
     }
 
     @Test

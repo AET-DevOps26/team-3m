@@ -13,6 +13,9 @@ import org.springframework.web.client.RestClientResponseException;
 public class TwelveDataClient {
 
     private static final int SEARCH_RESULT_LIMIT = 10;
+    private static final String NOT_CONFIGURED_MESSAGE =
+            "Live market data is not configured. Set TWELVE_DATA_API_KEY to enable it "
+                    + "— get a free key at https://twelvedata.com.";
 
     private final RestClient restClient;
     private final MarketDataProperties properties;
@@ -65,7 +68,7 @@ public class TwelveDataClient {
 
     private <T extends TwelveDataPayload> T fetch(String symbol, Supplier<T> call) {
         if (properties.apiKey().isBlank()) {
-            throw new MarketDataUnavailableException("Live market data is not configured");
+            throw new MarketDataUnavailableException(NOT_CONFIGURED_MESSAGE);
         }
         T payload;
         try {

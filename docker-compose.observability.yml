@@ -67,7 +67,7 @@ services:
       start_period: 20s
 
   tempo:
-    image: grafana/tempo:2.10.7
+    image: grafana/tempo:3.0.2
     command: ["-config.file=/etc/tempo/tempo.yaml", "-config.expand-env=true"]
     environment:
       S3_ACCESS_KEY: observability

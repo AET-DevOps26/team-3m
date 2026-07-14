@@ -134,8 +134,8 @@ spec:
           port: 443
   {{- end }}
 ---
-# RabbitMQ (subchart pods): AMQP (5672) only from the news aggregator; the
-# future news processor gets added here when it exists. The management UI
+# RabbitMQ (subchart pods): AMQP (5672) only from the news producer and AI
+# consumer. The management UI
 # (15672) stays cluster-internal (kubectl port-forward).
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -157,12 +157,16 @@ spec:
             matchLabels:
               {{- include "kontor.selectorLabels" . | nindent 14 }}
               app.kubernetes.io/component: news
+        - podSelector:
+            matchLabels:
+              {{- include "kontor.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: ai
       ports:
         - protocol: TCP
           port: 5672
 ---
-# News: no ingress allowed — nothing calls it yet (future consumers get added
-# here). Egress stays open unless restrictEgress is set; then, in addition to
+# News: no ingress allowed; the AI service consumes through RabbitMQ instead.
+# Egress stays open unless restrictEgress is set; then, in addition to
 # DNS/Postgres/Keycloak/RabbitMQ/OTLP, allow HTTPS to non-cluster addresses
 # because the aggregator fetches public RSS feeds and article pages.
 apiVersion: networking.k8s.io/v1

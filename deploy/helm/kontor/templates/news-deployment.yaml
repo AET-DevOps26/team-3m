@@ -75,6 +75,8 @@ spec:
             - name: KEYCLOAK_JWK_SET_URI
               value: {{ . | quote }}
             {{- end }}
+            - name: KEYCLOAK_AUDIENCE
+              value: {{ .Values.oidc.audience | quote }}
             {{- range $key, $value := .Values.news.env }}
             - name: {{ $key }}
               value: {{ $value | quote }}

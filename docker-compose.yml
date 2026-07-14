@@ -227,18 +227,24 @@ services:
     depends_on:
       ai-migrate:
         condition: service_completed_successfully
+      news:
+        condition: service_healthy
     environment:
       <<: *keycloak-oidc-env
       DATABASE_URL: "postgresql+asyncpg://${AI_POSTGRES_USER:-kontor_ai}:${AI_POSTGRES_PASSWORD:-change-me-local}@ai-db:5432/${AI_POSTGRES_DB:-kontor_ai}"
       LOGOS_API_KEY: "${LOGOS_API_KEY:-}"
-      LOGOS_EMBEDDING_MODEL: "${LOGOS_EMBEDDING_MODEL:-}"
+      LOGOS_EMBEDDING_MODEL: "${LOGOS_EMBEDDING_MODEL:-qwen/qwen3-embedding-8b}"
       LOCAL_LLM_BASE_URL: "${LOCAL_LLM_BASE_URL:-http://host.docker.internal:11434/v1}"
       LOCAL_LLM_MODEL: "${LOCAL_LLM_MODEL:-llama3.2}"
       LOCAL_EMBEDDING_MODEL: "${LOCAL_EMBEDDING_MODEL:-nomic-embed-text}"
-      # Empty by default → the news consumer stays off locally. The broker + queue are
-      # provisioned by the queue service; point this at it to enable news ingest.
+      # An explicit URL remains available for TLS/vhost deployments. Otherwise the
+      # consumer uses the discrete credentials shared with the local news producer.
       RABBITMQ_URL: "${RABBITMQ_URL:-}"
-      NEWS_QUEUE: "${NEWS_QUEUE:-kontor.news.ai}"
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: "5672"
+      RABBITMQ_USERNAME: "${RABBITMQ_USER:-news}"
+      RABBITMQ_PASSWORD: "${RABBITMQ_PASSWORD:-change-me-rabbit-local}"
+      NEWS_QUEUE: "${NEWS_QUEUE:-news.articles}"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:

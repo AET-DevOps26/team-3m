@@ -271,12 +271,21 @@ services:
     depends_on:
       ai-migrate:
         condition: service_completed_successfully
+      news:
+        condition: service_healthy
     environment:
       DATABASE_URL: "postgresql+asyncpg://${AI_POSTGRES_USER:-kontor_ai}:${AI_POSTGRES_PASSWORD}@ai-db:5432/${AI_POSTGRES_DB:-kontor_ai}"
       KEYCLOAK_ISSUER: "https://${KEYCLOAK_DOMAIN:-auth.${DOMAIN}}/realms/kontor"
       KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/realms/kontor/protocol/openid-connect/certs"
       KEYCLOAK_AUDIENCE: "${KEYCLOAK_AUDIENCE:-kontor-api}"
       LOGOS_API_KEY: "${LOGOS_API_KEY:-}"
+      LOGOS_EMBEDDING_MODEL: "${LOGOS_EMBEDDING_MODEL:-qwen/qwen3-embedding-8b}"
+      LOCAL_LLM_BASE_URL: ""
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: "5672"
+      RABBITMQ_USERNAME: "${RABBITMQ_USER:-news}"
+      RABBITMQ_PASSWORD: "${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}"
+      NEWS_QUEUE: "${NEWS_QUEUE:-news.articles}"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.ai.rule=Host(`${DOMAIN}`) && PathPrefix(`/ai`)"

@@ -141,6 +141,7 @@ jobs:
           KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
           KEYCLOAK_DB_PASSWORD: ${{ secrets.KEYCLOAK_DB_PASSWORD }}
           LOGOS_API_KEY: ${{ secrets.LOGOS_API_KEY }}
+          LOGOS_EMBEDDING_MODEL: ${{ vars.LOGOS_EMBEDDING_MODEL || 'qwen/qwen3-embedding-8b' }}
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
           AI_DB_PASSWORD: ${{ secrets.AI_DB_PASSWORD }}
           GRAFANA_OAUTH_CLIENT_SECRET: ${{ secrets.GRAFANA_OAUTH_CLIENT_SECRET }}
@@ -164,6 +165,7 @@ jobs:
             --set-string keycloak.admin.password="$KEYCLOAK_ADMIN_PASSWORD" \
             --set-string keycloak.db.password="$KEYCLOAK_DB_PASSWORD" \
             --set-string ai.logosApiKey="$LOGOS_API_KEY" \
+            --set-string ai.embedding.logosModel="$LOGOS_EMBEDDING_MODEL" \
             --set-string core.twelveDataApiKey="$TWELVE_DATA_API_KEY" \
             --set-string ai.db.password="$AI_DB_PASSWORD" \
             "${EXTRA[@]}" \
@@ -176,6 +178,7 @@ jobs:
           NEWS_POSTGRES_PASSWORD: ${{ secrets.NEWS_POSTGRES_PASSWORD }}
           KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
           LOGOS_API_KEY: ${{ secrets.LOGOS_API_KEY }}
+          LOGOS_EMBEDDING_MODEL: ${{ vars.LOGOS_EMBEDDING_MODEL || 'qwen/qwen3-embedding-8b' }}
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
           AI_DB_PASSWORD: ${{ secrets.AI_DB_PASSWORD }}
           PR_NUMBER: ${{ inputs.pr-number }}
@@ -199,6 +202,7 @@ jobs:
             --set-string news.db.password="$NEWS_POSTGRES_PASSWORD" \
             --set-string keycloak.admin.password="$KEYCLOAK_ADMIN_PASSWORD" \
             --set-string ai.logosApiKey="$LOGOS_API_KEY" \
+            --set-string ai.embedding.logosModel="$LOGOS_EMBEDDING_MODEL" \
             --set-string core.twelveDataApiKey="$TWELVE_DATA_API_KEY" \
             --set-string ai.db.password="$AI_DB_PASSWORD" \
             --rollback-on-failure --force-conflicts --wait --wait-for-jobs --timeout 4m

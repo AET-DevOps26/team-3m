@@ -95,10 +95,9 @@ core:
   tolerations: []
   affinity: {}
 
-# Spring Boot market-news aggregator service. ClusterIP-only, no ingress —
-# consumers are in-cluster (the future news processor / debugging via
-# port-forward). Public HTTPS egress is explicitly allowed when egress is
-# restricted.
+# Spring Boot market-news aggregator service. ClusterIP-only, no ingress; it
+# publishes to RabbitMQ for the in-cluster AI consumer. Public HTTPS egress is
+# explicitly allowed when egress is restricted.
 news:
   image:
     repository: aet-devops26/team-3m/kontor-news
@@ -166,7 +165,7 @@ news:
 
 # RabbitMQ message broker (CloudPirates subchart, official rabbitmq image).
 # The news aggregator publishes crawled articles to the durable queue
-# `news.articles`; the future news processor consumes from it. The subchart
+# `news.articles`; the AI service consumes from it. The subchart
 # auto-generates the password + erlang cookie into a Secret named
 # `<release>-rabbitmq` (helm.sh/resource-policy: keep, values preserved across
 # upgrades); the news deployment reads RABBITMQ_PASSWORD from that Secret.
@@ -199,7 +198,7 @@ ai:
   # Required for AI features. Supply via secrets.yaml or --set.
   logosApiKey: ""
   # -- When set, skip creating the AI Secret and mount this existing Secret instead.
-  # Expected keys: LOGOS_API_KEY (and optionally RABBITMQ_URL for a credentials-bearing broker URL).
+  # Expected keys: LOGOS_API_KEY (and optionally RABBITMQ_URL to override the in-chart broker).
   existingSecret: ""
   env: {}
   # Embedding config for news RAG (query embeddings + news ingest). Mirrors the LLM
@@ -207,17 +206,13 @@ ai:
   embedding:
     # -- Ollama embedding model (local mode). Pulled/served outside the chart.
     localModel: "nomic-embed-text"
-    # -- Logos embedding model (hosted mode). Empty disables Logos embeddings (symbol-only news).
-    logosModel: ""
-  # News ingest consumer. The RabbitMQ broker + queue topology are provisioned by the
-  # queue service; this service only consumes. Off by default until a broker is supplied.
+    # -- Logos embedding model (hosted mode). Required for hosted news ingest.
+    logosModel: "qwen/qwen3-embedding-8b"
+  # News ingest consumer for the queue declared by the bundled news service.
   newsConsumer:
-    enabled: false
-  # -- AMQP URL of the externally-provided broker (e.g. amqp://user:pass@host:5672/vhost).
-  # For a credentials-bearing URL, inject RABBITMQ_URL via ai.existingSecret instead.
-  rabbitmqUrl: ""
-  # -- Queue the consumer subscribes to (owned/declared by the queue service).
-  newsQueue: "kontor.news.ai"
+    enabled: true
+  # -- Producer-owned queue documented in news/docs/asyncapi.yml.
+  newsQueue: "news.articles"
   # -- Per-path protection for the /ai ingress (the AI service calls a paid LLM
   # backend). Rendered as nginx-ingress annotations on a dedicated /ai Ingress so
   # the limits do not affect the SPA (/) or core (/api). Set rateLimit.enabled

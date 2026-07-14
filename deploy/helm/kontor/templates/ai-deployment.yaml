@@ -84,10 +84,17 @@ spec:
               value: {{ . | quote }}
             {{- end }}
             {{- if .Values.ai.newsConsumer.enabled }}
-            {{- with .Values.ai.rabbitmqUrl }}
-            - name: RABBITMQ_URL
-              value: {{ . | quote }}
-            {{- end }}
+            - name: RABBITMQ_HOST
+              value: {{ include "kontor.rabbitmq.fullname" . | quote }}
+            - name: RABBITMQ_PORT
+              value: {{ dig "service" "amqpPort" 5672 .Values.rabbitmq | quote }}
+            - name: RABBITMQ_USERNAME
+              value: {{ .Values.rabbitmq.auth.username | quote }}
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ default (include "kontor.rabbitmq.fullname" .) .Values.rabbitmq.auth.existingSecret }}
+                  key: password
             - name: NEWS_QUEUE
               value: {{ .Values.ai.newsQueue | quote }}
             {{- end }}

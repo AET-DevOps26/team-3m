@@ -147,6 +147,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiResponse"
+        "429":
+          description: Market data provider rate limit reached
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
       security:
       - bearerAuth: []
   /api/v1/market-data/quotes/{symbol}:
@@ -181,6 +187,12 @@ paths:
                 $ref: "#/components/schemas/ApiResponse"
         "502":
           description: Market data provider unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "429":
+          description: Market data provider rate limit reached
           content:
             application/json:
               schema:
@@ -236,6 +248,12 @@ paths:
                 $ref: "#/components/schemas/ApiResponse"
         "502":
           description: Market data provider unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "429":
+          description: Market data provider rate limit reached
           content:
             application/json:
               schema:

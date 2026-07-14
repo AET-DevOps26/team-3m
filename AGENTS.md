@@ -49,7 +49,7 @@ Each microservice lives in its own directory with a Gradle wrapper.
 
 Market-news aggregator: crawls RSS feeds and publishes new articles to the
 RabbitMQ queue `news.articles` (contract: `news/docs/asyncapi.yml`) for the
-future news processor; stores only crawl/push metadata in its own `news`
+AI service; stores only crawl/push metadata in its own `news`
 database in the shared Postgres. Same Gradle toolchain and commands as core:
 
 | Task | Command |
@@ -61,8 +61,8 @@ database in the shared Postgres. Same Gradle toolchain and commands as core:
 | Format fix | `./gradlew spotlessApply` |
 | Lint | `./gradlew checkstyleMain checkstyleTest` |
 
-See `news/README.md` for the aggregation design and the storage contract for
-the future news processor (no embeddings/chunking here by design).
+See `news/README.md` for the aggregation design and producer/consumer contract
+(no embeddings in the news service by design).
 
 ### AI Service (`ai/`)
 
@@ -127,10 +127,10 @@ redeploy on demand, no versioning). PR deploy/teardown never touches it.
 - **Instrumentation**: OTel Java agent (core, baked into the image),
   `opentelemetry-distro`/`-instrument` (ai), **Grafana Faro** (`@grafana/faro-react`)
   for browser RUM on the client, and Keycloak's built-in tracing/metrics.
-- **Signals**: core/ai/client/keycloak send **traces** (the client ships them via
+- **Signals**: core/news/ai/client/keycloak send **traces** (the client ships them via
   Faro → the Alloy `faro.receiver` → Tempo); service **logs** are collected from pod
   stdout by the Alloy log collector via the Kubernetes API, and Faro also ships
-  browser logs/Web-Vitals to Loki; **metrics** come from core, ai, and Keycloak.
+  browser logs/Web-Vitals to Loki; **metrics** come from core, news, ai, and Keycloak.
 - **Filtering**: every signal is tagged `deployment_environment` (`prod`, `pr-<N>`,
   `local`) + `service`, so one Grafana variable switches across environments.
 - **Retention** (auto, strict for PRs): Loki per-stream prod 30d / pr 48h / default

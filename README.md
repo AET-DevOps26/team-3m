@@ -10,6 +10,7 @@
 | ------------------ | ------------------------------------------------------------ |
 | Client             | React 19, TypeScript 5.9, Vite 7, Tailwind CSS 4, shadcn/ui  |
 | Server             | Java 25, Spring Boot 4, Gradle                               |
+| News Service       | Java 25, Spring Boot 4, RabbitMQ                             |
 | AI Service         | Python 3.14, FastAPI, uv                                     |
 | Linting/Formatting | Biome (client), Spotless + Checkstyle + Error Prone (server), Ruff (AI) |
 
@@ -20,6 +21,10 @@
 The repository includes a root `.env.example` and a local `.env` with the default compose values. Update `.env` if you want to change the Postgres credentials, Keycloak database credentials, or shared local Keycloak dev-user password.
 
 The AI service uses a **Logos API key** (`LOGOS_API_KEY=lg-…`) in `.env` when available. The Logos endpoint is only reachable from the TUM network or via eduVPN. When the key is missing, the AI service **automatically falls back to a local LLM** (see [Local LLM (offline AI)](#local-llm-offline-ai) below). If no local LLM is configured either (`LOCAL_LLM_BASE_URL` empty), recommendation calls return `503`; if a local LLM is configured but not running, they return `502` ("Local LLM is not reachable").
+
+Hosted news ingest uses `qwen/qwen3-embedding-8b` by default through Logos'
+OpenAI-compatible embeddings endpoint. The `LOGOS_EMBEDDING_MODEL` repository
+variable can override that model for Helm and Azure deployments.
 
 The Compose Keycloak service is for local development only. It builds the custom Keycloak image from `infra/keycloak/theme/` (Keycloak with the Kontor login theme baked in), runs `start-dev`, imports `infra/keycloak/realms/kontor-realm.json`, and stores Keycloak state in the `keycloak_postgres_data` Docker volume. The realm import is skipped once the realm already exists, so delete that volume if you need to re-apply the import from scratch. The first `docker compose up --build` builds the theme image (Node + Maven), which takes a few minutes; subsequent runs use the cached layer.
 
@@ -33,7 +38,9 @@ docker compose up --build
 | ----------- | ----------------------- |
 | Client      | <http://localhost:5173> |
 | Server      | <http://localhost:8080> |
+| News Service | <http://localhost:8082> |
 | AI Service  | <http://localhost:8000> |
+| RabbitMQ UI | <http://localhost:15672> |
 
 ### Local LLM (offline AI)
 
@@ -44,6 +51,7 @@ When `LOGOS_API_KEY` is empty, the AI service falls back to a local [Ollama](htt
 ```sh
 brew install ollama        # or download the app from ollama.com
 ollama pull llama3.2       # one-time model download
+ollama pull nomic-embed-text # one-time news embedding model download
 ollama serve               # keep running (the app starts this for you)
 ```
 
@@ -133,12 +141,13 @@ CI's `openapi-sync` workflow fails if the committed files are out of sync.
 
 The Kontor stack ships as a single Helm chart in
 [`deploy/helm/kontor/`](deploy/helm/kontor/README.md) that bundles the client,
-core, Postgres (with `pgvector`), and an optional Keycloak. The chart README
+core, news aggregator, RabbitMQ, AI service, Postgres (with `pgvector`), and an
+optional Keycloak. The chart README
 documents environment overlays (`values-prod.yaml`,
 `values-pr.template.yaml`), required secrets, and the install / upgrade flow.
 
 
-Copy `deploy/helm/kontor/secrets.example.yaml` to `secrets.yaml` and fill in all `REPLACE_ME` values, including `ai.logosApiKey` (the `lg-…` key from your tutor — requires TUM network / eduVPN):
+Copy `deploy/helm/kontor/secrets.example.yaml` to `secrets.yaml` and fill in all `REPLACE_ME` values, including `ai.logosApiKey` (the `lg-…` key from your tutor — requires TUM network / eduVPN). Set `ai.embedding.logosModel` to a Logos embedding model to enable hosted news ingest:
 
 ```sh
 helm upgrade --install kontor ./deploy/helm/kontor \

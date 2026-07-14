@@ -1,8 +1,8 @@
 # Kontor News Aggregator
 
 Crawls market news from public RSS feeds and **pushes every new article onto a
-RabbitMQ queue** for the future **news processor** (the component that will do
-embeddings/chunking/RAG — out of scope here). Locally the aggregator stores only
+RabbitMQ queue** for the AI service, which performs embeddings and RAG. The
+aggregator stores only
 **crawl metadata**, so it never publishes the same article twice and only
 crawls what is new. The current feed set is an intentionally simple placeholder
 source, meant to be replaced later.
@@ -26,20 +26,24 @@ source, meant to be replaced later.
   durable queue `news.articles` (topic exchange `kontor.news`, routing key
   `news.article.crawled`), `messageId` = URL hash. The metadata row is marked
   `pushed_at` **only after the broker confirms and the mandatory publish was
-  routable**; unconfirmed or returned articles are
+    routable**; unconfirmed or returned articles are
   re-crawled and re-published on the next run (at-least-once delivery — the
   consumer dedups on `messageId`).
 
-## Contract for the news processor
+## Contract for the AI consumer
 
 The contract is the **queue**, documented in [`docs/asyncapi.yml`](docs/asyncapi.yml):
 subscribe to `news.articles`, treat delivery as at-least-once, deduplicate on
-`messageId`/`id`. The aggregator declares the durable topology itself, so
-messages accumulate until the processor exists. Inspect the queue via the
-RabbitMQ management UI (`http://localhost:15672`, credentials from `.env`).
+`messageId`/`id`. The aggregator declares the durable exchanges and queues, so
+messages accumulate while the AI consumer is unavailable. After one retry, the
+consumer republishes failed messages to the dead-letter exchange and only then
+acknowledges the original. That keeps sequential deployments compatible with
+the existing queue and retains failures in bounded `news.articles.dead`. Inspect
+either queue via the RabbitMQ management UI (`http://localhost:15672`,
+credentials from `.env`).
 
-No embeddings and no chunking happen here by design — both are coupled to the
-embedding model the processor will choose.
+No embeddings happen here by design; they remain coupled to the model configured
+by the AI service.
 
 ## Storage
 

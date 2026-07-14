@@ -15,7 +15,8 @@ cluster.
 ## Prerequisites
 
 - Namespace `team-3m` exists: `kubectl create namespace team-3m`
-- Images pushed to `ghcr.io/aet-devops26/team-3m/kontor-core` and `…/kontor-client`
+- Images pushed to `ghcr.io/aet-devops26/team-3m/kontor-core`, `…/kontor-news`,
+  `…/kontor-ai`, and `…/kontor-client`
 - cert-manager `ClusterIssuer` (default `letsencrypt-prod`) available
 
 ## Install
@@ -181,6 +182,7 @@ Required secret values (the render `fail`s if these are empty, unless
 |-------|---------------|
 | `postgres.password` | Always (the app DB). |
 | `news.db.password` | Always (the independent news DB role). |
+| `ai.db.password` | Always (recommendations and pgvector news store). |
 | `keycloak.admin.password` | When `keycloak.deploy=true`. |
 | `keycloak.db.password` | When `keycloak.deploy=true` and `keycloak.database=postgres`. |
 
@@ -192,6 +194,9 @@ Required secret values (the render `fail`s if these are empty, unless
   pod annotation rolls the deployment when the secret changes.
 - Use `*.existingSecret: <name>` to reference a Secret created out-of-band
   (e.g. by SealedSecrets/ESO once available).
+- Hosted news ingest defaults `ai.embedding.logosModel` to
+  `qwen/qwen3-embedding-8b`. Deployment workflows allow the
+  `LOGOS_EMBEDDING_MODEL` repository variable to override it.
 
 ## RabbitMQ
 
@@ -200,17 +205,23 @@ The chart pulls the [CloudPirates RabbitMQ chart](https://github.com/CloudPirate
 `helm dependency build deploy/helm/kontor` before lint/template/deploy (CI does
 this automatically; `Chart.lock` is committed, `charts/` is gitignored). The
 news aggregator publishes crawled articles to the durable queue `news.articles`
-(exchange `kontor.news`); the future news processor consumes from it. Contract:
+(exchange `kontor.news`); the AI service consumes from it. Contract:
 `news/docs/asyncapi.yml`.
 
 Credentials: the subchart generates the password and Erlang cookie into the
 Secret `<release>-rabbitmq` (`helm.sh/resource-policy: keep` — values survive
-upgrades and even uninstalls); the news deployment reads `RABBITMQ_PASSWORD`
-from that Secret, so no CI-injected RabbitMQ secret is needed. The management
+upgrades and even uninstalls); the news and AI deployments read
+`RABBITMQ_PASSWORD` from that Secret, so no CI-injected RabbitMQ secret is
+needed. The management
 UI (15672) is cluster-internal only: `kubectl port-forward svc/<release>-rabbitmq 15672`.
 The queue is capped at 10,000 messages and 256 MiB with `reject-publish`; a
 positive publisher confirm plus no mandatory return is required before an
-article is marked pushed.
+article is marked pushed. Invalid or repeatedly failing consumer messages land
+in the durable `news.articles.dead` queue, which has the same capacity limits
+and drops its oldest entries when full. The AI consumer republishes terminal
+failures to the dead-letter exchange before acknowledging the original instead
+of adding immutable arguments to `news.articles`; a deployment after the
+producer-only version therefore does not recreate or discard that queue.
 
 ## News service database
 
@@ -224,8 +235,8 @@ the script itself contains no credential values. When `news.db.existingSecret` i
 managed outside Helm, bump `news.db.provisioningRevision` after rotating it so
 both the Job and news Deployment rerun.
 
-The news Service is ClusterIP-only with no ingress route — consumers are
-in-cluster (the future news processor); use `kubectl port-forward` to poke it.
+The news Service is ClusterIP-only with no ingress route; the AI service consumes
+through RabbitMQ. Use `kubectl port-forward` to call the manual aggregation API.
 Manual aggregation requires a token carrying the `kontor-admin` realm role.
 Fresh realms define that role (preview's seeded user receives it); for an
 existing production realm, create the role if it predates this chart and assign
@@ -234,8 +245,8 @@ it to the intended operator account before using the endpoint.
 ## NetworkPolicies
 
 Enabled by default. Postgres only accepts ingress from the core and news pods
-in this release; client/core only accept ingress from `ingress-nginx`; news
-accepts no ingress at all. When Keycloak is deployed it also gets locked-down
+in this release; RabbitMQ accepts AMQP from news and AI; client/core only accept
+ingress from `ingress-nginx`; news accepts no ingress at all. When Keycloak is deployed it also gets locked-down
 policies (its DB accepts only Keycloak traffic; Keycloak HTTP accepts only
 ingress-nginx + core + ai + news).
 

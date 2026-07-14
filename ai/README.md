@@ -44,7 +44,7 @@ consumer and matched to the caller's holdings at generation time.
 
 ### Ingest
 
-A background consumer (started in the FastAPI `lifespan` when `RABBITMQ_URL` is set)
+A background consumer (started in the FastAPI `lifespan` when a RabbitMQ URL or host is configured)
 subscribes to a RabbitMQ queue, embeds each article, and upserts it into the
 `news_article` table (pgvector). Each row also stores the embedding model + dimension,
 so switching embedding provider never mixes vector dimensions at query time.
@@ -55,36 +55,39 @@ default `nomic-embed-text`).
 
 ### Retrieval
 
-At generation time the service retrieves news via a **hybrid** query: articles whose
-`symbols` overlap the portfolio's tickers (works even without embeddings), unioned with
-the nearest news by cosine similarity to a query built from the holdings. The retrieved
-articles are injected into the prompt as untrusted data; the response carries a
-`news_summary` and server-built `news_references` (grounded citations).
+At generation time the service retrieves the nearest news by cosine similarity to a
+query built from the holdings. The repository also supports optional symbol metadata,
+but the bundled aggregator currently publishes article text without ticker tags. The
+retrieved articles are serialized as delimiter-safe JSON and injected into the prompt
+as untrusted data; the response carries a `news_summary` and server-built
+`news_references` (grounded citations).
 
-### Queue contract (owned by the queue service — not this repo)
+### Queue contract
 
-The RabbitMQ broker, exchange, queue, bindings, and any dead-letter setup are
-provisioned by a separate service. This consumer only subscribes to the queue named by
-`NEWS_QUEUE` (default `kontor.news.ai`), declaring it **passively** (fails fast if
-absent). `RABBITMQ_URL` may carry TLS/vhost/credentials; the service manages no broker
-topology or secrets beyond consuming that URL.
+The bundled news service owns the RabbitMQ exchanges and queues and publishes the
+contract in `news/docs/asyncapi.yml`. This consumer subscribes passively to
+`NEWS_QUEUE` (default `news.articles`) and republishes terminal failures to the
+producer-owned dead-letter exchange before acknowledging the original. Configure
+either `RABBITMQ_URL` for an external TLS/vhost broker or the discrete
+`RABBITMQ_HOST`, `RABBITMQ_PORT`, `RABBITMQ_USERNAME`, and `RABBITMQ_PASSWORD`
+settings used by Compose and Helm.
 
-Message body is JSON and the schema is intentionally open — unknown fields are tolerated
-(`extra="allow"`). The only hard requirement is a `title` or `content`.
+Message bodies use the producer-owned camelCase schema. Unknown additive fields are
+ignored, while the required contract is validated before any embedding call.
 
-| Field            | Type      | Notes                                            |
-| ---------------- | --------- | ------------------------------------------------ |
-| `schema_version` | int       | Defaults to 1.                                   |
-| `title`          | string    | Title or content required.                       |
-| `content`        | string    | Title or content required.                       |
-| `external_id`    | string    | Optional; used for idempotency when present.     |
-| `url`            | string    | Optional.                                        |
-| `source`         | string    | Optional.                                        |
-| `published_at`   | string    | Optional; ISO-8601.                              |
-| `symbols`        | string[]  | Optional; tickers, normalized to uppercase.      |
+| Field         | Type          | Notes                                             |
+| ------------- | ------------- | ------------------------------------------------- |
+| `id`          | string        | Required 64-char URL hash and idempotency key.    |
+| `source`      | string        | Required configured feed name.                   |
+| `feedUrl`     | string        | Required source feed URL.                         |
+| `url`         | string        | Required article URL.                             |
+| `title`       | string        | Required article title.                           |
+| `summary`     | string/null   | Feed summary; content fallback when full text is absent. |
+| `contentText` | string/null   | Best-effort extracted article text.               |
+| `publishedAt` | datetime/null | Feed publication time.                            |
+| `fetchedAt`   | datetime      | Aggregator fetch time.                            |
 
-Delivery is assumed at-least-once; ingest is idempotent (dedupe by `content_hash`, and
-by `external_id` when present). A message that never parses is rejected without requeue
-(dead-lettered only if the upstream queue is configured with a DLX). The consumer runs
-in the API process and is best-effort: a broker or embedding fault never affects the
-recommendation API.
+Delivery is at-least-once; ingest deduplicates on both `id` and the sanitized content
+hash. Invalid messages are rejected immediately. Processing failures are retried once,
+then rejected into the bounded `news.articles.dead` queue for inspection instead of cycling indefinitely.
+The consumer runs in the API process and remains isolated from recommendation serving.

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Test Market News</title>
+    <link>${baseUrl}</link>
+    <description>Integration test feed</description>
+    <item>
+      <title>Stocks rally on strong earnings</title>
+      <link>${baseUrl}/articles/1?utm_source=rss</link>
+      <guid>it-article-1</guid>
+      <description>Markets surged today.</description>
+      <pubDate>Mon, 06 Jul 2026 12:30:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Fed holds rates steady</title>
+      <link>${baseUrl}/articles/2</link>
+      <guid>it-article-2</guid>
+    </item>
+  </channel>
+</rss>

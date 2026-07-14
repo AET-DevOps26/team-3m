@@ -34,6 +34,25 @@ services:
       start_period: 10s
     restart: unless-stopped
 
+  news-db-init:
+    image: pgvector/pgvector:pg18-trixie
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["sh", "/scripts/init-news-db.sh"]
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: "${POSTGRES_DB:-team3m}"
+      POSTGRES_USER: "${POSTGRES_USER:-team3m}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      NEWS_POSTGRES_DB: "${NEWS_POSTGRES_DB:-news}"
+      NEWS_POSTGRES_USER: "${NEWS_POSTGRES_USER:-news}"
+      NEWS_POSTGRES_PASSWORD: "${NEWS_POSTGRES_PASSWORD:?NEWS_POSTGRES_PASSWORD is required}"
+    volumes:
+      - ./deploy/helm/kontor/files/postgres/init-news-db.sh:/scripts/init-news-db.sh:ro
+    restart: "no"
+
   keycloak-db:
     image: postgres:18-trixie
     environment:
@@ -140,6 +159,7 @@ services:
       KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/realms/kontor/protocol/openid-connect/certs"
       KEYCLOAK_AUDIENCE: "${KEYCLOAK_AUDIENCE:-kontor-api}"
       APP_CORS_ALLOWED_ORIGINS: "https://${DOMAIN}"
+      TWELVE_DATA_API_KEY: "${TWELVE_DATA_API_KEY:-}"
       JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75"
     labels:
       - "traefik.enable=true"
@@ -147,6 +167,58 @@ services:
       - "traefik.http.routers.core.entrypoints=websecure"
       - "traefik.http.routers.core.tls.certresolver=le"
       - "traefik.http.services.core.loadbalancer.server.port=8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/health/liveness >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:4.2-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: "${RABBITMQ_USER:-news}"
+      RABBITMQ_DEFAULT_PASS: "${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  news:
+    image: ghcr.io/aet-devops26/team-3m/kontor-news:${KONTOR_NEWS_IMAGE_TAG:-latest}
+    deploy:
+      resources:
+        limits:
+          memory: ${NEWS_MEMORY_LIMIT:-768m}
+    depends_on:
+      db:
+        condition: service_healthy
+      news-db-init:
+        condition: service_completed_successfully
+      keycloak:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      NEWS_POSTGRES_HOST: db
+      NEWS_POSTGRES_PORT: "5432"
+      NEWS_POSTGRES_DB: "${NEWS_POSTGRES_DB:-news}"
+      NEWS_POSTGRES_USER: "${NEWS_POSTGRES_USER:-news}"
+      NEWS_POSTGRES_PASSWORD: "${NEWS_POSTGRES_PASSWORD:?NEWS_POSTGRES_PASSWORD is required}"
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: "5672"
+      RABBITMQ_USERNAME: "${RABBITMQ_USER:-news}"
+      RABBITMQ_PASSWORD: "${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}"
+      KEYCLOAK_ISSUER: "https://${KEYCLOAK_DOMAIN:-auth.${DOMAIN}}/realms/kontor"
+      KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/realms/kontor/protocol/openid-connect/certs"
+      KEYCLOAK_AUDIENCE: "${KEYCLOAK_AUDIENCE:-kontor-api}"
+      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/health/liveness >/dev/null 2>&1 || exit 1"]
       interval: 10s
@@ -222,5 +294,6 @@ services:
 volumes:
   postgres_data:
   keycloak_postgres_data:
+  rabbitmq_data:
   ai_postgres_data:
   letsencrypt:

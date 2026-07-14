@@ -31,6 +31,10 @@ stringData:
           {
             "name": "kontor-user",
             "description": "Standard user able to manage their own financial data."
+          },
+          {
+            "name": "kontor-admin",
+            "description": "Operator role allowed to trigger news aggregation."
           }
         ]
         {{- if .Values.keycloak.realm.grafanaClient.enabled }},
@@ -57,7 +61,7 @@ stringData:
           "credentials": [
             { "type": "password", "value": "dev", "temporary": false }
           ],
-          "realmRoles": ["kontor-user", {{ printf "default-roles-%s" $realm | quote }}]
+          "realmRoles": ["kontor-user", "kontor-admin", {{ printf "default-roles-%s" $realm | quote }}]
         }
       ],
       {{- end }}

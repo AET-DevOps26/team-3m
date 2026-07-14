@@ -106,6 +106,17 @@ Component-scoped resource names.
 {{- end -}}
 
 {{/*
+Name of the Secret holding core market-data credentials (TWELVE_DATA_API_KEY).
+*/}}
+{{- define "kontor.core.marketDataSecretName" -}}
+{{- if .Values.core.existingMarketDataSecret -}}
+{{- .Values.core.existingMarketDataSecret -}}
+{{- else -}}
+{{- printf "%s-core-market-data" (include "kontor.fullname" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Name of the Secret holding AI service credentials (LOGOS_API_KEY).
 */}}
 {{- define "kontor.ai.secretName" -}}
@@ -114,6 +125,29 @@ Name of the Secret holding AI service credentials (LOGOS_API_KEY).
 {{- else -}}
 {{- printf "%s-ai" (include "kontor.fullname" .) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
+{{- end -}}
+
+{{- define "kontor.news.fullname" -}}
+{{- printf "%s-news" (include "kontor.fullname" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
+Name of the Secret holding the news service's Postgres credentials.
+*/}}
+{{- define "kontor.news.postgres.secretName" -}}
+{{- if .Values.news.db.existingSecret -}}
+{{- .Values.news.db.existingSecret -}}
+{{- else -}}
+{{- printf "%s-news-postgres" (include "kontor.fullname" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Name of the RabbitMQ subchart's Service and Secret (standard subchart fullname:
+release name + chart name; our release names never contain "rabbitmq").
+*/}}
+{{- define "kontor.rabbitmq.fullname" -}}
+{{- printf "%s-rabbitmq" .Release.Name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{- define "kontor.ai.postgres.fullname" -}}

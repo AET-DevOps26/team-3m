@@ -116,6 +116,132 @@ paths:
                 $ref: "#/components/schemas/ApiResponsePortfolioOverview"
       security:
       - bearerAuth: []
+  /api/v1/market-data/search:
+    get:
+      tags:
+      - market-data-controller
+      operationId: searchInstruments
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+          default: ""
+      responses:
+        "200":
+          description: Instruments matching the query
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstrumentSearchApiResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstrumentSearchApiResponse"
+        "502":
+          description: Market data provider unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+      security:
+      - bearerAuth: []
+  /api/v1/market-data/quotes/{symbol}:
+    get:
+      tags:
+      - market-data-controller
+      operationId: getQuote
+      parameters:
+      - name: symbol
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Current quote for the instrument
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstrumentQuoteApiResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstrumentQuoteApiResponse"
+        "404":
+          description: Unknown symbol
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "502":
+          description: Market data provider unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+      security:
+      - bearerAuth: []
+  /api/v1/market-data/quotes/{symbol}/history:
+    get:
+      tags:
+      - market-data-controller
+      operationId: getQuoteHistory
+      parameters:
+      - name: symbol
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: range
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - 1D
+          - 1W
+          - 1M
+          - 1Y
+          - MAX
+      responses:
+        "200":
+          description: Historical prices for the instrument
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstrumentHistoryApiResponse"
+        "400":
+          description: Invalid range parameter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstrumentHistoryApiResponse"
+        "404":
+          description: Unknown symbol
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "502":
+          description: Market data provider unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+      security:
+      - bearerAuth: []
   /api/v1/health/server:
     get:
       tags:
@@ -426,6 +552,117 @@ components:
         currency:
           type: string
         totalValue:
+          type: number
+    InstrumentSearchApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/InstrumentSearchResult"
+        error:
+          type:
+          - string
+          - "null"
+        details:
+          type:
+          - array
+          - "null"
+          items: {}
+      required:
+      - success
+    InstrumentSearchResult:
+      type: object
+      properties:
+        matches:
+          type: array
+          items:
+            $ref: "#/components/schemas/Match"
+    Match:
+      type: object
+      properties:
+        symbol:
+          type: string
+        name:
+          type: string
+        exchange:
+          type: string
+        type:
+          type: string
+        currency:
+          type: string
+    InstrumentQuoteApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: "null"
+          $ref: "#/components/schemas/InstrumentQuoteResult"
+        error:
+          type:
+          - string
+          - "null"
+        details:
+          type:
+          - array
+          - "null"
+          items: {}
+      required:
+      - success
+    InstrumentQuoteResult:
+      type: object
+      properties:
+        symbol:
+          type: string
+        name:
+          type: string
+        currency:
+          type: string
+        price:
+          type: number
+        change:
+          type: number
+        changePercent:
+          type: number
+    InstrumentHistoryApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/InstrumentHistoryResult"
+        error:
+          type:
+          - string
+          - "null"
+        details:
+          type:
+          - array
+          - "null"
+          items: {}
+      required:
+      - success
+    InstrumentHistoryResult:
+      type: object
+      properties:
+        symbol:
+          type: string
+        currency:
+          type: string
+        range:
+          type: string
+        series:
+          type: array
+          items:
+            $ref: "#/components/schemas/PricePoint"
+    PricePoint:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        close:
           type: number
     FinancialTransactionResponse:
       type: object

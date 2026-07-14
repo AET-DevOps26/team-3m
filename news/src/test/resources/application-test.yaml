@@ -1,0 +1,40 @@
+spring:
+  datasource:
+    url: jdbc:tc:postgresql:18-trixie:///news
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    username: news
+    password: news
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  rabbitmq:
+    # Overridden by @DynamicPropertySource (Testcontainers) in integration tests.
+    host: localhost
+    port: 5672
+    username: news
+    password: news
+    publisher-confirm-type: correlated
+    publisher-returns: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Tests use SecurityMockMvcRequestPostProcessors.jwt() to inject mock
+          # authentication; this URL is never contacted.
+          jwk-set-uri: http://localhost:0/realms/test/protocol/openid-connect/certs
+
+kontor:
+  security:
+    issuer: http://localhost:0/realms/test
+    audience: kontor-api-test
+
+news:
+  http:
+    timeout: PT2S
+    allow-http: true
+    allow-private-addresses: true
+  aggregation:
+    scheduler-enabled: false
+    fetch-full-text: false
+    manual-trigger-min-interval: PT0S
+    feeds: []

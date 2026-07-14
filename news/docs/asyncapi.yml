@@ -1,0 +1,116 @@
+asyncapi: 3.0.0
+info:
+  title: Kontor News Aggregator
+  version: 1.0.0
+  description: |
+    Message contract between the news aggregator (producer) and the future news
+    processor (consumer). The aggregator crawls public RSS feeds and publishes
+    one message per newly discovered article. Delivery is **at-least-once**:
+    the aggregator only records an article as pushed after a broker publisher
+    confirm, and re-publishes unconfirmed articles on the next aggregation run.
+    Consumers MUST deduplicate on `id` (also set as the AMQP `messageId`),
+    which is the SHA-256 hex hash of the normalized article URL.
+
+    The aggregator declares the exchange, queue, and binding itself (durable,
+    classic queue, persistent messages). The queue rejects new publishes at
+    10,000 messages or 256 MiB so an absent consumer cannot exhaust the broker;
+    rejected messages remain retryable by the aggregator.
+
+defaultContentType: application/json
+
+servers:
+  local:
+    host: localhost:5672
+    protocol: amqp
+    description: Local docker-compose RabbitMQ (management UI on :15672).
+
+channels:
+  newsArticles:
+    address: news.articles
+    description: >
+      Durable queue bound to the durable topic exchange `kontor.news` with
+      routing key `news.article.crawled`.
+    bindings:
+      amqp:
+        is: queue
+        queue:
+          name: news.articles
+          durable: true
+          exclusive: false
+          autoDelete: false
+          arguments:
+            x-max-length: 10000
+            x-max-length-bytes: 268435456
+            x-overflow: reject-publish
+        exchange:
+          name: kontor.news
+          type: topic
+          durable: true
+          autoDelete: false
+    messages:
+      articleCrawled:
+        $ref: '#/components/messages/articleCrawled'
+
+operations:
+  publishArticleCrawled:
+    action: send
+    channel:
+      $ref: '#/channels/newsArticles'
+    bindings:
+      amqp:
+        cc:
+          - news.article.crawled
+        deliveryMode: 2
+        mandatory: true
+
+components:
+  messages:
+    articleCrawled:
+      name: articleCrawled
+      title: Crawled news article
+      contentType: application/json
+      headers:
+        type: object
+        properties:
+          messageId:
+            type: string
+            description: Same value as payload `id`; dedup key for consumers.
+      payload:
+        $ref: '#/components/schemas/ArticleMessage'
+
+  schemas:
+    ArticleMessage:
+      type: object
+      required: [id, source, feedUrl, url, title, fetchedAt]
+      properties:
+        id:
+          type: string
+          description: SHA-256 hex of the normalized article URL. Idempotency key.
+          minLength: 64
+          maxLength: 64
+        source:
+          type: string
+          description: Configured feed name, e.g. `yahoo-finance`.
+        feedUrl:
+          type: string
+          format: uri
+        url:
+          type: string
+          format: uri
+          description: Original article URL as published by the feed.
+        title:
+          type: string
+        summary:
+          type: [string, 'null']
+          description: Feed-provided description, HTML stripped. Absent for feeds without descriptions.
+        contentText:
+          type: [string, 'null']
+          description: >
+            Best-effort full article text extracted from the linked page.
+            Null when extraction failed (paywall, bot detection, too short).
+        publishedAt:
+          type: [string, 'null']
+          format: date-time
+        fetchedAt:
+          type: string
+          format: date-time

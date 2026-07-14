@@ -1,6 +1,6 @@
 {{- if .Values.networkPolicy.enabled }}
 ---
-# Postgres: only accept traffic from the core deployment in this release.
+# Postgres: only accept traffic from the core and news deployments in this release.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -21,6 +21,14 @@ spec:
             matchLabels:
               {{- include "kontor.selectorLabels" . | nindent 14 }}
               app.kubernetes.io/component: core
+        - podSelector:
+            matchLabels:
+              {{- include "kontor.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: news
+        - podSelector:
+            matchLabels:
+              {{- include "kontor.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: news-db-provisioner
       ports:
         - protocol: TCP
           port: 5432
@@ -59,7 +67,9 @@ spec:
   egress:
     # DNS
     - to:
-        - namespaceSelector: {}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
       ports:
         - protocol: UDP
           port: 53
@@ -99,8 +109,196 @@ spec:
         - protocol: TCP
           port: 4318
     {{- end }}
+    # Public APIs used by the core service, excluding non-public and reserved
+    # IPv4 destinations. IPv6 stays denied because no IPv6 ipBlock is allowed.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 0.0.0.0/8
+              - 10.0.0.0/8
+              - 100.64.0.0/10
+              - 127.0.0.0/8
+              - 169.254.0.0/16
+              - 172.16.0.0/12
+              - 192.0.0.0/24
+              - 192.0.2.0/24
+              - 192.168.0.0/16
+              - 198.18.0.0/15
+              - 198.51.100.0/24
+              - 203.0.113.0/24
+              - 224.0.0.0/4
+              - 240.0.0.0/4
+      ports:
+        - protocol: TCP
+          port: 443
   {{- end }}
 ---
+# RabbitMQ (subchart pods): AMQP (5672) only from the news aggregator; the
+# future news processor gets added here when it exists. The management UI
+# (15672) stays cluster-internal (kubectl port-forward).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "kontor.rabbitmq.fullname" . }}
+  labels:
+    {{- include "kontor.labels" . | nindent 4 }}
+    app.kubernetes.io/component: rabbitmq
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: rabbitmq
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "kontor.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: news
+      ports:
+        - protocol: TCP
+          port: 5672
+---
+# News: no ingress allowed — nothing calls it yet (future consumers get added
+# here). Egress stays open unless restrictEgress is set; then, in addition to
+# DNS/Postgres/Keycloak/RabbitMQ/OTLP, allow HTTPS to non-cluster addresses
+# because the aggregator fetches public RSS feeds and article pages.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "kontor.news.fullname" . }}
+  labels:
+    {{- include "kontor.labels" . | nindent 4 }}
+    app.kubernetes.io/component: news
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "kontor.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: news
+  policyTypes:
+    - Ingress
+    {{- if .Values.networkPolicy.restrictEgress }}
+    - Egress
+    {{- end }}
+  ingress: []
+  {{- if .Values.networkPolicy.restrictEgress }}
+  egress:
+    # DNS
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Postgres in this release
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "kontor.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+    # RabbitMQ in this release
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: rabbitmq
+              app.kubernetes.io/instance: {{ .Release.Name }}
+      ports:
+        - protocol: TCP
+          port: 5672
+    {{- if .Values.keycloak.deploy }}
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "kontor.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: keycloak
+      ports:
+        - protocol: TCP
+          port: 8080
+    {{- end }}
+    {{- if .Values.observability.enabled }}
+    # OTLP export to the Alloy gateway in the shared monitoring namespace.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.observability.collectorNamespace }}
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: alloy-gateway
+      ports:
+        - protocol: TCP
+          port: 4317
+        - protocol: TCP
+          port: 4318
+    {{- end }}
+    # Public RSS feeds / article pages over HTTPS (cluster-internal and
+    # private ranges excluded — in-cluster traffic is covered above).
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 0.0.0.0/8
+              - 10.0.0.0/8
+              - 100.64.0.0/10
+              - 127.0.0.0/8
+              - 169.254.0.0/16
+              - 172.16.0.0/12
+              - 192.0.0.0/24
+              - 192.0.2.0/24
+              - 192.168.0.0/16
+              - 198.18.0.0/15
+              - 198.51.100.0/24
+              - 203.0.113.0/24
+              - 224.0.0.0/4
+              - 240.0.0.0/4
+      ports:
+        - protocol: TCP
+          port: 443
+  {{- end }}
+---
+{{- if and .Values.postgres.enabled .Values.networkPolicy.restrictEgress }}
+# Database provisioning Job: DNS plus the shared Postgres pod only.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "kontor.fullname" . }}-news-db-provisioner
+  labels:
+    {{- include "kontor.labels" . | nindent 4 }}
+    app.kubernetes.io/component: news-db-provisioner
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "kontor.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: news-db-provisioner
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "kontor.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+---
+{{- end }}
 # Client: ingress from ingress-nginx only.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -234,6 +432,10 @@ spec:
             matchLabels:
               {{- include "kontor.selectorLabels" . | nindent 14 }}
               app.kubernetes.io/component: ai
+        - podSelector:
+            matchLabels:
+              {{- include "kontor.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: news
       ports:
         - protocol: TCP
           port: 8080

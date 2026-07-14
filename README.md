@@ -139,6 +139,10 @@ core, Postgres (with `pgvector`), and an optional Keycloak. The chart README
 documents environment overlays (`values-prod.yaml`,
 `values-pr.template.yaml`), required secrets, and the install / upgrade flow.
 
+There is also a standalone single-VM deployment on Azure (Terraform + Docker
+Compose + Traefik), served at `https://azure.kontor.live` and documented in
+[`deploy/azure/README.md`](deploy/azure/README.md).
+
 
 Copy `deploy/helm/kontor/secrets.example.yaml` to `secrets.yaml` and fill in all `REPLACE_ME` values, including `ai.logosApiKey` (the `lg-…` key from your tutor — requires TUM network / eduVPN):
 

@@ -1,0 +1,915 @@
+{
+  "id": "25469db3-ffed-4708-9c1d-046093f8dc91",
+  "version": "4.1.0",
+  "title": "DEPLOYMENT_DIAGRAM",
+  "type": "DeploymentDiagram",
+  "nodes": [
+    {
+      "id": "2761a5d6-d3c7-49b8-95da-e86f2c61b51b",
+      "width": 1505,
+      "height": 1315,
+      "type": "deploymentNode",
+      "position": {
+        "x": -255,
+        "y": 65
+      },
+      "data": {
+        "name": "Kubernetes Cluster  ·  namespace team-3m",
+        "isComponentHeaderShown": true,
+        "stereotype": "Kubernetes Cluster"
+      },
+      "measured": {
+        "width": 1505,
+        "height": 1315
+      }
+    },
+    {
+      "id": "9ef8f923-bdcd-48c0-978b-7b8151709623",
+      "width": 260,
+      "height": 90,
+      "type": "deploymentNode",
+      "position": {
+        "x": 75,
+        "y": 495
+      },
+      "parentId": "2761a5d6-d3c7-49b8-95da-e86f2c61b51b",
+      "data": {
+        "name": "nginx Ingress",
+        "isComponentHeaderShown": true,
+        "stereotype": "Ingress + cert-manager TLS"
+      },
+      "measured": {
+        "width": 260,
+        "height": 90
+      }
+    },
+    {
+      "id": "58848bfa-c3b1-4c04-830f-f32472e258fb",
+      "width": 250,
+      "height": 150,
+      "type": "deploymentNode",
+      "position": {
+        "x": 80,
+        "y": 85
+      },
+      "parentId": "2761a5d6-d3c7-49b8-95da-e86f2c61b51b",
+      "data": {
+        "name": "Client",
+        "isComponentHeaderShown": true,
+        "stereotype": "Deployment"
+      },
+      "measured": {
+        "width": 250,
+        "height": 150
+      }
+    },
+    {
+      "id": "36f9189a-47a0-4257-a21d-bb7b95f5fe68",
+      "width": 200,
+      "height": 48,
+      "type": "deploymentArtifact",
+      "position": {
+        "x": 25,
+        "y": 69
+      },
+      "parentId": "58848bfa-c3b1-4c04-830f-f32472e258fb",
+      "data": {
+        "name": "kontor-client (nginx SPA)"
+      },
+      "measured": {
+        "width": 200,
+        "height": 48
+      }
+    },
+    {
+      "id": "2f47fb88-1963-438b-91b6-86a439fc6af0",
+      "width": 250,
+      "height": 150,
+      "type": "deploymentNode",
+      "position": {
+        "x": 690,
+        "y": 920
+      },
+      "parentId": "2761a5d6-d3c7-49b8-95da-e86f2c61b51b",
+      "data": {
+        "name": "Core",
+        "isComponentHeaderShown": true,
+        "stereotype": "Deployment"
+      },
+      "measured": {
+        "width": 250,
+        "height": 150
+      }
+    },
+    {
+      "id": "3f4147bc-ec19-4b4f-9e58-f4169f3d94eb",
+      "width": 200,
+      "height": 48,
+      "type": "deploymentArtifact",
+      "position": {
+        "x": 25,
+        "y": 69
+      },
+      "parentId": "2f47fb88-1963-438b-91b6-86a439fc6af0",
+      "data": {
+        "name": "kontor-core.jar :8080"
+      },
+      "measured": {
+        "width": 200,
+        "height": 48
+      }
+    },
+    {
+      "id": "18744101-e17a-4bcc-bcdc-4696c3f67e55",
+      "width": 355,
+      "height": 150,
+      "type": "deploymentNode",
+      "position": {
+        "x": 750,
+        "y": 470
+      },
+      "parentId": "2761a5d6-d3c7-49b8-95da-e86f2c61b51b",
+      "data": {
+        "name": "AI Service",
+        "isComponentHeaderShown": true,
+        "stereotype": "Deployment"
+      },
+      "measured": {
+        "width": 355,
+        "height": 150
+      }
+    },
+    {
+      "id": "75761b8a-d6ae-45b8-9719-fe137aa64093",
+      "width": 285,
+      "height": 50,
+      "type": "deploymentArtifact",
+      "position": {
+        "x": 25,
+        "y": 69
+      },
+      "parentId": "18744101-e17a-4bcc-bcdc-4696c3f67e55",
+      "data": {
+        "name": "kontor-ai (FastAPI) :8000"
+      },
+      "measured": {
+        "width": 285,
+        "height": 50
+      }
+    },
+    {
+      "id": "bda84217-58e1-4ac7-9d23-647af72e38b6",
+      "width": 310,
+      "height": 145,
+      "type": "deploymentNode",
+      "position": {
+        "x": 790,
+        "y": 255
+      },
+      "parentId": "2761a5d6-d3c7-49b8-95da-e86f2c61b51b",
+      "data": {
+        "name": "News",
+        "isComponentHeaderShown": true,
+        "stereotype": "Deployment"
+      },
+      "measured": {
+        "width": 310,
+        "height": 145
+      }
+    },
+    {
+      "id": "232bf4d2-3dd8-4c04-ad22-c0ade9ad59d6",
+      "width": 260,
+      "height": 50,
+      "type": "deploymentArtifact",
+      "position": {
+        "x": 25,
+        "y": 62
+      },
+      "parentId": "bda84217-58e1-4ac7-9d23-647af72e38b6",
+      "data": {
+        "name": "kontor-news.jar :8080"
+      },
+      "measured": {
+        "width": 260,
+        "height": 50
+      }
+    },
+    {
+      "id": "11e1e461-b396-4112-b0f6-89b3fd5a06bc",
+      "width": 250,
+      "height": 150,
+      "type": "deploymentNode",
+      "position": {
+        "x": 80,
+        "y": 925
+      },
+      "parentId": "2761a5d6-d3c7-49b8-95da-e86f2c61b51b",
+      "data": {
+        "name": "Keycloak",
+        "isComponentHeaderShown": true,
+        "stereotype": "Deployment"
+      },
+      "measured": {
+        "width": 250,
+        "height": 150
+      }
+    },
+    {
+      "id": "45d634c7-6c43-49ff-b9a4-16838844d1b9",
+      "width": 200,
+      "height": 48,
+      "type": "deploymentArtifact",
+      "position": {
+        "x": 25,
+        "y": 69
+      },
+      "parentId": "11e1e461-b396-4112-b0f6-89b3fd5a06bc",
+      "data": {
+        "name": "keycloak (auth.kontor.live)"
+      },
+      "measured": {
+        "width": 200,
+        "height": 48
+      }
+    },
+    {
+      "id": "104319f2-73dc-4ad0-a281-e6008ef7f7a1",
+      "width": 270,
+      "height": 130,
+      "type": "deploymentNode",
+      "position": {
+        "x": 680,
+        "y": 1135
+      },
+      "parentId": "2761a5d6-d3c7-49b8-95da-e86f2c61b51b",
+      "data": {
+        "name": "Core Postgres + pgvector",
+        "isComponentHeaderShown": true,
+        "stereotype": "StatefulSet"
+      },
+      "measured": {
+        "width": 270,
+        "height": 130
+      }
+    },
+    {
+      "id": "677407dc-77ed-4115-9909-e3af31cf520c",
+      "width": 220,
+      "height": 48,
+      "type": "deploymentArtifact",
+      "position": {
+        "x": 25,
+        "y": 66
+      },
+      "parentId": "104319f2-73dc-4ad0-a281-e6008ef7f7a1",
+      "data": {
+        "name": "kontor  (core DB)"
+      },
+      "measured": {
+        "width": 220,
+        "height": 48
+      }
+    },
+    {
+      "id": "d8f0de39-8138-4238-ab3f-5c5fb640d608",
+      "width": 270,
+      "height": 150,
+      "type": "deploymentNode",
+      "position": {
+        "x": 1185,
+        "y": 655
+      },
+      "parentId": "2761a5d6-d3c7-49b8-95da-e86f2c61b51b",
+      "data": {
+        "name": "AI Postgres + pgvector",
+        "isComponentHeaderShown": true,
+        "stereotype": "StatefulSet"
+      },
+      "measured": {
+        "width": 270,
+        "height": 150
+      }
+    },
+    {
+      "id": "c1bc2c76-626a-4462-ad14-4e24d5e21836",
+      "width": 220,
+      "height": 48,
+      "type": "deploymentArtifact",
+      "position": {
+        "x": 25,
+        "y": 69
+      },
+      "parentId": "d8f0de39-8138-4238-ab3f-5c5fb640d608",
+      "data": {
+        "name": "kontor_ai"
+      },
+      "measured": {
+        "width": 220,
+        "height": 48
+      }
+    },
+    {
+      "id": "0a59e0fe-5fd3-4dd8-967a-395e5c8ead2c",
+      "width": 270,
+      "height": 150,
+      "type": "deploymentNode",
+      "position": {
+        "x": 1200,
+        "y": 375
+      },
+      "parentId": "2761a5d6-d3c7-49b8-95da-e86f2c61b51b",
+      "data": {
+        "name": "RabbitMQ",
+        "isComponentHeaderShown": true,
+        "stereotype": "StatefulSet"
+      },
+      "measured": {
+        "width": 270,
+        "height": 150
+      }
+    },
+    {
+      "id": "3e3fb836-cbea-4d4e-96b6-0ff7f18438fc",
+      "width": 220,
+      "height": 48,
+      "type": "deploymentArtifact",
+      "position": {
+        "x": 25,
+        "y": 69
+      },
+      "parentId": "0a59e0fe-5fd3-4dd8-967a-395e5c8ead2c",
+      "data": {
+        "name": "queue news.articles"
+      },
+      "measured": {
+        "width": 220,
+        "height": 48
+      }
+    },
+    {
+      "id": "1574f0c8-ae0a-4e36-8534-7a719b14ff59",
+      "width": 270,
+      "height": 150,
+      "type": "deploymentNode",
+      "position": {
+        "x": 70,
+        "y": 1130
+      },
+      "parentId": "2761a5d6-d3c7-49b8-95da-e86f2c61b51b",
+      "data": {
+        "name": "Keycloak Postgres",
+        "isComponentHeaderShown": true,
+        "stereotype": "StatefulSet"
+      },
+      "measured": {
+        "width": 270,
+        "height": 150
+      }
+    },
+    {
+      "id": "8d333866-ef2c-4add-8334-cf6606baa8cc",
+      "width": 220,
+      "height": 48,
+      "type": "deploymentArtifact",
+      "position": {
+        "x": 25,
+        "y": 69
+      },
+      "parentId": "1574f0c8-ae0a-4e36-8534-7a719b14ff59",
+      "data": {
+        "name": "keycloak"
+      },
+      "measured": {
+        "width": 220,
+        "height": 48
+      }
+    },
+    {
+      "id": "6ad8dbd3-e3e3-47ce-aeae-3fcfa49f784e",
+      "width": 230,
+      "height": 80,
+      "type": "deploymentNode",
+      "position": {
+        "x": -555,
+        "y": 565
+      },
+      "data": {
+        "name": "User Browser (PWA)",
+        "isComponentHeaderShown": true,
+        "stereotype": "device"
+      },
+      "measured": {
+        "width": 230,
+        "height": 80
+      }
+    },
+    {
+      "id": "950b309c-b45a-475f-add9-d912bafd9a18",
+      "width": 250,
+      "height": 90,
+      "type": "deploymentNode",
+      "position": {
+        "x": 1690,
+        "y": 1010
+      },
+      "data": {
+        "name": "Twelve Data API",
+        "isComponentHeaderShown": true,
+        "stereotype": "external"
+      },
+      "measured": {
+        "width": 250,
+        "height": 90
+      }
+    },
+    {
+      "id": "376f963a-1b83-4106-a80e-6a0bbc0f060d",
+      "width": 250,
+      "height": 100,
+      "type": "deploymentNode",
+      "position": {
+        "x": 1675,
+        "y": 560
+      },
+      "data": {
+        "name": "Logos LLM API (TUM AET)",
+        "isComponentHeaderShown": true,
+        "stereotype": "external"
+      },
+      "measured": {
+        "width": 250,
+        "height": 100
+      }
+    },
+    {
+      "id": "bb4611d5-41d9-40bf-a08b-c12ae416ee41",
+      "width": 250,
+      "height": 110,
+      "type": "deploymentNode",
+      "position": {
+        "x": 1655,
+        "y": 335
+      },
+      "data": {
+        "name": "RSS Feeds (Yahoo · MarketWatch)",
+        "isComponentHeaderShown": true,
+        "stereotype": "external"
+      },
+      "measured": {
+        "width": 250,
+        "height": 110
+      }
+    },
+    {
+      "id": "9e54087d-6555-46d6-b748-8d65044d5967",
+      "width": 250,
+      "height": 110,
+      "type": "deploymentNode",
+      "position": {
+        "x": 375,
+        "y": 485
+      },
+      "parentId": "2761a5d6-d3c7-49b8-95da-e86f2c61b51b",
+      "data": {
+        "name": "Grafana Alloy + LGTM",
+        "isComponentHeaderShown": true,
+        "stereotype": "ns team-3m-monitoring"
+      },
+      "measured": {
+        "width": 250,
+        "height": 110
+      }
+    },
+    {
+      "id": "e9286d8e-0f9f-4ee1-8167-90d6d95eb09e",
+      "width": 270,
+      "height": 125,
+      "type": "deploymentNode",
+      "position": {
+        "x": 815,
+        "y": 70
+      },
+      "parentId": "2761a5d6-d3c7-49b8-95da-e86f2c61b51b",
+      "data": {
+        "name": "News Postgres",
+        "isComponentHeaderShown": true,
+        "stereotype": "StatefulSet"
+      },
+      "measured": {
+        "width": 270,
+        "height": 125
+      }
+    },
+    {
+      "id": "b72bca99-a2dd-4af1-8fe5-20956b78ed7a",
+      "width": 220,
+      "height": 48,
+      "type": "deploymentArtifact",
+      "position": {
+        "x": 20,
+        "y": 60
+      },
+      "parentId": "e9286d8e-0f9f-4ee1-8167-90d6d95eb09e",
+      "data": {
+        "name": "news"
+      },
+      "measured": {
+        "width": 220,
+        "height": 48
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "c84a9a6c-625d-4af8-9cc5-172a587ea283",
+      "source": "9ef8f923-bdcd-48c0-978b-7b8151709623",
+      "target": "58848bfa-c3b1-4c04-830f-f32472e258fb",
+      "type": "DeploymentAssociation",
+      "sourceHandle": "top",
+      "targetHandle": "bottom",
+      "data": {
+        "points": [],
+        "name": "/  (SPA)"
+      }
+    },
+    {
+      "id": "25e76427-327a-43bd-a594-80368b045489",
+      "source": "9ef8f923-bdcd-48c0-978b-7b8151709623",
+      "target": "2f47fb88-1963-438b-91b6-86a439fc6af0",
+      "type": "DeploymentAssociation",
+      "sourceHandle": "bottom",
+      "targetHandle": "left",
+      "data": {
+        "points": [
+          {
+            "x": -20,
+            "y": 650
+          },
+          {
+            "x": -20,
+            "y": 930
+          },
+          {
+            "x": 405,
+            "y": 930
+          },
+          {
+            "x": 405,
+            "y": 1025
+          },
+          {
+            "x": 435,
+            "y": 1025
+          }
+        ],
+        "name": "/api  :8080",
+        "sourceAnchor": {
+          "side": "bottom",
+          "ratio": 0.6153846153846154
+        },
+        "targetAnchor": {
+          "side": "left",
+          "ratio": 0.26666666666666666
+        }
+      }
+    },
+    {
+      "id": "bb86707c-8df9-42ac-a832-431a97e69d8d",
+      "source": "9ef8f923-bdcd-48c0-978b-7b8151709623",
+      "target": "11e1e461-b396-4112-b0f6-89b3fd5a06bc",
+      "type": "DeploymentAssociation",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": [],
+        "name": "auth  :8080",
+        "sourceAnchor": {
+          "side": "bottom",
+          "ratio": 0.23076923076923078
+        },
+        "targetAnchor": {
+          "side": "top",
+          "ratio": 0.22
+        }
+      }
+    },
+    {
+      "id": "11976f39-a66f-4137-ad8f-a4b4f53eb64a",
+      "source": "2f47fb88-1963-438b-91b6-86a439fc6af0",
+      "target": "104319f2-73dc-4ad0-a281-e6008ef7f7a1",
+      "type": "DeploymentAssociation",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": [],
+        "name": "JDBC :5432 (kontor)",
+        "targetAnchor": {
+          "side": "top",
+          "ratio": 0.5
+        },
+        "sourceAnchor": {
+          "side": "bottom",
+          "ratio": 0.5
+        }
+      }
+    },
+    {
+      "id": "8885aaaf-0ad6-40b5-b9de-ec8d3deeb370",
+      "source": "2f47fb88-1963-438b-91b6-86a439fc6af0",
+      "target": "11e1e461-b396-4112-b0f6-89b3fd5a06bc",
+      "type": "DeploymentAssociation",
+      "sourceHandle": "left",
+      "targetHandle": "right",
+      "data": {
+        "points": [],
+        "name": "OIDC / JWKS",
+        "targetAnchor": {
+          "side": "right",
+          "ratio": 0.5
+        },
+        "sourceAnchor": {
+          "side": "left",
+          "ratio": 0.5333333333333333
+        }
+      }
+    },
+    {
+      "id": "dbff6268-da51-40e8-ac92-c3924f0b4d85",
+      "source": "2f47fb88-1963-438b-91b6-86a439fc6af0",
+      "target": "950b309c-b45a-475f-add9-d912bafd9a18",
+      "type": "DeploymentAssociation",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": [],
+        "name": "HTTPS market data"
+      }
+    },
+    {
+      "id": "9815c6e7-7970-42ee-80a1-fb35f04b354d",
+      "source": "2f47fb88-1963-438b-91b6-86a439fc6af0",
+      "target": "9e54087d-6555-46d6-b748-8d65044d5967",
+      "type": "DeploymentAssociation",
+      "sourceHandle": "top",
+      "targetHandle": "bottom",
+      "data": {
+        "points": [],
+        "name": "OTLP :4317",
+        "targetAnchor": {
+          "side": "bottom",
+          "ratio": 0.48
+        },
+        "sourceAnchor": {
+          "side": "top",
+          "ratio": 0.52
+        }
+      }
+    },
+    {
+      "id": "62867498-bdce-4c2e-8efb-05910b1839e1",
+      "source": "18744101-e17a-4bcc-bcdc-4696c3f67e55",
+      "target": "0a59e0fe-5fd3-4dd8-967a-395e5c8ead2c",
+      "type": "DeploymentAssociation",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": [],
+        "name": "AMQP consume news.articles",
+        "sourceAnchor": {
+          "side": "right",
+          "ratio": 0.26666666666666666
+        }
+      }
+    },
+    {
+      "id": "ca28f06d-b0b0-4b3a-bb61-7889df7fc52a",
+      "source": "18744101-e17a-4bcc-bcdc-4696c3f67e55",
+      "target": "376f963a-1b83-4106-a80e-6a0bbc0f060d",
+      "type": "DeploymentAssociation",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": [],
+        "name": "HTTPS LLM + embeddings",
+        "sourceAnchor": {
+          "side": "right",
+          "ratio": 0.5
+        }
+      }
+    },
+    {
+      "id": "f14abd80-5aa0-4e54-93cc-e798920fc42f",
+      "source": "18744101-e17a-4bcc-bcdc-4696c3f67e55",
+      "target": "11e1e461-b396-4112-b0f6-89b3fd5a06bc",
+      "type": "DeploymentAssociation",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": [
+          {
+            "x": 566,
+            "y": 685
+          },
+          {
+            "x": 566,
+            "y": 765
+          },
+          {
+            "x": -65,
+            "y": 765
+          },
+          {
+            "x": -65,
+            "y": 990
+          }
+        ],
+        "name": "OIDC / JWKS",
+        "sourceAnchor": {
+          "side": "bottom",
+          "ratio": 0.2
+        },
+        "targetAnchor": {
+          "side": "top",
+          "ratio": 0.44
+        }
+      }
+    },
+    {
+      "id": "591cd06c-e80a-4d6c-8d3a-2cad946a6dd3",
+      "source": "bda84217-58e1-4ac7-9d23-647af72e38b6",
+      "target": "0a59e0fe-5fd3-4dd8-967a-395e5c8ead2c",
+      "type": "DeploymentAssociation",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": [],
+        "name": "AMQP publish news.articles",
+        "sourceAnchor": {
+          "side": "right",
+          "ratio": 0.7333333333333333
+        },
+        "targetAnchor": {
+          "side": "left",
+          "ratio": 0.3
+        }
+      }
+    },
+    {
+      "id": "89481599-5149-451c-8a4d-676d2ee7cfc8",
+      "source": "bda84217-58e1-4ac7-9d23-647af72e38b6",
+      "target": "bb4611d5-41d9-40bf-a08b-c12ae416ee41",
+      "type": "DeploymentAssociation",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": [],
+        "name": "HTTPS RSS crawl"
+      }
+    },
+    {
+      "id": "9fc77230-6c63-46cd-9397-c6724f8a5254",
+      "source": "bda84217-58e1-4ac7-9d23-647af72e38b6",
+      "target": "9e54087d-6555-46d6-b748-8d65044d5967",
+      "type": "DeploymentAssociation",
+      "sourceHandle": "left",
+      "targetHandle": "top",
+      "data": {
+        "points": [],
+        "name": "OTLP :4317",
+        "targetAnchor": {
+          "side": "top",
+          "ratio": 0.5
+        },
+        "sourceAnchor": {
+          "side": "left",
+          "ratio": 0.8
+        }
+      }
+    },
+    {
+      "id": "caa6f32a-94a2-482b-8915-62247cc7e4e0",
+      "source": "11e1e461-b396-4112-b0f6-89b3fd5a06bc",
+      "target": "1574f0c8-ae0a-4e36-8534-7a719b14ff59",
+      "type": "DeploymentAssociation",
+      "sourceHandle": "bottom",
+      "targetHandle": "top",
+      "data": {
+        "points": [],
+        "name": "JDBC :5432 (keycloak)",
+        "targetAnchor": {
+          "side": "top",
+          "ratio": 0.5
+        },
+        "sourceAnchor": {
+          "side": "bottom",
+          "ratio": 0.5
+        }
+      }
+    },
+    {
+      "id": "f3540225-cc05-4b51-8492-11122d9db9d5",
+      "source": "6ad8dbd3-e3e3-47ce-aeae-3fcfa49f784e",
+      "target": "9ef8f923-bdcd-48c0-978b-7b8151709623",
+      "type": "DeploymentAssociation",
+      "sourceHandle": "right",
+      "targetHandle": "left-between-mid-bottom-center",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "13b1d368-8690-49e1-b09e-e9f48c42f4a7",
+      "source": "bda84217-58e1-4ac7-9d23-647af72e38b6",
+      "target": "e9286d8e-0f9f-4ee1-8167-90d6d95eb09e",
+      "type": "DeploymentAssociation",
+      "sourceHandle": "top",
+      "targetHandle": "bottom",
+      "data": {
+        "targetAnchor": {
+          "side": "bottom",
+          "ratio": 0.48148148148148145
+        },
+        "points": []
+      }
+    },
+    {
+      "id": "532a8cfe-775e-45ef-a1bc-342784591008",
+      "source": "9ef8f923-bdcd-48c0-978b-7b8151709623",
+      "target": "bda84217-58e1-4ac7-9d23-647af72e38b6",
+      "type": "DeploymentAssociation",
+      "sourceHandle": "top-right",
+      "targetHandle": "left-between-mid-bottom-center",
+      "data": {
+        "points": []
+      }
+    },
+    {
+      "id": "2ca83d0c-744b-4161-844d-6df0f7578dbf",
+      "source": "d8f0de39-8138-4238-ab3f-5c5fb640d608",
+      "target": "18744101-e17a-4bcc-bcdc-4696c3f67e55",
+      "type": "DeploymentAssociation",
+      "sourceHandle": "top",
+      "targetHandle": "right",
+      "data": {
+        "targetAnchor": {
+          "side": "right",
+          "ratio": 0.8
+        },
+        "points": []
+      }
+    },
+    {
+      "id": "68f826bc-79bf-47a4-82da-955c64798014",
+      "source": "9e54087d-6555-46d6-b748-8d65044d5967",
+      "target": "18744101-e17a-4bcc-bcdc-4696c3f67e55",
+      "type": "DeploymentAssociation",
+      "sourceHandle": "right",
+      "targetHandle": "left-between-mid-bottom-center",
+      "data": {
+        "sourceAnchor": {
+          "side": "right",
+          "ratio": 0.5454545454545454
+        },
+        "points": []
+      }
+    },
+    {
+      "id": "b15cad3f-120c-4dc1-ab72-7efda4bdd83a",
+      "source": "9ef8f923-bdcd-48c0-978b-7b8151709623",
+      "target": "18744101-e17a-4bcc-bcdc-4696c3f67e55",
+      "type": "DeploymentAssociation",
+      "sourceHandle": "bottom",
+      "targetHandle": "left-bottom",
+      "data": {
+        "points": [
+          {
+            "x": 15,
+            "y": 650
+          },
+          {
+            "x": 15,
+            "y": 720
+          },
+          {
+            "x": 464,
+            "y": 720
+          },
+          {
+            "x": 464,
+            "y": 660
+          },
+          {
+            "x": 494,
+            "y": 660
+          }
+        ],
+        "sourceAnchor": {
+          "side": "bottom",
+          "ratio": 0.75
+        }
+      }
+    }
+  ],
+  "assessments": {}
+}

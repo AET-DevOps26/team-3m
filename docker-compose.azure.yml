@@ -144,7 +144,7 @@ services:
       JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.core.rule=Host(`${DOMAIN}`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.core.rule=Host(`${DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/swagger-ui`) || PathPrefix(`/v3/api-docs`))"
       - "traefik.http.routers.core.entrypoints=websecure"
       - "traefik.http.routers.core.tls.certresolver=le"
       - "traefik.http.services.core.loadbalancer.server.port=8080"

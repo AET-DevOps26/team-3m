@@ -1,5 +1,5 @@
 import { Suspense, startTransition, useState } from "react"
-import { Area, AreaChart, XAxis } from "recharts"
+import { Area, AreaChart, XAxis, YAxis } from "recharts"
 import { RangeSelector } from "@/components/charts/range-selector"
 import { Card, CardContent, CardTitle } from "@/components/ui/card"
 import {
@@ -76,6 +76,13 @@ function PriceChart({ symbol, range }: PriceChartProps) {
   const maxMs = data[data.length - 1].t
   const ticks = computeEquidistantTicks(minMs, maxMs, range)
 
+  const closes = data.map((d) => d.close)
+  const lowClose = Math.min(...closes)
+  const highClose = Math.max(...closes)
+  const spread = highClose - lowClose
+  const yPadding = spread > 0 ? spread * 0.08 : Math.abs(highClose) * 0.01 || 1
+  const yDomain: [number, number] = [lowClose - yPadding, highClose + yPadding]
+
   const isPositive = data[data.length - 1].close >= data[0].close
   const lineColor = isPositive
     ? "var(--color-primary)"
@@ -118,6 +125,7 @@ function PriceChart({ symbol, range }: PriceChartProps) {
             )
           }}
         />
+        <YAxis hide domain={yDomain} />
         <Area
           type="monotone"
           dataKey="close"

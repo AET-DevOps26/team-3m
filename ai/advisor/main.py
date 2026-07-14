@@ -33,7 +33,7 @@ async def _supervise_consumer() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     task: asyncio.Task | None = None
-    if get_settings().rabbitmq_url:
+    if get_settings().is_news_consumer_configured:
         task = asyncio.create_task(_supervise_consumer())
     try:
         yield

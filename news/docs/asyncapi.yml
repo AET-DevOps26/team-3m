@@ -3,8 +3,8 @@ info:
   title: Kontor News Aggregator
   version: 1.0.0
   description: |
-    Message contract between the news aggregator (producer) and the future news
-    processor (consumer). The aggregator crawls public RSS feeds and publishes
+    Message contract between the news aggregator (producer) and the AI service
+    (consumer). The aggregator crawls public RSS feeds and publishes
     one message per newly discovered article. Delivery is **at-least-once**:
     the aggregator only records an article as pushed after a broker publisher
     confirm, and re-publishes unconfirmed articles on the next aggregation run.
@@ -14,7 +14,9 @@ info:
     The aggregator declares the exchange, queue, and binding itself (durable,
     classic queue, persistent messages). The queue rejects new publishes at
     10,000 messages or 256 MiB so an absent consumer cannot exhaust the broker;
-    rejected messages remain retryable by the aggregator.
+    rejected publishes remain retryable by the aggregator. After one retry,
+    the AI consumer republishes failed messages to `kontor.news.dlx`; this
+    preserves the existing durable queue declaration during sequential rollout.
 
 defaultContentType: application/json
 
@@ -50,6 +52,29 @@ channels:
     messages:
       articleCrawled:
         $ref: '#/components/messages/articleCrawled'
+  deadNewsArticles:
+    address: news.articles.dead
+    description: Consumer-rejected articles retained for inspection and replay.
+    bindings:
+      amqp:
+        is: queue
+        queue:
+          name: news.articles.dead
+          durable: true
+          exclusive: false
+          autoDelete: false
+          arguments:
+            x-max-length: 10000
+            x-max-length-bytes: 268435456
+            x-overflow: drop-head
+        exchange:
+          name: kontor.news.dlx
+          type: direct
+          durable: true
+          autoDelete: false
+    messages:
+      articleCrawled:
+        $ref: '#/components/messages/articleCrawled'
 
 operations:
   publishArticleCrawled:
@@ -62,6 +87,10 @@ operations:
           - news.article.crawled
         deliveryMode: 2
         mandatory: true
+  consumeArticleCrawled:
+    action: receive
+    channel:
+      $ref: '#/channels/newsArticles'
 
 components:
   messages:
@@ -77,6 +106,19 @@ components:
             description: Same value as payload `id`; dedup key for consumers.
       payload:
         $ref: '#/components/schemas/ArticleMessage'
+      examples:
+        - name: yahooFinanceArticle
+          summary: Shared producer-consumer contract fixture.
+          payload:
+            id: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+            source: yahoo-finance
+            feedUrl: https://finance.yahoo.com/news/rssindex
+            url: https://finance.yahoo.com/news/example
+            title: Markets rally on strong earnings
+            summary: Stocks rose after a positive earnings session.
+            contentText: Global markets rallied after several companies beat earnings expectations.
+            publishedAt: '2026-07-14T08:30:00Z'
+            fetchedAt: '2026-07-14T08:35:00Z'
 
   schemas:
     ArticleMessage:

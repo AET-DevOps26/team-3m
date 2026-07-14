@@ -10,7 +10,7 @@ spring:
   datasource:
     url: jdbc:postgresql://${NEWS_POSTGRES_HOST:localhost}:${NEWS_POSTGRES_PORT:5432}/${NEWS_POSTGRES_DB:news}
     username: ${NEWS_POSTGRES_USER:news}
-    password: ${NEWS_POSTGRES_PASSWORD:change-me-news-local}
+    password: ${NEWS_POSTGRES_PASSWORD}
   flyway:
     enabled: true
     locations: classpath:db/migration
@@ -18,7 +18,7 @@ spring:
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USERNAME:news}
-    password: ${RABBITMQ_PASSWORD:change-me-rabbit-local}
+    password: ${RABBITMQ_PASSWORD}
     publisher-confirm-type: correlated
     publisher-returns: true
     template:

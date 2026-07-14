@@ -1,5 +1,6 @@
 package de.devops26.kontor.news.aggregation;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.Mockito.never;
@@ -55,6 +56,30 @@ class StaleRunCleanerTest {
         when(leaseManager.tryAcquire()).thenReturn(Optional.empty());
 
         new StaleRunCleaner(runRepository, leaseManager).run(null);
+
+        verify(runRepository, never()).failStaleRunning(any(), any());
+    }
+
+    @Test
+    @DisplayName("startup continues when stale-run persistence fails")
+    void run_cleanupFails_continuesStartup() {
+        when(leaseManager.tryAcquire()).thenReturn(Optional.of(lease));
+        when(runRepository.failStaleRunning(any(OffsetDateTime.class), any()))
+                .thenThrow(new IllegalStateException("database unavailable"));
+
+        assertThatCode(() -> new StaleRunCleaner(runRepository, leaseManager).run(null))
+                .doesNotThrowAnyException();
+
+        verify(lease).close();
+    }
+
+    @Test
+    @DisplayName("startup continues when the cleanup lease cannot be acquired")
+    void run_leaseAcquisitionFails_continuesStartup() {
+        when(leaseManager.tryAcquire()).thenThrow(new IllegalStateException("database unavailable"));
+
+        assertThatCode(() -> new StaleRunCleaner(runRepository, leaseManager).run(null))
+                .doesNotThrowAnyException();
 
         verify(runRepository, never()).failStaleRunning(any(), any());
     }

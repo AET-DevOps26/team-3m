@@ -2,13 +2,18 @@ package de.devops26.kontor.news.aggregation;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.http.HttpClient;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Set;
+import org.apache.hc.client5.http.DnsResolver;
+import org.apache.hc.client5.http.config.ConnectionConfig;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.core5.util.Timeout;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.JdkClientHttpRequestFactory;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -29,12 +34,32 @@ public class FeedClient {
     private final OutboundUrlPolicy urlPolicy;
     private final NewsHttpProperties properties;
 
+    @Autowired
     public FeedClient(FeedParser feedParser, OutboundUrlPolicy urlPolicy, NewsHttpProperties properties) {
-        var httpClient = HttpClient.newBuilder()
-                .connectTimeout(properties.timeout())
-                .followRedirects(HttpClient.Redirect.NEVER)
+        this(feedParser, urlPolicy, properties, new PublicAddressDnsResolver(urlPolicy));
+    }
+
+    FeedClient(
+            FeedParser feedParser,
+            OutboundUrlPolicy urlPolicy,
+            NewsHttpProperties properties,
+            DnsResolver dnsResolver) {
+        var timeout = Timeout.of(properties.timeout());
+        var connectionConfig = ConnectionConfig.custom()
+                .setConnectTimeout(timeout)
+                .setSocketTimeout(timeout)
                 .build();
-        var requestFactory = new JdkClientHttpRequestFactory(httpClient);
+        var connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
+                .setDnsResolver(dnsResolver)
+                .setDefaultConnectionConfig(connectionConfig)
+                .build();
+        var httpClient = HttpClients.custom()
+                .setConnectionManager(connectionManager)
+                .disableRedirectHandling()
+                .disableAutomaticRetries()
+                .build();
+        var requestFactory = new HttpComponentsClientHttpRequestFactory(httpClient);
+        requestFactory.setConnectionRequestTimeout(properties.timeout());
         requestFactory.setReadTimeout(properties.timeout());
         this.restClient = RestClient.builder()
                 .requestFactory(requestFactory)

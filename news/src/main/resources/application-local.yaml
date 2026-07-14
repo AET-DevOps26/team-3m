@@ -1,0 +1,8 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    password: change-me-news-local
+  rabbitmq:
+    password: change-me-rabbit-local

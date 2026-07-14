@@ -82,7 +82,11 @@ Helm exposes `news.aggregation.schedulerEnabled`, `interval`, `initialDelay`,
 | Format check | `./gradlew spotlessCheck` |
 | Format fix | `./gradlew spotlessApply` |
 | Lint | `./gradlew checkstyleMain checkstyleTest` |
-| Run locally | `./gradlew bootRun` (needs compose `db`, `keycloak`, `rabbitmq`) |
+| Run locally | `./gradlew bootRun --args='--spring.profiles.active=local'` (needs compose `db`, `keycloak`, `rabbitmq`) |
+
+The shared configuration requires database and RabbitMQ passwords from the
+environment. The `local` profile supplies only the documented throwaway local
+defaults; deployed environments always inject their credentials from secrets.
 
 ## Manual testing
 

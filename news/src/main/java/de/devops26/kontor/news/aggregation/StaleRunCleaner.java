@@ -23,6 +23,14 @@ public class StaleRunCleaner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
+        try {
+            cleanStaleRuns();
+        } catch (RuntimeException e) {
+            log.error("Stale-run cleanup failed; continuing startup", e);
+        }
+    }
+
+    private void cleanStaleRuns() {
         var lease = leaseManager.tryAcquire();
         if (lease.isEmpty()) {
             log.info("An aggregation run is active in another service instance; stale-run cleanup skipped");

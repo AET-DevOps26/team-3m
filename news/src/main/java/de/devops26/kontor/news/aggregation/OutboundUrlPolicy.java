@@ -44,15 +44,25 @@ public class OutboundUrlPolicy {
             return uri.normalize();
         }
         try {
-            for (var address : InetAddress.getAllByName(host.toLowerCase(Locale.ROOT))) {
-                if (!isPublic(address)) {
-                    throw new UnsafeOutboundUrlException(url, "host resolves to a non-public address");
-                }
-            }
+            validateResolvedAddresses(url, InetAddress.getAllByName(host.toLowerCase(Locale.ROOT)));
         } catch (UnknownHostException e) {
             throw new UnsafeOutboundUrlException(url, "host cannot be resolved", e);
         }
         return uri.normalize();
+    }
+
+    void validateResolvedAddresses(String url, InetAddress[] addresses) {
+        if (addresses == null || addresses.length == 0) {
+            throw new UnsafeOutboundUrlException(url, "host cannot be resolved");
+        }
+        if (properties.allowPrivateAddresses()) {
+            return;
+        }
+        for (var address : addresses) {
+            if (!isPublic(address)) {
+                throw new UnsafeOutboundUrlException(url, "host resolves to a non-public address");
+            }
+        }
     }
 
     private static boolean isPublic(InetAddress address) {

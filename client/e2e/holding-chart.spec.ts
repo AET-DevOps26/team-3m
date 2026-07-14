@@ -43,7 +43,31 @@ test("opens a holding's live price chart in a dialog", async ({ page }) => {
   await expect(dialog.getByText("+$13.86 (+4.71%)")).toBeVisible()
   await expect(
     dialog.getByRole("button", { name: "1M", exact: true }),
-  ).toHaveClass(/bg-primary/)
+  ).toHaveAttribute("aria-pressed", "true")
+})
+
+test("opens the chart via keyboard and restores focus on close", async ({
+  page,
+}) => {
+  await stubPortfolio(page)
+  await page.route(QUOTE_ROUTE, async (route) => {
+    await fulfillOk(route, instrumentQuote())
+  })
+  await page.route(HISTORY_ROUTE, async (route) => {
+    await fulfillOk(route, instrumentHistory())
+  })
+
+  await page.goto("/")
+  const row = page.getByRole("button", { name: APPLE_ROW })
+  await row.focus()
+  await page.keyboard.press("Enter")
+
+  const dialog = page.getByRole("dialog")
+  await expect(dialog).toBeVisible()
+
+  await page.keyboard.press("Escape")
+  await expect(dialog).not.toBeVisible()
+  await expect(row).toBeFocused()
 })
 
 test("switches the chart time range inside the dialog and refetches", async ({
@@ -68,7 +92,7 @@ test("switches the chart time range inside the dialog and refetches", async ({
   const oneYear = dialog.getByRole("button", { name: "1Y", exact: true })
   await oneYear.click()
 
-  await expect(oneYear).toHaveClass(/bg-primary/)
+  await expect(oneYear).toHaveAttribute("aria-pressed", "true")
   await expect.poll(() => requestedRanges).toContain("1Y")
 })
 

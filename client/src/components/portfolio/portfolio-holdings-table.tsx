@@ -67,7 +67,9 @@ export function HoldingsTable({ holdings }: HoldingsTableProps) {
                     : undefined
                 }
                 className={
-                  isChartable ? "cursor-pointer hover:bg-muted/50" : undefined
+                  isChartable
+                    ? "cursor-pointer outline-none transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/50"
+                    : undefined
                 }
                 onClick={
                   isChartable

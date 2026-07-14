@@ -13,6 +13,7 @@ export function RangeSelector({ selected, onSelect }: RangeSelectorProps) {
         <button
           key={label}
           type="button"
+          aria-pressed={selected === label}
           onClick={() => onSelect(label)}
           className={[
             "rounded px-2.5 py-1 text-xs font-medium transition-colors",

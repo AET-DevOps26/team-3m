@@ -11,10 +11,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Service
 public class MarketDataService {
+
+    public static final String QUOTES_CACHE = "marketQuotes";
+    public static final String HISTORY_CACHE = "marketHistory";
 
     private static final DateTimeFormatter INTRADAY_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final Pattern ISIN_PATTERN = Pattern.compile("[A-Z]{2}[A-Z0-9]{9}[0-9]");
@@ -43,6 +47,7 @@ public class MarketDataService {
         return new InstrumentSearchResult(matches);
     }
 
+    @Cacheable(QUOTES_CACHE)
     public InstrumentQuoteResult getQuote(String symbol) {
         var payload = client.quote(resolveSymbol(symbol));
         if (payload.close() == null) {
@@ -58,6 +63,7 @@ public class MarketDataService {
                 payload.percentChange());
     }
 
+    @Cacheable(value = HISTORY_CACHE, key = "#symbol + '-' + #range")
     public InstrumentHistoryResult getHistory(String symbol, MarketRange range) {
         var resolved = resolveSymbol(symbol);
         var payload = client.timeSeries(resolved, range);

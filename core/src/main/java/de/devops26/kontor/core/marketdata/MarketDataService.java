@@ -8,14 +8,23 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Service
 public class MarketDataService {
 
+    public static final String QUOTES_CACHE = "marketQuotes";
+    public static final String HISTORY_CACHE = "marketHistory";
+
     private static final DateTimeFormatter INTRADAY_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final Pattern ISIN_PATTERN = Pattern.compile("[A-Z]{2}[A-Z0-9]{9}[0-9]");
 
     private final TwelveDataClient client;
+    private final Map<String, String> tickerByIsin = new ConcurrentHashMap<>();
 
     public MarketDataService(TwelveDataClient client) {
         this.client = client;
@@ -38,8 +47,9 @@ public class MarketDataService {
         return new InstrumentSearchResult(matches);
     }
 
+    @Cacheable(QUOTES_CACHE)
     public InstrumentQuoteResult getQuote(String symbol) {
-        var payload = client.quote(symbol);
+        var payload = client.quote(resolveSymbol(symbol));
         if (payload.close() == null) {
             throw new MarketDataUnavailableException(
                     new IllegalStateException("Quote for '" + symbol + "' has no price"));
@@ -53,8 +63,10 @@ public class MarketDataService {
                 payload.percentChange());
     }
 
+    @Cacheable(value = HISTORY_CACHE, key = "#symbol + '-' + #range")
     public InstrumentHistoryResult getHistory(String symbol, MarketRange range) {
-        var payload = client.timeSeries(symbol, range);
+        var resolved = resolveSymbol(symbol);
+        var payload = client.timeSeries(resolved, range);
         var series = payload.values().stream()
                 .filter(value -> value.close() != null && value.datetime() != null)
                 .map(value -> new InstrumentHistoryResult.PricePoint(parseTimestamp(value.datetime()), value.close()))
@@ -62,10 +74,25 @@ public class MarketDataService {
                 .toList();
         var meta = payload.meta();
         return new InstrumentHistoryResult(
-                meta == null || meta.symbol() == null ? symbol : meta.symbol(),
+                meta == null || meta.symbol() == null ? resolved : meta.symbol(),
                 meta == null ? null : meta.currency(),
                 range.param(),
                 series);
+    }
+
+    private String resolveSymbol(String symbol) {
+        if (symbol == null || !ISIN_PATTERN.matcher(symbol).matches()) {
+            return symbol;
+        }
+        return tickerByIsin.computeIfAbsent(symbol, this::searchTicker);
+    }
+
+    private String searchTicker(String isin) {
+        return client.search(isin).data().stream()
+                .map(TwelveDataClient.SearchMatch::symbol)
+                .filter(candidate -> candidate != null && !candidate.isBlank())
+                .findFirst()
+                .orElseThrow(() -> new UnknownSymbolException(isin));
     }
 
     private static OffsetDateTime parseTimestamp(String datetime) {

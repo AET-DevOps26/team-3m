@@ -136,6 +136,21 @@ class MarketDataIntegrationTest {
     }
 
     @Test
+    @DisplayName("GET /quotes/{symbol} when the provider rate-limits returns 429 envelope")
+    void getQuote_providerRateLimited_returns429() throws Exception {
+        when(twelveDataClient.quote("TSLA"))
+                .thenThrow(new MarketDataRateLimitException(new IllegalStateException("rate limited")));
+
+        mockMvc.perform(get("/api/v1/market-data/quotes/TSLA").with(userJwt()))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error")
+                        .value("Live market data is temporarily paused because the market-data provider's "
+                                + "request limit was reached. This is a limit on the provider's side, not a "
+                                + "problem with Kontor — please wait about a minute and try again."));
+    }
+
+    @Test
     @DisplayName("GET /quotes/{symbol}/history with an invalid range returns 400 without upstream call")
     void getQuoteHistory_invalidRange_returns400() throws Exception {
         mockMvc.perform(get("/api/v1/market-data/quotes/AAPL/history")

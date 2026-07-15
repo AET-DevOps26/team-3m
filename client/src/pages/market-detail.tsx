@@ -2,8 +2,7 @@ import { ArrowLeft } from "lucide-react"
 import { Link, useParams } from "react-router-dom"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { InstrumentPriceCard } from "@/components/markets/instrument-price-card"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { APIError } from "@/network/errors"
+import { marketDataErrorFallback } from "@/components/markets/market-data-error"
 
 function safeDecodeURIComponent(value: string): string {
   try {
@@ -11,19 +10,6 @@ function safeDecodeURIComponent(value: string): string {
   } catch {
     return value
   }
-}
-
-function marketDataErrorFallback(error: Error) {
-  return (
-    <Alert variant="destructive">
-      <AlertTitle>Could not load market data</AlertTitle>
-      <AlertDescription>
-        {error instanceof APIError
-          ? error.message
-          : "Something went wrong. Please try again later."}
-      </AlertDescription>
-    </Alert>
-  )
 }
 
 export function MarketDetailPage() {

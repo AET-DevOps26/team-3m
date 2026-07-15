@@ -43,10 +43,23 @@ export function formatTooltipDate(
   }).format(d)
 }
 
-const STEP_MS: Record<"1D" | "1W" | "1M", number> = {
-  "1D": 4 * 60 * 60 * 1000,
+const STEP_MS: Record<"1W" | "1M", number> = {
   "1W": 24 * 60 * 60 * 1000,
   "1M": 7 * 24 * 60 * 60 * 1000,
+}
+
+const INTRADAY_TICK_COUNT = 5
+
+function evenlySpacedTicks(
+  minMs: number,
+  maxMs: number,
+  count: number,
+): number[] {
+  if (maxMs <= minMs || count < 2) {
+    return [minMs]
+  }
+  const step = (maxMs - minMs) / (count - 1)
+  return Array.from({ length: count }, (_, i) => Math.round(minMs + i * step))
 }
 
 export function computeEquidistantTicks(
@@ -75,7 +88,11 @@ export function computeEquidistantTicks(
     return ticks
   }
 
-  const stepMs = STEP_MS[range]
+  if (range === "1D") {
+    return evenlySpacedTicks(minMs, maxMs, INTRADAY_TICK_COUNT)
+  }
+
+  const stepMs = STEP_MS[range as "1W" | "1M"]
   // Prepend minMs so the first data point always has a label
   const seen = new Set<number>([minMs])
   const ticks: number[] = [minMs]

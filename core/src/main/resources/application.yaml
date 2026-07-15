@@ -1,7 +1,8 @@
 server:
   port: 8080
-  # TLS terminates at the ingress/Traefik proxy; honor X-Forwarded-* so
-  # springdoc generates https URLs for the Swagger UI and OpenAPI servers.
+  # TLS terminates at the reverse proxy in front of the service; honor
+  # X-Forwarded-* so springdoc generates https URLs for the Swagger UI
+  # and OpenAPI servers.
   forward-headers-strategy: framework
 
 spring:

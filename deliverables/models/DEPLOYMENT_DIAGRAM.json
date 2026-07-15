@@ -45,11 +45,11 @@
     },
     {
       "id": "58848bfa-c3b1-4c04-830f-f32472e258fb",
-      "width": 250,
+      "width": 315,
       "height": 150,
       "type": "deploymentNode",
       "position": {
-        "x": 80,
+        "x": 45,
         "y": 85
       },
       "parentId": "2761a5d6-d3c7-49b8-95da-e86f2c61b51b",
@@ -59,14 +59,14 @@
         "stereotype": "Deployment"
       },
       "measured": {
-        "width": 250,
+        "width": 315,
         "height": 150
       }
     },
     {
       "id": "36f9189a-47a0-4257-a21d-bb7b95f5fe68",
-      "width": 200,
-      "height": 48,
+      "width": 265,
+      "height": 50,
       "type": "deploymentArtifact",
       "position": {
         "x": 25,
@@ -77,13 +77,13 @@
         "name": "kontor-client (nginx SPA)"
       },
       "measured": {
-        "width": 200,
-        "height": 48
+        "width": 265,
+        "height": 50
       }
     },
     {
       "id": "2f47fb88-1963-438b-91b6-86a439fc6af0",
-      "width": 250,
+      "width": 310,
       "height": 150,
       "type": "deploymentNode",
       "position": {
@@ -97,14 +97,14 @@
         "stereotype": "Deployment"
       },
       "measured": {
-        "width": 250,
+        "width": 310,
         "height": 150
       }
     },
     {
       "id": "3f4147bc-ec19-4b4f-9e58-f4169f3d94eb",
-      "width": 200,
-      "height": 48,
+      "width": 260,
+      "height": 46,
       "type": "deploymentArtifact",
       "position": {
         "x": 25,
@@ -112,11 +112,11 @@
       },
       "parentId": "2f47fb88-1963-438b-91b6-86a439fc6af0",
       "data": {
-        "name": "kontor-core.jar :8080"
+        "name": "kontor-core"
       },
       "measured": {
-        "width": 200,
-        "height": 48
+        "width": 260,
+        "height": 46
       }
     },
     {
@@ -183,12 +183,12 @@
       "height": 50,
       "type": "deploymentArtifact",
       "position": {
-        "x": 25,
-        "y": 62
+        "x": 20,
+        "y": 60
       },
       "parentId": "bda84217-58e1-4ac7-9d23-647af72e38b6",
       "data": {
-        "name": "kontor-news.jar :8080"
+        "name": "kontor-news"
       },
       "measured": {
         "width": 260,
@@ -197,11 +197,11 @@
     },
     {
       "id": "11e1e461-b396-4112-b0f6-89b3fd5a06bc",
-      "width": 250,
+      "width": 335,
       "height": 150,
       "type": "deploymentNode",
       "position": {
-        "x": 80,
+        "x": 60,
         "y": 925
       },
       "parentId": "2761a5d6-d3c7-49b8-95da-e86f2c61b51b",
@@ -211,14 +211,14 @@
         "stereotype": "Deployment"
       },
       "measured": {
-        "width": 250,
+        "width": 335,
         "height": 150
       }
     },
     {
       "id": "45d634c7-6c43-49ff-b9a4-16838844d1b9",
-      "width": 200,
-      "height": 48,
+      "width": 280,
+      "height": 50,
       "type": "deploymentArtifact",
       "position": {
         "x": 25,
@@ -229,8 +229,8 @@
         "name": "keycloak (auth.kontor.live)"
       },
       "measured": {
-        "width": 200,
-        "height": 48
+        "width": 280,
+        "height": 50
       }
     },
     {
@@ -239,7 +239,7 @@
       "height": 130,
       "type": "deploymentNode",
       "position": {
-        "x": 680,
+        "x": 710,
         "y": 1135
       },
       "parentId": "2761a5d6-d3c7-49b8-95da-e86f2c61b51b",
@@ -353,7 +353,7 @@
       "height": 150,
       "type": "deploymentNode",
       "position": {
-        "x": 70,
+        "x": 90,
         "y": 1130
       },
       "parentId": "2761a5d6-d3c7-49b8-95da-e86f2c61b51b",
@@ -395,7 +395,7 @@
         "y": 565
       },
       "data": {
-        "name": "User Browser (PWA)",
+        "name": "User Browser",
         "isComponentHeaderShown": true,
         "stereotype": "device"
       },
@@ -410,8 +410,8 @@
       "height": 90,
       "type": "deploymentNode",
       "position": {
-        "x": 1690,
-        "y": 1010
+        "x": 1385,
+        "y": 1015
       },
       "data": {
         "name": "Twelve Data API",
@@ -429,7 +429,7 @@
       "height": 100,
       "type": "deploymentNode",
       "position": {
-        "x": 1675,
+        "x": 1375,
         "y": 560
       },
       "data": {
@@ -448,8 +448,8 @@
       "height": 110,
       "type": "deploymentNode",
       "position": {
-        "x": 1655,
-        "y": 335
+        "x": 1380,
+        "y": 340
       },
       "data": {
         "name": "RSS Feeds (Yahoo · MarketWatch)",
@@ -716,11 +716,11 @@
             "y": 765
           },
           {
-            "x": -65,
+            "x": -48,
             "y": 765
           },
           {
-            "x": -65,
+            "x": -48,
             "y": 990
           }
         ],
@@ -815,7 +815,6 @@
       "sourceHandle": "right",
       "targetHandle": "left-between-mid-bottom-center",
       "data": {
-        "name": "HTTPS :443",
         "points": []
       }
     },
@@ -827,7 +826,6 @@
       "sourceHandle": "top",
       "targetHandle": "bottom",
       "data": {
-        "name": "JDBC :5432 (news)",
         "targetAnchor": {
           "side": "bottom",
           "ratio": 0.48148148148148145
@@ -848,14 +846,13 @@
     },
     {
       "id": "2ca83d0c-744b-4161-844d-6df0f7578dbf",
-      "source": "18744101-e17a-4bcc-bcdc-4696c3f67e55",
-      "target": "d8f0de39-8138-4238-ab3f-5c5fb640d608",
+      "source": "d8f0de39-8138-4238-ab3f-5c5fb640d608",
+      "target": "18744101-e17a-4bcc-bcdc-4696c3f67e55",
       "type": "DeploymentAssociation",
-      "sourceHandle": "right",
-      "targetHandle": "top",
+      "sourceHandle": "top",
+      "targetHandle": "right",
       "data": {
-        "name": "Postgres :5432 (kontor_ai)",
-        "sourceAnchor": {
+        "targetAnchor": {
           "side": "right",
           "ratio": 0.8
         },
@@ -864,14 +861,13 @@
     },
     {
       "id": "68f826bc-79bf-47a4-82da-955c64798014",
-      "source": "18744101-e17a-4bcc-bcdc-4696c3f67e55",
-      "target": "9e54087d-6555-46d6-b748-8d65044d5967",
+      "source": "9e54087d-6555-46d6-b748-8d65044d5967",
+      "target": "18744101-e17a-4bcc-bcdc-4696c3f67e55",
       "type": "DeploymentAssociation",
-      "sourceHandle": "left-between-mid-bottom-center",
-      "targetHandle": "right",
+      "sourceHandle": "right",
+      "targetHandle": "left-between-mid-bottom-center",
       "data": {
-        "name": "OTLP :4317",
-        "targetAnchor": {
+        "sourceAnchor": {
           "side": "right",
           "ratio": 0.5454545454545454
         },
@@ -886,7 +882,6 @@
       "sourceHandle": "bottom",
       "targetHandle": "left-bottom",
       "data": {
-        "name": "/ai :8000",
         "points": [
           {
             "x": 15,

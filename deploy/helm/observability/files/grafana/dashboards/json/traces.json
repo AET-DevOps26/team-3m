@@ -8,7 +8,7 @@
   ],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 2,
+  "version": 3,
   "refresh": "30s",
   "time": {
     "from": "now-1h",
@@ -460,7 +460,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.95, sum by (service, span_name, le) (rate(traces_spanmetrics_latency_bucket{deployment_environment=~\"$deployment_environment\", service=~\"$service\", span_kind=\"SPAN_KIND_SERVER\"}[$__rate_interval]))) > 0"
+          "expr": "histogram_quantile(0.95, sum by (service, span_name, le) (rate(traces_spanmetrics_latency_bucket{deployment_environment=~\"$deployment_environment\", service=~\"$service\", span_kind=\"SPAN_KIND_SERVER\"}[$__range]))) > 0"
         },
         {
           "refId": "rate",
@@ -470,7 +470,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (service, span_name) (rate(traces_spanmetrics_calls_total{deployment_environment=~\"$deployment_environment\", service=~\"$service\", span_kind=\"SPAN_KIND_SERVER\"}[$__rate_interval])) > 0"
+          "expr": "sum by (service, span_name) (rate(traces_spanmetrics_calls_total{deployment_environment=~\"$deployment_environment\", service=~\"$service\", span_kind=\"SPAN_KIND_SERVER\"}[$__range])) > 0"
         }
       ],
       "transformations": [

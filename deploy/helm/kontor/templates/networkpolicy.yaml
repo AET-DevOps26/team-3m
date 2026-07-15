@@ -153,8 +153,9 @@ spec:
         - protocol: TCP
           port: 5672
 ---
-# News: no ingress allowed — nothing calls it yet (future consumers get added
-# here). Egress stays open unless restrictEgress is set; then, in addition to
+# News: ingress from ingress-nginx only, for the public API-docs paths routed
+# through the ingress (in-cluster consumers get added here when they exist).
+# Egress stays open unless restrictEgress is set; then, in addition to
 # DNS/Postgres/Keycloak/RabbitMQ/OTLP, allow HTTPS to non-cluster addresses
 # because the aggregator fetches public RSS feeds and article pages.
 apiVersion: networking.k8s.io/v1
@@ -174,7 +175,14 @@ spec:
     {{- if .Values.networkPolicy.restrictEgress }}
     - Egress
     {{- end }}
-  ingress: []
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8080
   {{- if .Values.networkPolicy.restrictEgress }}
   egress:
     # DNS

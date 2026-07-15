@@ -815,6 +815,7 @@
       "sourceHandle": "right",
       "targetHandle": "left-between-mid-bottom-center",
       "data": {
+        "name": "HTTPS :443",
         "points": []
       }
     },
@@ -826,6 +827,7 @@
       "sourceHandle": "top",
       "targetHandle": "bottom",
       "data": {
+        "name": "JDBC :5432 (news)",
         "targetAnchor": {
           "side": "bottom",
           "ratio": 0.48148148148148145
@@ -846,13 +848,14 @@
     },
     {
       "id": "2ca83d0c-744b-4161-844d-6df0f7578dbf",
-      "source": "d8f0de39-8138-4238-ab3f-5c5fb640d608",
-      "target": "18744101-e17a-4bcc-bcdc-4696c3f67e55",
+      "source": "18744101-e17a-4bcc-bcdc-4696c3f67e55",
+      "target": "d8f0de39-8138-4238-ab3f-5c5fb640d608",
       "type": "DeploymentAssociation",
-      "sourceHandle": "top",
-      "targetHandle": "right",
+      "sourceHandle": "right",
+      "targetHandle": "top",
       "data": {
-        "targetAnchor": {
+        "name": "Postgres :5432 (kontor_ai)",
+        "sourceAnchor": {
           "side": "right",
           "ratio": 0.8
         },
@@ -861,13 +864,14 @@
     },
     {
       "id": "68f826bc-79bf-47a4-82da-955c64798014",
-      "source": "9e54087d-6555-46d6-b748-8d65044d5967",
-      "target": "18744101-e17a-4bcc-bcdc-4696c3f67e55",
+      "source": "18744101-e17a-4bcc-bcdc-4696c3f67e55",
+      "target": "9e54087d-6555-46d6-b748-8d65044d5967",
       "type": "DeploymentAssociation",
-      "sourceHandle": "right",
-      "targetHandle": "left-between-mid-bottom-center",
+      "sourceHandle": "left-between-mid-bottom-center",
+      "targetHandle": "right",
       "data": {
-        "sourceAnchor": {
+        "name": "OTLP :4317",
+        "targetAnchor": {
           "side": "right",
           "ratio": 0.5454545454545454
         },
@@ -882,6 +886,7 @@
       "sourceHandle": "bottom",
       "targetHandle": "left-bottom",
       "data": {
+        "name": "/ai :8000",
         "points": [
           {
             "x": 15,

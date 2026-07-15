@@ -78,6 +78,12 @@ spec:
         checksum/datasources: {{ .Files.Get "files/grafana/datasources/datasources.yaml" | sha256sum }}
         checksum/dashboard-provider: {{ .Files.Get "files/grafana/dashboards/provider.yaml" | sha256sum }}
         checksum/dashboards: {{ (.Files.Glob "files/grafana/dashboards/json/*.json").AsConfig | sha256sum }}
+        {{- if include "obs.alerting.enabled" . }}
+        checksum/alerting: {{ (.Files.Glob "files/grafana/alerting/*.yaml").AsConfig | sha256sum }}
+        {{- with .Values.alerting.secretChecksum }}
+        checksum/alerting-secret: {{ . }}
+        {{- end }}
+        {{- end }}
     spec:
       securityContext:
         runAsNonRoot: true
@@ -109,6 +115,13 @@ spec:
               value: grafana-exploretraces-app
             - name: GF_USERS_DEFAULT_THEME
               value: light
+            {{- if include "obs.alerting.enabled" . }}
+            - name: DISCORD_WEBHOOK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "obs.alerting.secretName" . }}
+                  key: discord-webhook-url
+            {{- end }}
             {{- if and .Values.grafana.ingress.enabled .Values.grafana.ingress.hosts }}
             - name: GF_SERVER_ROOT_URL
               value: {{ printf "https://%s" (first .Values.grafana.ingress.hosts) | quote }}
@@ -162,6 +175,9 @@ spec:
             - { name: datasources, mountPath: /etc/grafana/provisioning/datasources }
             - { name: dashboard-provider, mountPath: /etc/grafana/provisioning/dashboards }
             - { name: dashboards, mountPath: /var/lib/grafana/dashboards }
+            {{- if include "obs.alerting.enabled" . }}
+            - { name: alerting, mountPath: /etc/grafana/provisioning/alerting }
+            {{- end }}
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false
@@ -180,6 +196,11 @@ spec:
         - name: dashboards
           configMap:
             name: grafana-dashboards
+        {{- if include "obs.alerting.enabled" . }}
+        - name: alerting
+          configMap:
+            name: grafana-alerting
+        {{- end }}
 {{- if .Values.grafana.ingress.enabled }}
 ---
 apiVersion: networking.k8s.io/v1

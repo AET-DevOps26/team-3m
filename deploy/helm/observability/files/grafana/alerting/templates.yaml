@@ -1,0 +1,19 @@
+apiVersion: 1
+
+templates:
+  - orgId: 1
+    name: kontor-discord
+    template: |
+      {{ define "kontor.title" -}}
+      {{ if gt (len .Alerts.Firing) 0 }}🔴 {{ .CommonLabels.alertname }}{{ else }}🟢 Resolved: {{ .CommonLabels.alertname }}{{ end }}
+      {{- end }}
+
+      {{ define "kontor.message" -}}
+      {{ range .Alerts.Firing -}}
+      {{ .Annotations.summary }}
+      {{ if .Labels.service }}**Service:** {{ .Labels.service }} · {{ end }}**Severity:** {{ .Labels.severity }} · [view rule]({{ .GeneratorURL }}) · [silence]({{ .SilenceURL }})
+      {{ end -}}
+      {{ range .Alerts.Resolved -}}
+      Resolved{{ if .Labels.service }} for {{ .Labels.service }}{{ end }}: {{ .Annotations.summary }}
+      {{ end -}}
+      {{ end }}

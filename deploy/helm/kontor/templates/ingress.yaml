@@ -53,6 +53,21 @@ spec:
                 name: {{ include "kontor.news.fullname" $ }}
                 port:
                   number: {{ $.Values.news.service.port }}
+
+          - path: /swagger-ui
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "kontor.core.fullname" $ }}
+                port:
+                  number: {{ $.Values.core.service.port }}
+          - path: /v3/api-docs
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "kontor.core.fullname" $ }}
+                port:
+                  number: {{ $.Values.core.service.port }}
           - path: /
             pathType: Prefix
             backend:

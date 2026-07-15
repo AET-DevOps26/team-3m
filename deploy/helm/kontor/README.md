@@ -227,8 +227,9 @@ inside the news service owns schema migrations. When `news.db.existingSecret`
 is managed outside Helm, bump `news.db.secretRevision` after rotating it to roll
 the database and news pods.
 
-The news Service is ClusterIP-only with no ingress route — consumers are
-in-cluster (the future news processor); use `kubectl port-forward` to poke it.
+The news Service is ClusterIP; the ingress routes `/api/v1/news` plus the
+API-docs paths (`/news/swagger-ui`, `/news/v3/api-docs`) to it, while all other
+`/api` traffic goes to core.
 Manual aggregation requires a token carrying the `kontor-admin` realm role.
 Fresh realms define that role (preview's seeded user receives it); for an
 existing production realm, create the role if it predates this chart and assign

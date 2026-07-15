@@ -43,6 +43,13 @@ public class MarketDataController {
                 content =
                         @Content(
                                 mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ApiResponse.class))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "429",
+                description = "Market data provider rate limit reached",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
                                 schema = @Schema(implementation = ApiResponse.class)))
     })
     public ResponseEntity<InstrumentSearchApiResponse> searchInstruments(
@@ -71,6 +78,13 @@ public class MarketDataController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "502",
                 description = "Market data provider unavailable",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ApiResponse.class))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "429",
+                description = "Market data provider rate limit reached",
                 content =
                         @Content(
                                 mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -109,6 +123,13 @@ public class MarketDataController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "502",
                 description = "Market data provider unavailable",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ApiResponse.class))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "429",
+                description = "Market data provider rate limit reached",
                 content =
                         @Content(
                                 mediaType = MediaType.APPLICATION_JSON_VALUE,

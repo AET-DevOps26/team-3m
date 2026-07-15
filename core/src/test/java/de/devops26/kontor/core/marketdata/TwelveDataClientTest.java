@@ -129,20 +129,20 @@ class TwelveDataClientTest {
     }
 
     @Test
-    @DisplayName("quote rate-limit error body raises MarketDataUnavailableException")
-    void quote_errorBodyRateLimit_throwsUnavailable() {
+    @DisplayName("quote rate-limit error body raises MarketDataRateLimitException")
+    void quote_errorBodyRateLimit_throwsRateLimit() {
         server.expect(requestTo("https://twelvedata.test/quote?symbol=AAPL"))
                 .andRespond(withSuccess(RATE_LIMIT_BODY, MediaType.APPLICATION_JSON));
 
-        assertThatThrownBy(() -> client.quote("AAPL")).isInstanceOf(MarketDataUnavailableException.class);
+        assertThatThrownBy(() -> client.quote("AAPL")).isInstanceOf(MarketDataRateLimitException.class);
     }
 
     @Test
-    @DisplayName("quote HTTP 429 raises MarketDataUnavailableException")
-    void quote_http429_throwsUnavailable() {
+    @DisplayName("quote HTTP 429 raises MarketDataRateLimitException")
+    void quote_http429_throwsRateLimit() {
         server.expect(requestTo("https://twelvedata.test/quote?symbol=AAPL")).andRespond(withTooManyRequests());
 
-        assertThatThrownBy(() -> client.quote("AAPL")).isInstanceOf(MarketDataUnavailableException.class);
+        assertThatThrownBy(() -> client.quote("AAPL")).isInstanceOf(MarketDataRateLimitException.class);
     }
 
     @Test

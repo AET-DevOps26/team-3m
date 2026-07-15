@@ -37,8 +37,8 @@ test("searches for an instrument and opens its live price detail", async ({
   await expect(page.getByText("$308.24")).toBeVisible()
   await expect(page.getByText("+$13.86 (+4.71%)")).toBeVisible()
   await expect(
-    page.getByRole("button", { name: "1M", exact: true }),
-  ).toHaveClass(/bg-primary/)
+    page.getByRole("button", { name: "MAX", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true")
 })
 
 test("switches the price chart time range and refetches", async ({ page }) => {
@@ -60,7 +60,7 @@ test("switches the price chart time range and refetches", async ({ page }) => {
   const oneYear = page.getByRole("button", { name: "1Y", exact: true })
   await oneYear.click()
 
-  await expect(oneYear).toHaveClass(/bg-primary/)
+  await expect(oneYear).toHaveAttribute("aria-pressed", "true")
   await expect.poll(() => requestedRanges).toContain("1Y")
 })
 

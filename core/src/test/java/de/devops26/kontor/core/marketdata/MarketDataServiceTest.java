@@ -2,6 +2,10 @@ package de.devops26.kontor.core.marketdata;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -193,5 +197,98 @@ class MarketDataServiceTest {
         assertThat(result.symbol()).isEqualTo("AAPL");
         assertThat(result.currency()).isNull();
         assertThat(result.series()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("getQuote resolves an ISIN to a ticker via search before quoting")
+    void getQuote_isinSymbol_resolvesToTicker() {
+        when(client.search("US0378331005"))
+                .thenReturn(new SearchPayload(
+                        List.of(new SearchMatch("AAPL", "Apple Inc.", "NASDAQ", "Common Stock", "USD")),
+                        "ok",
+                        null,
+                        null));
+        when(client.quote("AAPL"))
+                .thenReturn(new QuotePayload(
+                        "AAPL",
+                        "Apple Inc.",
+                        "USD",
+                        new BigDecimal("308.235"),
+                        new BigDecimal("13.855"),
+                        new BigDecimal("4.7065"),
+                        "ok",
+                        null,
+                        null));
+
+        var result = service.getQuote("US0378331005");
+
+        assertThat(result.symbol()).isEqualTo("AAPL");
+        verify(client).quote("AAPL");
+    }
+
+    @Test
+    @DisplayName("getHistory resolves an ISIN to a ticker via search before fetching the series")
+    void getHistory_isinSymbol_resolvesToTicker() {
+        when(client.search("IE00B5BMR087"))
+                .thenReturn(new SearchPayload(
+                        List.of(new SearchMatch("CSPX", "iShares Core S&P 500 UCITS ETF", "LSE", "ETF", "USD")),
+                        "ok",
+                        null,
+                        null));
+        when(client.timeSeries("CSPX", MarketRange.ONE_MONTH))
+                .thenReturn(new TimeSeriesPayload(
+                        new TimeSeriesMeta("CSPX", "USD"),
+                        List.of(new TimeSeriesValue("2026-07-01", new BigDecimal("560.10"))),
+                        "ok",
+                        null,
+                        null));
+
+        var result = service.getHistory("IE00B5BMR087", MarketRange.ONE_MONTH);
+
+        assertThat(result.symbol()).isEqualTo("CSPX");
+        verify(client).timeSeries("CSPX", MarketRange.ONE_MONTH);
+    }
+
+    @Test
+    @DisplayName("an ISIN with no search matches raises UnknownSymbolException without quoting")
+    void getQuote_isinWithoutMatch_throwsUnknownSymbol() {
+        when(client.search("US0378331005")).thenReturn(new SearchPayload(List.of(), "ok", null, null));
+
+        assertThatThrownBy(() -> service.getQuote("US0378331005"))
+                .isInstanceOf(UnknownSymbolException.class)
+                .hasMessageContaining("US0378331005");
+        verify(client, never()).quote(anyString());
+    }
+
+    @Test
+    @DisplayName("ISIN resolution is cached across calls")
+    void resolveSymbol_repeatedIsin_searchesOnce() {
+        when(client.search("US0378331005"))
+                .thenReturn(new SearchPayload(
+                        List.of(new SearchMatch("AAPL", "Apple Inc.", "NASDAQ", "Common Stock", "USD")),
+                        "ok",
+                        null,
+                        null));
+        when(client.quote("AAPL"))
+                .thenReturn(new QuotePayload(
+                        "AAPL", "Apple Inc.", "USD", new BigDecimal("308.235"), null, null, "ok", null, null));
+
+        service.getQuote("US0378331005");
+        service.getQuote("US0378331005");
+
+        verify(client, times(1)).search("US0378331005");
+        verify(client, times(2)).quote("AAPL");
+    }
+
+    @Test
+    @DisplayName("a plain ticker is quoted directly without a search call")
+    void getQuote_tickerSymbol_skipsResolution() {
+        when(client.quote("AAPL"))
+                .thenReturn(new QuotePayload(
+                        "AAPL", "Apple Inc.", "USD", new BigDecimal("308.235"), null, null, "ok", null, null));
+
+        service.getQuote("AAPL");
+
+        verify(client, never()).search(anyString());
     }
 }

@@ -13,6 +13,9 @@ import org.springframework.web.client.RestClientResponseException;
 public class TwelveDataClient {
 
     private static final int SEARCH_RESULT_LIMIT = 10;
+    private static final String NOT_CONFIGURED_MESSAGE =
+            "Live market data is not configured. Set TWELVE_DATA_API_KEY to enable it "
+                    + "— get a free key at https://twelvedata.com.";
 
     private final RestClient restClient;
     private final MarketDataProperties properties;
@@ -65,14 +68,18 @@ public class TwelveDataClient {
 
     private <T extends TwelveDataPayload> T fetch(String symbol, Supplier<T> call) {
         if (properties.apiKey().isBlank()) {
-            throw new MarketDataUnavailableException("Live market data is not configured");
+            throw new MarketDataUnavailableException(NOT_CONFIGURED_MESSAGE);
         }
         T payload;
         try {
             payload = call.get();
         } catch (RestClientResponseException e) {
-            if (symbol != null && isNotFoundStatus(e.getStatusCode().value())) {
+            var status = e.getStatusCode().value();
+            if (symbol != null && isNotFoundStatus(status)) {
                 throw new UnknownSymbolException(symbol);
+            }
+            if (isRateLimited(status)) {
+                throw new MarketDataRateLimitException(e);
             }
             throw new MarketDataUnavailableException(e);
         } catch (RestClientException e) {
@@ -86,6 +93,10 @@ public class TwelveDataClient {
             if (symbol != null && payload.code() != null && isNotFoundStatus(payload.code())) {
                 throw new UnknownSymbolException(symbol);
             }
+            if (payload.code() != null && isRateLimited(payload.code())) {
+                throw new MarketDataRateLimitException(
+                        new IllegalStateException("Twelve Data rate limit: " + payload.message()));
+            }
             throw new MarketDataUnavailableException(
                     new IllegalStateException("Twelve Data error " + payload.code() + ": " + payload.message()));
         }
@@ -94,6 +105,10 @@ public class TwelveDataClient {
 
     private static boolean isNotFoundStatus(int status) {
         return status == 404;
+    }
+
+    private static boolean isRateLimited(int status) {
+        return status == 429;
     }
 
     public interface TwelveDataPayload {

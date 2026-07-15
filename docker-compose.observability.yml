@@ -8,7 +8,7 @@ x-otel-backend-env: &otel-backend-env
 
 services:
   seaweedfs:
-    image: chrislusf/seaweedfs:4.37
+    image: chrislusf/seaweedfs:4.38
     command:
       - server
       - -dir=/data
@@ -29,7 +29,7 @@ services:
       start_period: 10s
 
   seaweedfs-init:
-    image: chrislusf/seaweedfs:4.37
+    image: chrislusf/seaweedfs:4.38
     depends_on:
       seaweedfs:
         condition: service_healthy
@@ -67,7 +67,7 @@ services:
       start_period: 20s
 
   tempo:
-    image: grafana/tempo:2.10.7
+    image: grafana/tempo:3.0.2
     command: ["-config.file=/etc/tempo/tempo.yaml", "-config.expand-env=true"]
     environment:
       S3_ACCESS_KEY: observability
@@ -88,7 +88,7 @@ services:
       start_period: 20s
 
   prometheus:
-    image: prom/prometheus:v3.12.0
+    image: prom/prometheus:v3.13.0
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.path=/prometheus

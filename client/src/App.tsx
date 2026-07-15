@@ -19,6 +19,16 @@ const AboutPage = lazy(() =>
     default: module.AboutPage,
   })),
 )
+const MarketsPage = lazy(() =>
+  import("@/pages/markets").then((module) => ({
+    default: module.MarketsPage,
+  })),
+)
+const MarketDetailPage = lazy(() =>
+  import("@/pages/market-detail").then((module) => ({
+    default: module.MarketDetailPage,
+  })),
+)
 
 function AppErrorFallback() {
   return (
@@ -46,6 +56,8 @@ export function App() {
           <Route element={<AppLayout />}>
             <Route path="/" element={<PortfolioOverviewPage />} />
             <Route path="/transactions" element={<TransactionsPage />} />
+            <Route path="/markets" element={<MarketsPage />} />
+            <Route path="/markets/:symbol" element={<MarketDetailPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/portfolio" element={<Navigate to="/" replace />} />
             <Route path="/import" element={<Navigate to="/" replace />} />

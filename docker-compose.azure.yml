@@ -140,6 +140,7 @@ services:
       KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/realms/kontor/protocol/openid-connect/certs"
       KEYCLOAK_AUDIENCE: "${KEYCLOAK_AUDIENCE:-kontor-api}"
       APP_CORS_ALLOWED_ORIGINS: "https://${DOMAIN}"
+      TWELVE_DATA_API_KEY: "${TWELVE_DATA_API_KEY:-}"
       JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75"
     labels:
       - "traefik.enable=true"

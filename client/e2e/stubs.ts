@@ -158,6 +158,72 @@ export function transactionMetadata(
   return { categories, types }
 }
 
+// --- Market data -------------------------------------------------------------
+
+export interface StubInstrumentMatch {
+  symbol: string
+  name: string
+  exchange: string
+  type: string
+  currency: string
+}
+
+export const SAMPLE_MATCHES: StubInstrumentMatch[] = [
+  {
+    symbol: "AAPL",
+    name: "Apple Inc.",
+    exchange: "NASDAQ",
+    type: "Common Stock",
+    currency: "USD",
+  },
+  {
+    symbol: "APLE",
+    name: "Apple Hospitality REIT, Inc.",
+    exchange: "NYSE",
+    type: "REIT",
+    currency: "USD",
+  },
+]
+
+export function instrumentSearch(
+  matches: StubInstrumentMatch[] = SAMPLE_MATCHES,
+) {
+  return { matches }
+}
+
+export function instrumentQuote(
+  overrides: Partial<{
+    symbol: string
+    name: string
+    currency: string
+    price: number
+    change: number
+    changePercent: number
+  }> = {},
+) {
+  return {
+    symbol: "AAPL",
+    name: "Apple Inc.",
+    currency: "USD",
+    price: 308.24,
+    change: 13.86,
+    changePercent: 4.71,
+    ...overrides,
+  }
+}
+
+/** Daily closes evenly spread from `spanDays` ago to now. */
+export function instrumentHistory(range = "1M", count = 22, spanDays = 30) {
+  const now = Date.now()
+  const dayMs = 24 * 60 * 60 * 1000
+  const denom = Math.max(count - 1, 1)
+  const series = Array.from({ length: count }, (_, i) => ({
+    timestamp: offsetIso(now - spanDays * dayMs * (1 - i / denom)),
+    close: 280 + i * 1.3,
+  }))
+  return { symbol: "AAPL", currency: "USD", range, series }
+}
+
 // --- AI recommendation -----------------------------------------------------
 
 export function recommendation() {

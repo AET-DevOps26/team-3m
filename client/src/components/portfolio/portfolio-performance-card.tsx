@@ -1,5 +1,6 @@
 import { Suspense, useMemo, useState } from "react"
 import { Area, AreaChart, XAxis } from "recharts"
+import { RangeSelector } from "@/components/charts/range-selector"
 import {
   Card,
   CardContent,
@@ -13,21 +14,18 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
+import {
+  computeEquidistantTicks,
+  formatAxisDate,
+  formatTooltipDate,
+  TIME_RANGES,
+  type TimeRange,
+} from "@/lib/chart-time"
 import { formatCurrency } from "@/lib/format"
 import {
   type PortfolioSnapshot,
   usePortfolioPerformance,
 } from "@/network/endpoints/portfolio"
-
-type TimeRange = "1D" | "1W" | "1M" | "1Y" | "MAX"
-
-const TIME_RANGES: { label: TimeRange; days: number | null }[] = [
-  { label: "1D", days: 1 },
-  { label: "1W", days: 7 },
-  { label: "1M", days: 30 },
-  { label: "1Y", days: 365 },
-  { label: "MAX", days: null },
-]
 
 function cutoffDateFor(days: number | null): string | null {
   if (days === null) return null
@@ -46,111 +44,6 @@ export function filterByRange(
   return cutoff === null
     ? snapshots
     : snapshots.filter((s) => s.datetime != null && s.datetime >= cutoff)
-}
-
-function formatAxisDate(timestampMs: number, range: TimeRange): string {
-  const d = new Date(timestampMs)
-  if (range === "1D") {
-    return new Intl.DateTimeFormat("en", {
-      hour: "numeric",
-      minute: "2-digit",
-    }).format(d)
-  }
-  const showDay = range === "1W" || range === "1M"
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    ...(showDay ? { day: "numeric" } : { year: "numeric" }),
-  }).format(d)
-}
-
-function formatTooltipDate(timestampMs: number, range: TimeRange): string {
-  const d = new Date(timestampMs)
-  if (range === "1D") {
-    return new Intl.DateTimeFormat("en", {
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    }).format(d)
-  }
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(d)
-}
-
-const STEP_MS: Record<"1D" | "1W" | "1M", number> = {
-  "1D": 4 * 60 * 60 * 1000,
-  "1W": 24 * 60 * 60 * 1000,
-  "1M": 7 * 24 * 60 * 60 * 1000,
-}
-
-function computeEquidistantTicks(
-  minMs: number,
-  maxMs: number,
-  range: TimeRange,
-): number[] {
-  // 1Y and MAX use calendar-aligned month boundaries to avoid duplicate labels
-  if (range === "1Y" || range === "MAX") {
-    const durationDays = (maxMs - minMs) / (24 * 60 * 60 * 1000)
-    let stepMonths = 1
-    if (durationDays > 730) stepMonths = 6
-    else if (durationDays > 365) stepMonths = 3
-
-    const start = new Date(minMs)
-    let current = new Date(start.getFullYear(), start.getMonth() + 1, 1)
-    const ticks: number[] = []
-    while (current.getTime() <= maxMs) {
-      ticks.push(current.getTime())
-      current = new Date(
-        current.getFullYear(),
-        current.getMonth() + stepMonths,
-        1,
-      )
-    }
-    return ticks
-  }
-
-  const stepMs = STEP_MS[range]
-  // Prepend minMs so the first data point always has a label
-  const seen = new Set<number>([minMs])
-  const ticks: number[] = [minMs]
-  const firstEquidistantTick = Math.ceil(minMs / stepMs) * stepMs
-  for (let t = firstEquidistantTick; t <= maxMs; t += stepMs) {
-    if (!seen.has(t)) {
-      seen.add(t)
-      ticks.push(t)
-    }
-  }
-  return ticks
-}
-
-interface RangeSelectorProps {
-  selected: TimeRange
-  onSelect: (r: TimeRange) => void
-}
-
-function RangeSelector({ selected, onSelect }: RangeSelectorProps) {
-  return (
-    <div className="flex gap-1">
-      {TIME_RANGES.map(({ label }) => (
-        <button
-          key={label}
-          type="button"
-          onClick={() => onSelect(label)}
-          className={[
-            "rounded px-2.5 py-1 text-xs font-medium transition-colors",
-            selected === label
-              ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:bg-muted hover:text-foreground",
-          ].join(" ")}
-        >
-          {label}
-        </button>
-      ))}
-    </div>
-  )
 }
 
 const chartConfig = {

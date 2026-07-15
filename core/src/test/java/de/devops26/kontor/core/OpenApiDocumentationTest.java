@@ -54,7 +54,16 @@ class OpenApiDocumentationTest {
                         "scheme: bearer",
                         "\"401\"",
                         "listTransactions",
-                        "/api/v1/financial-transactions");
+                        "/api/v1/financial-transactions",
+                        "searchInstruments",
+                        "getQuote",
+                        "getQuoteHistory",
+                        "/api/v1/market-data/search",
+                        "/api/v1/market-data/quotes/{symbol}",
+                        "/api/v1/market-data/quotes/{symbol}/history",
+                        "InstrumentSearchApiResponse",
+                        "InstrumentQuoteApiResponse",
+                        "InstrumentHistoryApiResponse");
 
         if (Boolean.getBoolean("openapi.write")) {
             Files.createDirectories(OUTPUT.getParent());

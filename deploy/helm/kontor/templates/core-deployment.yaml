@@ -19,6 +19,7 @@ spec:
       annotations:
         # Roll the pods when the DB secret changes so new creds take effect.
         checksum/secret: {{ include (print $.Template.BasePath "/postgres-secret.yaml") . | sha256sum }}
+        checksum/market-data-secret: {{ include (print $.Template.BasePath "/core-secret.yaml") . | sha256sum }}
     spec:
       securityContext:
         {{- toYaml .Values.core.podSecurityContext | nindent 8 }}
@@ -80,6 +81,10 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ include "kontor.postgres.secretName" . }}
+            {{- if or .Values.core.twelveDataApiKey .Values.core.existingMarketDataSecret }}
+            - secretRef:
+                name: {{ include "kontor.core.marketDataSecretName" . }}
+            {{- end }}
           readinessProbe:
             httpGet:
               path: {{ .Values.core.probes.readinessPath }}

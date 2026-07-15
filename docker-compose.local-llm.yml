@@ -9,7 +9,7 @@
 
 services:
   ollama:
-    image: ollama/ollama:0.31.1
+    image: ollama/ollama:0.31.2
     volumes:
       - ollama_models:/root/.ollama
     healthcheck:
@@ -23,7 +23,7 @@ services:
   # re-pull of an already-present model is a fast no-op. The ai service waits for this to
   # finish so the first request can't race a half-downloaded model.
   ollama-pull:
-    image: ollama/ollama:0.31.1
+    image: ollama/ollama:0.31.2
     depends_on:
       ollama:
         condition: service_healthy

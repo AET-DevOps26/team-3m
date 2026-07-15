@@ -22,6 +22,8 @@ The repository includes a root `.env.example` and a local `.env` with the defaul
 
 The AI service uses a **Logos API key** (`LOGOS_API_KEY=lg-…`) in `.env` when available. The Logos endpoint is only reachable from the TUM network or via eduVPN. When the key is missing, the AI service **automatically falls back to a local LLM** (see [Local LLM (offline AI)](#local-llm-offline-ai) below). If no local LLM is configured either (`LOCAL_LLM_BASE_URL` empty), recommendation calls return `503`; if a local LLM is configured but not running, they return `502` ("Local LLM is not reachable").
 
+Live stock/ETF market data (quotes, price history, the holdings chart) is sourced from [Twelve Data](https://twelvedata.com) via a **`TWELVE_DATA_API_KEY`** in `.env`. Get a free key at <https://twelvedata.com/pricing> — the free tier is enough for local testing. When the key is missing, market-data endpoints return `502` with a message telling you the key is not configured, and the holdings chart shows that message instead of a chart; the rest of the app works normally.
+
 Hosted news ingest uses `qwen/qwen3-embedding-8b` by default through Logos'
 OpenAI-compatible embeddings endpoint. The `LOGOS_EMBEDDING_MODEL` repository
 variable can override that model for Helm and Azure deployments.

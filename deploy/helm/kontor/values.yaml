@@ -95,9 +95,11 @@ core:
   tolerations: []
   affinity: {}
 
-# Spring Boot market-news aggregator service. ClusterIP-only, no ingress; it
-# publishes to RabbitMQ for the in-cluster AI consumer. Public HTTPS egress is
-# explicitly allowed when egress is restricted.
+# Spring Boot market-news aggregator service. ClusterIP; only the API docs
+# (/news/swagger-ui, /news/v3/api-docs) are exposed through the ingress — the
+# API itself stays in-cluster (the AI consumer reads via RabbitMQ / debugging
+# via port-forward). Public HTTPS egress is explicitly allowed when egress is
+# restricted.
 news:
   image:
     repository: aet-devops26/team-3m/kontor-news
@@ -108,19 +110,50 @@ news:
   service:
     type: ClusterIP
     port: 8080
-  # Dedicated database + role inside the shared Postgres instance. An
-  # idempotent provisioning Job reconciles it on every credential revision.
+  # Dedicated Postgres instance owned exclusively by the news service.
   db:
+    image:
+      registry: docker.io
+      repository: postgres
+      tag: "18-trixie"
+      pullPolicy: ""
     database: news
     username: news
-    # REQUIRED when existingSecret is empty. Supply via secrets.yaml or --set.
+    # Required unless existingSecret is set. Supply via -f secrets.yaml or
+    # --set news.db.password=... (CI passes the NEWS_POSTGRES_PASSWORD secret).
     password: ""
     # Existing Secret with keys: NEWS_POSTGRES_DB, NEWS_POSTGRES_USER,
     # NEWS_POSTGRES_PASSWORD.
     existingSecret: ""
-    # Bump when an externally managed Secret changes so the provisioner Job
-    # gets a new immutable name and reruns.
-    provisioningRevision: ""
+    # Bump after rotating an externally managed Secret to roll both workloads.
+    secretRevision: ""
+    service:
+      port: 5432
+    persistence:
+      enabled: true
+      size: 4Gi
+      storageClass: "csi-rbd-sc"
+      accessModes:
+        - ReadWriteOnce
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 999
+      runAsGroup: 999
+      fsGroup: 999
+      seccompProfile:
+        type: RuntimeDefault
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop: ["ALL"]
   aggregation:
     schedulerEnabled: true
     interval: PT15M

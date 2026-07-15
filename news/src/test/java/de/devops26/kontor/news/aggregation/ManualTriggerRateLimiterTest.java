@@ -1,6 +1,7 @@
 package de.devops26.kontor.news.aggregation;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
 import static org.mockito.Mockito.when;
 
 import java.time.Duration;
@@ -24,12 +25,14 @@ class ManualTriggerRateLimiterTest {
     @DisplayName("rejects a manual trigger inside the configured interval")
     void checkAllowed_recentManualRun_throws() {
         var properties = new NewsFeedProperties(
-                Duration.ofMinutes(15), Duration.ofMinutes(1), true, 50, Duration.ofSeconds(30), List.of());
+                Duration.ofSeconds(1), Duration.ZERO, true, 50, Duration.ofMinutes(10), List.of());
         when(runRepository.findLatestStartedAt(AggregationTrigger.MANUAL))
-                .thenReturn(Optional.of(OffsetDateTime.now(ZoneOffset.UTC)));
+                .thenReturn(Optional.of(OffsetDateTime.now(ZoneOffset.UTC).minusMinutes(1)));
 
-        assertThatThrownBy(() -> new ManualTriggerRateLimiter(runRepository, properties).checkAllowed())
-                .isInstanceOf(ManualTriggerRateLimitException.class)
-                .hasMessageContaining("retry");
+        var exception = catchThrowableOfType(
+                ManualTriggerRateLimitException.class,
+                () -> new ManualTriggerRateLimiter(runRepository, properties).checkAllowed());
+
+        assertThat(exception.retryAfterSeconds()).isBetween(530L, 540L);
     }
 }

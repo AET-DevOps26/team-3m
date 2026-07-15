@@ -46,6 +46,12 @@ async def lifespan(app: FastAPI):
                 pass
 
 
-app = FastAPI(title="Kontor AI", lifespan=lifespan)
+app = FastAPI(
+    title="Kontor AI",
+    lifespan=lifespan,
+    docs_url="/ai/docs",
+    redoc_url=None,
+    openapi_url="/ai/openapi.json",
+)
 app.include_router(health_router, prefix="/ai")
 app.include_router(recommendation_router, prefix="/ai")

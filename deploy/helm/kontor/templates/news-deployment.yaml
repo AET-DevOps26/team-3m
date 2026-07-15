@@ -21,7 +21,7 @@ spec:
         app.kubernetes.io/component: news
       annotations:
         # Roll the pods when the DB secret changes so new creds take effect.
-        checksum/secret: {{ printf "%s|%s" (include (print $.Template.BasePath "/news-postgres-secret.yaml") .) .Values.news.db.provisioningRevision | sha256sum }}
+        checksum/secret: {{ printf "%s|%s" (include (print $.Template.BasePath "/news-postgres-secret.yaml") .) .Values.news.db.secretRevision | sha256sum }}
     spec:
       securityContext:
         {{- toYaml .Values.news.podSecurityContext | nindent 8 }}
@@ -39,9 +39,9 @@ spec:
             - name: APP_VERSION
               value: {{ default .Chart.AppVersion .Values.news.image.tag | quote }}
             - name: NEWS_POSTGRES_HOST
-              value: {{ include "kontor.postgres.fullname" . | quote }}
+              value: {{ include "kontor.news.postgres.fullname" . | quote }}
             - name: NEWS_POSTGRES_PORT
-              value: {{ .Values.postgres.service.port | quote }}
+              value: {{ .Values.news.db.service.port | quote }}
             - name: RABBITMQ_HOST
               value: {{ include "kontor.rabbitmq.fullname" . | quote }}
             - name: RABBITMQ_PORT
@@ -75,8 +75,6 @@ spec:
             - name: KEYCLOAK_JWK_SET_URI
               value: {{ . | quote }}
             {{- end }}
-            - name: KEYCLOAK_AUDIENCE
-              value: {{ .Values.oidc.audience | quote }}
             {{- range $key, $value := .Values.news.env }}
             - name: {{ $key }}
               value: {{ $value | quote }}

@@ -63,4 +63,12 @@ class FeedParserTest {
                 .isInstanceOf(FeedFetchException.class)
                 .hasMessageContaining(FEED_URL);
     }
+
+    @Test
+    @DisplayName("rejects feeds containing a document type declaration")
+    void parse_feedWithDoctype_throws() {
+        assertThatThrownBy(() -> parser.parse(fixture("feed-with-doctype.xml"), FEED_URL))
+                .isInstanceOf(FeedFetchException.class)
+                .hasMessageContaining(FEED_URL);
+    }
 }

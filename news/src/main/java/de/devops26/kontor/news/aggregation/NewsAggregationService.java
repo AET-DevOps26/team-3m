@@ -8,6 +8,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -174,12 +175,7 @@ public class NewsAggregationService {
     private PublishOutcome publishNewItems(
             NewsFeedProperties.Feed feed, List<FeedItem> items, java.util.Set<String> claimedHashes) {
         var hashedItems = items.stream()
-                .map(item -> {
-                    var safeUrl = urlPolicy.validate(item.url()).toString();
-                    return new HashedItem(
-                            new FeedItem(item.title(), safeUrl, item.externalId(), item.summary(), item.publishedAt()),
-                            UrlNormalizer.sha256Hex(UrlNormalizer.normalize(safeUrl)));
-                })
+                .flatMap(item -> hashSafeItem(feed, item).stream())
                 .filter(item -> claimedHashes.add(item.urlHash()))
                 .toList();
         var alreadyPushed = crawledArticleRepository.findPushedUrlHashes(
@@ -198,6 +194,18 @@ public class NewsAggregationService {
         }
         var error = failures > 0 ? feed.name() + ": " + failures + " item(s) failed to publish" : null;
         return new PublishOutcome(published, error);
+    }
+
+    private Optional<HashedItem> hashSafeItem(NewsFeedProperties.Feed feed, FeedItem item) {
+        try {
+            var safeUrl = urlPolicy.validate(item.url()).toString();
+            return Optional.of(new HashedItem(
+                    new FeedItem(item.title(), safeUrl, item.externalId(), item.summary(), item.publishedAt()),
+                    UrlNormalizer.sha256Hex(UrlNormalizer.normalize(safeUrl))));
+        } catch (UnsafeOutboundUrlException e) {
+            log.warn("Skipping an unsafe article URL from feed '{}'", feed.name());
+            return Optional.empty();
+        }
     }
 
     private boolean publishItem(NewsFeedProperties.Feed feed, HashedItem hashedItem) {

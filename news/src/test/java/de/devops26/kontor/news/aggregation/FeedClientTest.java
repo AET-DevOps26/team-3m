@@ -1,13 +1,19 @@
 package de.devops26.kontor.news.aggregation;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import org.apache.hc.client5.http.DnsResolver;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -30,6 +36,11 @@ class FeedClientTest {
         });
         server.createContext("/redirect", exchange -> {
             exchange.getResponseHeaders().set("Location", "file:///etc/passwd");
+            exchange.sendResponseHeaders(302, -1);
+            exchange.close();
+        });
+        server.createContext("/redirect-private", exchange -> {
+            exchange.getResponseHeaders().set("Location", "http://169.254.169.254/latest/meta-data/");
             exchange.sendResponseHeaders(302, -1);
             exchange.close();
         });
@@ -62,6 +73,44 @@ class FeedClientTest {
         assertThatThrownBy(() -> client.fetchItems(feed))
                 .isInstanceOf(UnsafeOutboundUrlException.class)
                 .hasMessageContaining("HTTPS is required");
+    }
+
+    @Test
+    @DisplayName("rejects redirects from an allowed feed to a private address")
+    void fetchItems_redirectToPrivateAddress_throws() {
+        var permissiveProperties = new NewsHttpProperties(Duration.ofSeconds(2), 64, 64, 1000, 2, true, true);
+        var strictProperties = new NewsHttpProperties(Duration.ofSeconds(2), 64, 64, 1000, 2, true, false);
+        var feedUrl = baseUrl() + "/redirect-private";
+        var requestPolicy = mock(OutboundUrlPolicy.class);
+        when(requestPolicy.validate(feedUrl)).thenReturn(URI.create(feedUrl));
+        var strictPolicy = new OutboundUrlPolicy(strictProperties);
+        when(requestPolicy.validate(any(URI.class)))
+                .thenAnswer(invocation -> strictPolicy.validate(invocation.getArgument(0, URI.class)));
+        var connectionResolver = new PublicAddressDnsResolver(new OutboundUrlPolicy(permissiveProperties));
+        var client = new FeedClient(new FeedParser(), requestPolicy, permissiveProperties, connectionResolver);
+        var feed = new NewsFeedProperties.Feed("test", feedUrl);
+
+        assertThatThrownBy(() -> client.fetchItems(feed))
+                .isInstanceOf(UnsafeOutboundUrlException.class)
+                .hasMessageContaining("non-public address");
+    }
+
+    @Test
+    @DisplayName("rejects a private address returned by connection-time DNS resolution")
+    void fetchItems_dnsRebindsToPrivateAddress_throws() throws Exception {
+        var properties = new NewsHttpProperties(Duration.ofSeconds(2), 64, 64, 1000, 2, true, false);
+        var requestPolicy = mock(OutboundUrlPolicy.class);
+        var feedUrl = baseUrl() + "/declared-large";
+        when(requestPolicy.validate(feedUrl)).thenReturn(URI.create(feedUrl));
+        var delegate = mock(DnsResolver.class);
+        when(delegate.resolve("localhost")).thenReturn(new InetAddress[] {InetAddress.getLoopbackAddress()});
+        var resolver = new PublicAddressDnsResolver(new OutboundUrlPolicy(properties), delegate);
+        var client = new FeedClient(new FeedParser(), requestPolicy, properties, resolver);
+        var feed = new NewsFeedProperties.Feed("test", feedUrl);
+
+        assertThatThrownBy(() -> client.fetchItems(feed))
+                .isInstanceOf(FeedFetchException.class)
+                .hasRootCauseInstanceOf(UnsafeOutboundUrlException.class);
     }
 
     private static void assertOversized(String path) {

@@ -202,6 +202,29 @@ class NewsAggregationServiceTest {
     }
 
     @Test
+    @DisplayName("an unsafe article URL does not prevent valid feed items from publishing")
+    void startRun_unsafeItemUrl_skipsOnlyUnsafeItem() {
+        var runId = UUID.randomUUID();
+        stubRunInsert(runId, AggregationTrigger.SCHEDULED);
+        var unsafeUrl = "https://unsafe.example/article";
+        when(feedClient.fetchItems(FEED_A))
+                .thenReturn(List.of(
+                        new FeedItem("Unsafe", unsafeUrl, null, null, null),
+                        new FeedItem("Valid", "https://example.com/valid", null, null, null)));
+        when(feedClient.fetchItems(FEED_B)).thenReturn(List.of());
+        when(urlPolicy.validate(unsafeUrl))
+                .thenThrow(new UnsafeOutboundUrlException(unsafeUrl, "host resolves to a non-public address"));
+        when(crawledArticleRepository.findPushedUrlHashes(anyCollection())).thenReturn(Set.of());
+
+        service.startRun(AggregationTrigger.SCHEDULED);
+
+        var messageCaptor = ArgumentCaptor.forClass(ArticleMessage.class);
+        verify(articlePublisher).publish(messageCaptor.capture());
+        assertThat(messageCaptor.getValue().title()).isEqualTo("Valid");
+        verify(runRepository).markFinished(eq(runId), eq(AggregationStatus.SUCCEEDED), any(), eq(2), eq(1), eq(null));
+    }
+
+    @Test
     @DisplayName("the run is marked failed when every feed fails")
     void startRun_allFeedsFail_marksFailed() {
         var runId = UUID.randomUUID();

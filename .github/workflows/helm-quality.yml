@@ -9,8 +9,8 @@ permissions:
 
 env:
   CHART: deploy/helm/kontor
-  # Dummy secrets so the chart's `fail` guards (postgres/keycloak passwords) pass
-  # during lint/template/scan. Never used at runtime.
+  # Dummy secrets so the chart's `fail` guards pass during lint/template/scan.
+  # Never used at runtime.
   HELM_SECRETS: >-
     --set postgres.password=ci
     --set news.db.password=ci

@@ -83,13 +83,18 @@ repository secret (see `deploy/rbac/`). Passwords are passed via
 |------|------|-------|
 | Variable | `RANCHER_PROJECT_ID` | `c-f49m7:p-xj8vv` — places namespaces in the team project (quota + RBAC). |
 | Secret (repo) | `KUBECONFIG_B64` | base64 of `deploy/rbac/extract-kubeconfig.sh` output. |
-| Secret (env `k8s-prod`) | `POSTGRES_PASSWORD`, `NEWS_POSTGRES_PASSWORD`, `KEYCLOAK_ADMIN_PASSWORD`, `KEYCLOAK_DB_PASSWORD` | Independent core/news credentials; the news role is reconciled on deploy. |
-| Secret (env `k8s-preview`) | `POSTGRES_PASSWORD`, `NEWS_POSTGRES_PASSWORD`, `KEYCLOAK_ADMIN_PASSWORD` | Throwaway; `dev-mem` Keycloak needs no DB password. |
+| Secret (env `k8s-prod`) | `POSTGRES_PASSWORD`, `NEWS_POSTGRES_PASSWORD`, `KEYCLOAK_ADMIN_PASSWORD`, `KEYCLOAK_DB_PASSWORD` | `NEWS_POSTGRES_PASSWORD` is the dedicated news-DB credential. |
+| Secret (env `k8s-preview`) | `POSTGRES_PASSWORD`, `NEWS_POSTGRES_PASSWORD`, `KEYCLOAK_ADMIN_PASSWORD` | `dev-mem` Keycloak needs no DB password. |
 
 The `k8s-prod` / `k8s-preview` GitHub Environments can be created with the
 `Bootstrap Environments` workflow (`workflow_dispatch`, takes the environment
 name as input). One-time RBAC bootstrap and the Rancher-project verification are
 documented in [`deploy/rbac/README.md`](../../rbac/README.md).
+
+`news.db.password` is required unless `news.db.existingSecret` is set — the
+chart fails the render otherwise, like the other database passwords. The news
+Postgres instance is independent from core's database and credentials; CI
+supplies the password from the `NEWS_POSTGRES_PASSWORD` secret.
 
 ## Client runtime configuration
 
@@ -181,7 +186,7 @@ Required secret values (the render `fail`s if these are empty, unless
 | Value | When required |
 |-------|---------------|
 | `postgres.password` | Always (the app DB). |
-| `news.db.password` | Always (the independent news DB role). |
+| `news.db.password` | Always (the dedicated news Postgres). |
 | `ai.db.password` | Always (recommendations and pgvector news store). |
 | `keycloak.admin.password` | When `keycloak.deploy=true`. |
 | `keycloak.db.password` | When `keycloak.deploy=true` and `keycloak.database=postgres`. |
@@ -225,18 +230,52 @@ producer-only version therefore does not recreate or discard that queue.
 
 ## News service database
 
-The news aggregator uses a **separate database and role** (`news`) inside the
-shared Postgres instance (see `news.db.*` values; password comes from
-secrets.yaml / `--set news.db.password=`). An idempotent provisioning Job runs
-for fresh and existing volumes and safely creates or updates the role, database,
-and password before Helm reports success. Its reconciliation script is mounted
-from a Secret because it references credential environment variables, although
-the script itself contains no credential values. When `news.db.existingSecret` is
-managed outside Helm, bump `news.db.provisioningRevision` after rotating it so
-both the Job and news Deployment rerun.
+The news aggregator owns a **dedicated Postgres StatefulSet, Service, Secret,
+and PVC** (see `news.db.*` values); it never connects to core's Postgres. Set
+the required `news.db.password` via secrets.yaml / `--set`, or point
+`news.db.existingSecret` at an externally managed Secret. Flyway
+inside the news service owns schema migrations. When `news.db.existingSecret`
+is managed outside Helm, bump `news.db.secretRevision` after rotating it to roll
+the database and news pods.
 
 The news Service is ClusterIP-only with no ingress route; the AI service consumes
 through RabbitMQ. Use `kubectl port-forward` to call the manual aggregation API.
+Manual aggregation requires a token carrying the `kontor-admin` realm role.
+Fresh realms define that role (preview's seeded user receives it); for an
+existing production realm, create the role if it predates this chart and assign
+it to the intended operator account before using the endpoint.
+
+## RabbitMQ
+
+The chart pulls the [CloudPirates RabbitMQ chart](https://github.com/CloudPirates-io/helm-charts)
+(official `rabbitmq` image, no CRDs) as a dependency — run
+`helm dependency build deploy/helm/kontor` before lint/template/deploy (CI does
+this automatically; `Chart.lock` is committed, `charts/` is gitignored). The
+news aggregator publishes crawled articles to the durable queue `news.articles`
+(exchange `kontor.news`); the future news processor consumes from it. Contract:
+`news/docs/asyncapi.yml`.
+
+Credentials: the subchart generates the password and Erlang cookie into the
+Secret `<release>-rabbitmq` (`helm.sh/resource-policy: keep` — values survive
+upgrades and even uninstalls); the news deployment reads `RABBITMQ_PASSWORD`
+from that Secret, so no CI-injected RabbitMQ secret is needed. The management
+UI (15672) is cluster-internal only: `kubectl port-forward svc/<release>-rabbitmq 15672`.
+The queue is capped at 10,000 messages and 256 MiB with `reject-publish`; a
+positive publisher confirm plus no mandatory return is required before an
+article is marked pushed.
+
+## News service database
+
+The news aggregator owns a **dedicated Postgres StatefulSet, Service, Secret,
+and PVC** (see `news.db.*` values); it never connects to core's Postgres. Set
+the required `news.db.password` via secrets.yaml / `--set`, or point
+`news.db.existingSecret` at an externally managed Secret. Flyway
+inside the news service owns schema migrations. When `news.db.existingSecret`
+is managed outside Helm, bump `news.db.secretRevision` after rotating it to roll
+the database and news pods.
+
+The news Service is ClusterIP-only with no ingress route — consumers are
+in-cluster (the future news processor); use `kubectl port-forward` to poke it.
 Manual aggregation requires a token carrying the `kontor-admin` realm role.
 Fresh realms define that role (preview's seeded user receives it); for an
 existing production realm, create the role if it predates this chart and assign
@@ -246,7 +285,8 @@ it to the intended operator account before using the endpoint.
 
 Enabled by default. Postgres only accepts ingress from the core and news pods
 in this release; RabbitMQ accepts AMQP from news and AI; client/core only accept
-ingress from `ingress-nginx`; news accepts no ingress at all. When Keycloak is deployed it also gets locked-down
+ingress from `ingress-nginx`; news accepts ingress from `ingress-nginx` (API docs
+only). When Keycloak is deployed it also gets locked-down
 policies (its DB accepts only Keycloak traffic; Keycloak HTTP accepts only
 ingress-nginx + core + ai + news).
 

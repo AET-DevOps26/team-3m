@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/news/aggregation/runs")
 @SecurityRequirement(name = "bearerAuth")
+@PreAuthorize("hasRole('kontor-admin')")
 public class AggregationRunController {
 
     private static final int MAX_RUNS_PAGE_SIZE = 100;
@@ -31,7 +32,6 @@ public class AggregationRunController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('kontor-admin')")
     @Operation(
             summary = "Trigger an aggregation run",
             description = "Requires the kontor-admin role. Starts an asynchronous aggregation run over all "
@@ -43,7 +43,7 @@ public class AggregationRunController {
     }
 
     @GetMapping
-    @Operation(summary = "List recent aggregation runs")
+    @Operation(summary = "List recent aggregation runs", description = "Requires the kontor-admin role.")
     public ResponseEntity<ApiResponse<List<AggregationRun>>> list(@RequestParam(defaultValue = "20") int limit) {
         if (limit < 1 || limit > MAX_RUNS_PAGE_SIZE) {
             throw new IllegalArgumentException("limit must be between 1 and " + MAX_RUNS_PAGE_SIZE);
@@ -52,7 +52,7 @@ public class AggregationRunController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get an aggregation run by id")
+    @Operation(summary = "Get an aggregation run by id", description = "Requires the kontor-admin role.")
     public ResponseEntity<ApiResponse<AggregationRun>> get(@PathVariable UUID id) {
         var run = runRepository.findById(id).orElseThrow(() -> new AggregationRunNotFoundException(id));
         return ResponseEntity.ok(ApiResponse.ok(run));

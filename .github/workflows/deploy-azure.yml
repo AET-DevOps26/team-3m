@@ -145,7 +145,6 @@ jobs:
               cd \"\$REPO_DIR\"
               docker compose -f docker-compose.azure.yml pull
               docker compose -f docker-compose.azure.yml up -d db
-              docker compose -f docker-compose.azure.yml up -d --force-recreate news-db-init
               docker compose -f docker-compose.azure.yml up -d
 
               # When the demo dev user is seeded, also seed the example

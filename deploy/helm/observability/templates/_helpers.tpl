@@ -43,3 +43,13 @@ seaweedfs-s3
 grafana-admin
 {{- end -}}
 {{- end -}}
+
+{{- define "obs.alerting.enabled" -}}
+{{- $alerting := .Values.alerting | default dict -}}
+{{- if $alerting.existingSecret -}}true{{- end -}}
+{{- end -}}
+
+{{- define "obs.alerting.secretName" -}}
+{{- $alerting := .Values.alerting | default dict -}}
+{{- $alerting.existingSecret -}}
+{{- end -}}

@@ -167,6 +167,7 @@ az vm run-command invoke \
 DOMAIN=azure.kontor.live
 ACME_EMAIL=you@example.com
 POSTGRES_PASSWORD=change-me
+NEWS_POSTGRES_PASSWORD=change-me-different
 AI_POSTGRES_PASSWORD=change-me
 KEYCLOAK_POSTGRES_PASSWORD=change-me
 KEYCLOAK_ADMIN_USER=admin

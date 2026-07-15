@@ -10,7 +10,7 @@ spring:
   datasource:
     url: jdbc:postgresql://${NEWS_POSTGRES_HOST:localhost}:${NEWS_POSTGRES_PORT:5432}/${NEWS_POSTGRES_DB:news}
     username: ${NEWS_POSTGRES_USER:news}
-    password: ${NEWS_POSTGRES_PASSWORD:change-me-news-local}
+    password: ${NEWS_POSTGRES_PASSWORD}
   flyway:
     enabled: true
     locations: classpath:db/migration
@@ -18,7 +18,7 @@ spring:
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USERNAME:news}
-    password: ${RABBITMQ_PASSWORD:change-me-rabbit-local}
+    password: ${RABBITMQ_PASSWORD}
     publisher-confirm-type: correlated
     publisher-returns: true
     template:
@@ -33,6 +33,14 @@ kontor:
   security:
     issuer: ${KEYCLOAK_ISSUER:http://localhost:8081/realms/kontor}
     audience: ${KEYCLOAK_AUDIENCE:kontor-api}
+
+# Docs live under /news because core serves its Swagger UI at the root paths
+# of the shared public domain.
+springdoc:
+  api-docs:
+    path: /news/v3/api-docs
+  swagger-ui:
+    path: /news/swagger-ui.html
 
 # Static defaults (exchange/queue/routing key, timeouts, item caps) live in the
 # @DefaultValue annotations of NewsMessagingProperties / NewsFeedProperties —

@@ -18,7 +18,9 @@ public class FeedParser {
 
     public List<FeedItem> parse(byte[] feedBody, String feedUrl) {
         try (var reader = new XmlReader(new ByteArrayInputStream(feedBody))) {
-            var feed = new SyndFeedInput().build(reader);
+            var input = new SyndFeedInput();
+            input.setAllowDoctypes(false);
+            var feed = input.build(reader);
             return feed.getEntries().stream()
                     .map(entry -> toItem(entry, feedUrl))
                     .filter(Objects::nonNull)

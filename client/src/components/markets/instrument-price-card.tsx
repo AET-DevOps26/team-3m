@@ -1,13 +1,9 @@
 import { Suspense, startTransition, useState } from "react"
-import { Area, AreaChart, XAxis } from "recharts"
+import { Area, AreaChart, XAxis, YAxis } from "recharts"
 import { RangeSelector } from "@/components/charts/range-selector"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { ErrorBoundary } from "@/components/error-boundary"
+import { marketDataErrorFallback } from "@/components/markets/market-data-error"
+import { Card, CardContent, CardTitle } from "@/components/ui/card"
 import {
   type ChartConfig,
   ChartContainer,
@@ -82,6 +78,13 @@ function PriceChart({ symbol, range }: PriceChartProps) {
   const maxMs = data[data.length - 1].t
   const ticks = computeEquidistantTicks(minMs, maxMs, range)
 
+  const closes = data.map((d) => d.close)
+  const lowClose = Math.min(...closes)
+  const highClose = Math.max(...closes)
+  const spread = highClose - lowClose
+  const yPadding = spread > 0 ? spread * 0.08 : Math.abs(highClose) * 0.01 || 1
+  const yDomain: [number, number] = [lowClose - yPadding, highClose + yPadding]
+
   const isPositive = data[data.length - 1].close >= data[0].close
   const lineColor = isPositive
     ? "var(--color-primary)"
@@ -124,6 +127,7 @@ function PriceChart({ symbol, range }: PriceChartProps) {
             )
           }}
         />
+        <YAxis hide domain={yDomain} />
         <Area
           type="monotone"
           dataKey="close"
@@ -153,41 +157,47 @@ function PriceChart({ symbol, range }: PriceChartProps) {
   )
 }
 
-interface InstrumentPriceCardProps {
+interface InstrumentPriceViewProps {
   symbol: string
   name?: string
 }
 
 /**
- * Live price card for the market detail page: current quote with day change
- * and a historical price chart over a selectable time range, both backed by
- * the core market-data endpoints.
+ * Card-less live price view: current quote with day change and a historical
+ * price chart over a selectable time range, both backed by the core
+ * market-data endpoints. Rendered inside a `Card` by `InstrumentPriceCard` on
+ * the market detail page, and directly inside the holdings chart dialog.
  */
-export function InstrumentPriceCard({
+export function InstrumentPriceView({
   symbol,
   name,
-}: InstrumentPriceCardProps) {
-  const [range, setRange] = useState<TimeRange>("1M")
+}: InstrumentPriceViewProps) {
+  const [range, setRange] = useState<TimeRange>("MAX")
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-start justify-between pb-2">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-row items-start justify-between">
         <div className="flex flex-col gap-1">
-          <CardDescription>{name ?? symbol}</CardDescription>
-          <Suspense
-            fallback={
-              <div className="h-14 w-40 animate-pulse rounded bg-muted" />
-            }
-          >
-            <QuoteSummary symbol={symbol} />
-          </Suspense>
+          <p className="text-sm text-muted-foreground">{name ?? symbol}</p>
+          <ErrorBoundary key={symbol} fallback={null}>
+            <Suspense
+              fallback={
+                <div className="h-14 w-40 animate-pulse rounded bg-muted" />
+              }
+            >
+              <QuoteSummary symbol={symbol} />
+            </Suspense>
+          </ErrorBoundary>
         </div>
         <RangeSelector
           selected={range}
           onSelect={(r) => startTransition(() => setRange(r))}
         />
-      </CardHeader>
-      <CardContent className="pb-4">
+      </div>
+      <ErrorBoundary
+        key={`${symbol}-${range}`}
+        renderFallback={marketDataErrorFallback}
+      >
         <Suspense
           fallback={
             <div className="h-48 w-full animate-pulse rounded bg-muted" />
@@ -195,6 +205,28 @@ export function InstrumentPriceCard({
         >
           <PriceChart symbol={symbol} range={range} />
         </Suspense>
+      </ErrorBoundary>
+    </div>
+  )
+}
+
+interface InstrumentPriceCardProps {
+  symbol: string
+  name?: string
+}
+
+/**
+ * Live price card for the market detail page: wraps `InstrumentPriceView` in a
+ * `Card` surface.
+ */
+export function InstrumentPriceCard({
+  symbol,
+  name,
+}: InstrumentPriceCardProps) {
+  return (
+    <Card>
+      <CardContent className="py-4">
+        <InstrumentPriceView symbol={symbol} name={name} />
       </CardContent>
     </Card>
   )

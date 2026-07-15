@@ -324,6 +324,10 @@ export type SearchInstrumentsErrors = {
    */
   401: InstrumentSearchApiResponse
   /**
+   * Market data provider rate limit reached
+   */
+  429: ApiResponse
+  /**
    * Market data provider unavailable
    */
   502: ApiResponse
@@ -360,6 +364,10 @@ export type GetQuoteErrors = {
    * Unknown symbol
    */
   404: ApiResponse
+  /**
+   * Market data provider rate limit reached
+   */
+  429: ApiResponse
   /**
    * Market data provider unavailable
    */
@@ -401,6 +409,10 @@ export type GetQuoteHistoryErrors = {
    * Unknown symbol
    */
   404: ApiResponse
+  /**
+   * Market data provider rate limit reached
+   */
+  429: ApiResponse
   /**
    * Market data provider unavailable
    */

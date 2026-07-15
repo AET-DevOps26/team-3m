@@ -1,10 +1,10 @@
 {
   "uid": "kontor-frontend-rum",
-  "title": "Client RUM",
+  "title": "Client Metrics",
   "tags": ["kontor", "rum", "faro", "client"],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 2,
+  "version": 3,
   "refresh": "30s",
   "time": { "from": "now-6h", "to": "now" },
   "templating": {
@@ -13,9 +13,10 @@
         "name": "deployment_environment",
         "label": "Environment",
         "type": "query",
-        "datasource": { "type": "prometheus", "uid": "prometheus" },
-        "query": "label_values(traces_spanmetrics_calls_total{service=\"kontor-client\"}, deployment_environment)",
+        "datasource": { "type": "loki", "uid": "loki" },
+        "query": "label_values({service=\"kontor-client\"}, deployment_environment)",
         "includeAll": true,
+        "allValue": ".+",
         "multi": true,
         "refresh": 2,
         "sort": 1
@@ -29,7 +30,7 @@
       "type": "stat",
       "datasource": { "type": "loki", "uid": "loki" },
       "gridPos": { "h": 4, "w": 8, "x": 0, "y": 0 },
-      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "red" } }, "overrides": [] },
+      "fieldConfig": { "defaults": { "unit": "short", "noValue": "0", "color": { "mode": "fixed", "fixedColor": "red" } }, "overrides": [] },
       "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["sum"] } },
       "targets": [
         { "refId": "A", "datasource": { "type": "loki", "uid": "loki" }, "expr": "sum(count_over_time({service=\"kontor-client\", deployment_environment=~\"$deployment_environment\", kind=\"exception\"} [$__interval]))" }
@@ -88,14 +89,14 @@
       "type": "timeseries",
       "datasource": { "type": "loki", "uid": "loki" },
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 12 },
-      "description": "Best-effort: assumes Faro web-vitals arrive as kind=measurement with values_<vital> fields. Verify/adjust the unwrap field names once real Faro data lands.",
+      "description": "Faro web-vitals arrive as logfmt lines (kind=measurement type=web-vitals) with one vital per line (lcp/inp/cls/fcp/ttfb). LCP/INP/FCP/TTFB are milliseconds; CLS is unitless.",
       "fieldConfig": { "defaults": { "custom": { "fillOpacity": 5 } }, "overrides": [] },
       "targets": [
-        { "refId": "lcp", "datasource": { "type": "loki", "uid": "loki" }, "expr": "quantile_over_time(0.75, {service=\"kontor-client\", deployment_environment=~\"$deployment_environment\", kind=\"measurement\"} | json | unwrap values_lcp [$__interval]) by ()", "legendFormat": "LCP" },
-        { "refId": "inp", "datasource": { "type": "loki", "uid": "loki" }, "expr": "quantile_over_time(0.75, {service=\"kontor-client\", deployment_environment=~\"$deployment_environment\", kind=\"measurement\"} | json | unwrap values_inp [$__interval]) by ()", "legendFormat": "INP" },
-        { "refId": "cls", "datasource": { "type": "loki", "uid": "loki" }, "expr": "quantile_over_time(0.75, {service=\"kontor-client\", deployment_environment=~\"$deployment_environment\", kind=\"measurement\"} | json | unwrap values_cls [$__interval]) by ()", "legendFormat": "CLS" },
-        { "refId": "fcp", "datasource": { "type": "loki", "uid": "loki" }, "expr": "quantile_over_time(0.75, {service=\"kontor-client\", deployment_environment=~\"$deployment_environment\", kind=\"measurement\"} | json | unwrap values_fcp [$__interval]) by ()", "legendFormat": "FCP" },
-        { "refId": "ttfb", "datasource": { "type": "loki", "uid": "loki" }, "expr": "quantile_over_time(0.75, {service=\"kontor-client\", deployment_environment=~\"$deployment_environment\", kind=\"measurement\"} | json | unwrap values_ttfb [$__interval]) by ()", "legendFormat": "TTFB" }
+        { "refId": "lcp", "datasource": { "type": "loki", "uid": "loki" }, "expr": "quantile_over_time(0.75, {service=\"kontor-client\", deployment_environment=~\"$deployment_environment\", kind=\"measurement\"} | logfmt | unwrap lcp | __error__=\"\" [$__interval]) by ()", "legendFormat": "LCP" },
+        { "refId": "inp", "datasource": { "type": "loki", "uid": "loki" }, "expr": "quantile_over_time(0.75, {service=\"kontor-client\", deployment_environment=~\"$deployment_environment\", kind=\"measurement\"} | logfmt | unwrap inp | __error__=\"\" [$__interval]) by ()", "legendFormat": "INP" },
+        { "refId": "cls", "datasource": { "type": "loki", "uid": "loki" }, "expr": "quantile_over_time(0.75, {service=\"kontor-client\", deployment_environment=~\"$deployment_environment\", kind=\"measurement\"} | logfmt | unwrap cls | __error__=\"\" [$__interval]) by ()", "legendFormat": "CLS" },
+        { "refId": "fcp", "datasource": { "type": "loki", "uid": "loki" }, "expr": "quantile_over_time(0.75, {service=\"kontor-client\", deployment_environment=~\"$deployment_environment\", kind=\"measurement\"} | logfmt | unwrap fcp | __error__=\"\" [$__interval]) by ()", "legendFormat": "FCP" },
+        { "refId": "ttfb", "datasource": { "type": "loki", "uid": "loki" }, "expr": "quantile_over_time(0.75, {service=\"kontor-client\", deployment_environment=~\"$deployment_environment\", kind=\"measurement\"} | logfmt | unwrap ttfb | __error__=\"\" [$__interval]) by ()", "legendFormat": "TTFB" }
       ]
     },
     {

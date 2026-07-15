@@ -26,7 +26,9 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private static final String[] PUBLIC_ENDPOINTS = {"/api/health/**", "/api/v1/health/**", "/api/info", "/error"};
+    private static final String[] PUBLIC_ENDPOINTS = {
+        "/api/health/**", "/api/v1/health/**", "/api/info", "/error", "/news/swagger-ui/**", "/news/v3/api-docs/**"
+    };
 
     private final String jwkSetUri;
     private final String issuer;
@@ -89,6 +91,20 @@ public class SecurityConfig {
                 for (Object role : roleList) {
                     if (role instanceof String roleName && !roleName.isBlank()) {
                         authorities.add(new SimpleGrantedAuthority("ROLE_" + roleName));
+                    }
+                }
+            }
+        }
+
+        Object resourceAccess = jwt.getClaim("resource_access");
+        if (resourceAccess instanceof Map<?, ?> resourceAccessMap) {
+            for (Map.Entry<?, ?> entry : resourceAccessMap.entrySet()) {
+                if (entry.getValue() instanceof Map<?, ?> clientAccess
+                        && clientAccess.get("roles") instanceof List<?> clientRoles) {
+                    for (Object role : clientRoles) {
+                        if (role instanceof String roleName && !roleName.isBlank()) {
+                            authorities.add(new SimpleGrantedAuthority("ROLE_" + roleName));
+                        }
                     }
                 }
             }

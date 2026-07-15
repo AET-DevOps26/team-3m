@@ -32,6 +32,14 @@ core:
       memory: 704Mi
 
 news:
+  db:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 192Mi
+      limits:
+        cpu: 300m
+        memory: 384Mi
   resources:
     requests:
       cpu: 100m

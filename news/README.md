@@ -92,6 +92,15 @@ The shared configuration requires database and RabbitMQ passwords from the
 environment. The `local` profile supplies only the documented throwaway local
 defaults; deployed environments always inject their credentials from secrets.
 
+## API docs
+
+Springdoc serves the OpenAPI spec at `/news/v3/api-docs` and the Swagger UI at
+`/news/swagger-ui/index.html` without authentication. The `/news` prefix keeps
+the docs distinct from core's, which occupy the root `/swagger-ui` and
+`/v3/api-docs` paths on the shared public domain. Locally they are on
+`http://localhost:8082`; in k8s and on Azure only these two doc paths are
+routed publicly — the API itself stays internal.
+
 ## Manual testing
 
 Everything runs locally with compose. If ports 5434/8081 are taken on your

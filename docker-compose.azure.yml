@@ -214,6 +214,12 @@ services:
       KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/realms/kontor/protocol/openid-connect/certs"
       KEYCLOAK_AUDIENCE: "${KEYCLOAK_AUDIENCE:-kontor-api}"
       JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.news.rule=Host(`${DOMAIN}`) && (PathPrefix(`/news/swagger-ui`) || PathPrefix(`/news/v3/api-docs`))"
+      - "traefik.http.routers.news.entrypoints=websecure"
+      - "traefik.http.routers.news.tls.certresolver=le"
+      - "traefik.http.services.news.loadbalancer.server.port=8080"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/health/liveness >/dev/null 2>&1 || exit 1"]
       interval: 10s

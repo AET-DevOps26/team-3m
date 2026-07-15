@@ -95,8 +95,9 @@ core:
   tolerations: []
   affinity: {}
 
-# Spring Boot market-news aggregator service. ClusterIP-only, no ingress —
-# consumers are in-cluster (the future news processor / debugging via
+# Spring Boot market-news aggregator service. ClusterIP; only the API docs
+# (/news/swagger-ui, /news/v3/api-docs) are exposed through the ingress — the
+# API itself stays in-cluster (the future news processor / debugging via
 # port-forward). Public HTTPS egress is explicitly allowed when egress is
 # restricted.
 news:

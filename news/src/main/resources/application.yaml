@@ -34,6 +34,14 @@ kontor:
     issuer: ${KEYCLOAK_ISSUER:http://localhost:8081/realms/kontor}
     audience: ${KEYCLOAK_AUDIENCE:kontor-api}
 
+# Docs live under /news because core serves its Swagger UI at the root paths
+# of the shared public domain.
+springdoc:
+  api-docs:
+    path: /news/v3/api-docs
+  swagger-ui:
+    path: /news/swagger-ui.html
+
 # Static defaults (exchange/queue/routing key, timeouts, item caps) live in the
 # @DefaultValue annotations of NewsMessagingProperties / NewsFeedProperties —
 # only env-overridable values and the feed list are configured here.

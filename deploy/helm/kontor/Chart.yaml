@@ -12,3 +12,7 @@ maintainers:
   - name: Mathilde Hagl
   - name: Magnus Kühne
   - name: Maximilian Rapp
+dependencies:
+  - name: rabbitmq
+    version: 0.21.7
+    repository: oci://registry-1.docker.io/cloudpirates

@@ -21,6 +21,23 @@ services:
       retries: 5
       start_period: 10s
 
+  news-db:
+    image: postgres:18-trixie
+    environment:
+      POSTGRES_DB: "${NEWS_POSTGRES_DB:-news}"
+      POSTGRES_USER: "${NEWS_POSTGRES_USER:-news}"
+      POSTGRES_PASSWORD: "${NEWS_POSTGRES_PASSWORD:-change-me-news-local}"
+    ports:
+      - "127.0.0.1:${NEWS_POSTGRES_PORT:-5434}:5432"
+    volumes:
+      - news_postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
   keycloak-db:
     image: postgres:18-trixie
     environment:
@@ -122,6 +139,53 @@ services:
       retries: 5
       start_period: 30s
 
+  rabbitmq:
+    image: rabbitmq:4.2-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: "${RABBITMQ_USER:-news}"
+      RABBITMQ_DEFAULT_PASS: "${RABBITMQ_PASSWORD:-change-me-rabbit-local}"
+    ports:
+      - "127.0.0.1:${RABBITMQ_PORT:-5672}:5672"
+      - "127.0.0.1:${RABBITMQ_MGMT_PORT:-15672}:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  news:
+    build:
+      context: ./news
+    depends_on:
+      news-db:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      <<: *keycloak-oidc-env
+      NEWS_POSTGRES_HOST: news-db
+      NEWS_POSTGRES_PORT: "5432"
+      NEWS_POSTGRES_DB: "${NEWS_POSTGRES_DB:-news}"
+      NEWS_POSTGRES_USER: "${NEWS_POSTGRES_USER:-news}"
+      NEWS_POSTGRES_PASSWORD: "${NEWS_POSTGRES_PASSWORD:-change-me-news-local}"
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: "5672"
+      RABBITMQ_USERNAME: "${RABBITMQ_USER:-news}"
+      RABBITMQ_PASSWORD: "${RABBITMQ_PASSWORD:-change-me-rabbit-local}"
+    ports:
+      - "8082:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/health >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
+
   client:
     build:
       context: ./client
@@ -179,5 +243,7 @@ services:
 
 volumes:
   postgres_data:
+  news_postgres_data:
   keycloak_postgres_data:
+  rabbitmq_data:
   ai_postgres_data:

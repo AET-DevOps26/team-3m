@@ -9,10 +9,11 @@ permissions:
 
 env:
   CHART: deploy/helm/kontor
-  # Dummy secrets so the chart's `fail` guards (postgres/keycloak passwords) pass
-  # during lint/template/scan. Never used at runtime.
+  # Dummy secrets so the chart's `fail` guards pass during lint/template/scan.
+  # Never used at runtime.
   HELM_SECRETS: >-
     --set postgres.password=ci
+    --set news.db.password=ci
     --set keycloak.admin.password=ci
     --set keycloak.db.password=ci
     --set ai.db.password=ci
@@ -50,6 +51,9 @@ jobs:
         uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567 # v0.3.1
         with:
           version: v0.72.0
+
+      - name: Build chart dependencies
+        run: helm dependency build "$CHART"
 
       - name: Lint & schema-validate each values file
         run: |

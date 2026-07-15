@@ -4,6 +4,7 @@ name: Deploy to Azure
 #
 # Secrets: AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_TENANT_ID,
 #          AZURE_SUBSCRIPTION_ID, AZURE_POSTGRES_PASSWORD,
+#          AZURE_NEWS_POSTGRES_PASSWORD, AZURE_RABBITMQ_PASSWORD,
 #          AZURE_AI_POSTGRES_PASSWORD, AZURE_KEYCLOAK_POSTGRES_PASSWORD,
 #          AZURE_KEYCLOAK_ADMIN_PASSWORD, AZURE_KEYCLOAK_DEV_PASSWORD
 # Variables: AZURE_SSH_PUBLIC_KEY, AZURE_ACME_EMAIL, AZURE_KEYCLOAK_ADMIN_USER,
@@ -92,6 +93,8 @@ jobs:
             DOMAIN=${{ env.DOMAIN }}
             ACME_EMAIL=${{ vars.AZURE_ACME_EMAIL }}
             POSTGRES_PASSWORD=${{ secrets.AZURE_POSTGRES_PASSWORD }}
+            NEWS_POSTGRES_PASSWORD=${{ secrets.AZURE_NEWS_POSTGRES_PASSWORD }}
+            RABBITMQ_PASSWORD=${{ secrets.AZURE_RABBITMQ_PASSWORD }}
             AI_POSTGRES_DB=kontor_ai
             AI_POSTGRES_USER=kontor_ai
             AI_POSTGRES_PASSWORD=${{ secrets.AZURE_AI_POSTGRES_PASSWORD }}
@@ -136,6 +139,8 @@ jobs:
 
               cd \"\$REPO_DIR\"
               docker compose -f docker-compose.azure.yml pull
+              docker compose -f docker-compose.azure.yml up -d db
+              docker compose -f docker-compose.azure.yml up -d --force-recreate news-db-init
               docker compose -f docker-compose.azure.yml up -d
 
               # When the demo dev user is seeded, also seed the example

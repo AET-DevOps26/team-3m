@@ -31,6 +31,26 @@ core:
       cpu: 700m
       memory: 704Mi
 
+news:
+  db:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 192Mi
+      limits:
+        cpu: 300m
+        memory: 384Mi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 384Mi
+    limits:
+      cpu: 500m
+      memory: 640Mi
+
+networkPolicy:
+  restrictEgress: true
+
 postgres:
   resources:
     requests:

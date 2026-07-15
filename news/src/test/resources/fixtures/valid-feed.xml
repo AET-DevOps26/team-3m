@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Example Market News</title>
+    <link>https://example.com</link>
+    <description>Test feed</description>
+    <item>
+      <title>Stocks rally on earnings</title>
+      <link>https://example.com/articles/1</link>
+      <guid>article-1</guid>
+      <description>&lt;p&gt;Markets &lt;b&gt;surged&lt;/b&gt; today.&lt;/p&gt;</description>
+      <pubDate>Mon, 06 Jul 2026 12:30:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Fed holds rates steady</title>
+      <link>https://example.com/articles/2</link>
+    </item>
+  </channel>
+</rss>

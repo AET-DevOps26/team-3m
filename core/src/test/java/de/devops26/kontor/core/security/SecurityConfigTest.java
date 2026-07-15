@@ -28,6 +28,13 @@ class SecurityConfigTest {
     }
 
     @Test
+    @DisplayName("Swagger UI and OpenAPI spec are reachable without authentication")
+    void swaggerUi_publicEndpoint_returnsSuccessWithoutToken() throws Exception {
+        mockMvc.perform(get("/v3/api-docs")).andExpect(status().isOk());
+        mockMvc.perform(get("/swagger-ui/index.html")).andExpect(status().isOk());
+    }
+
+    @Test
     @DisplayName("Authenticated endpoints reject anonymous calls with 401 and Bearer challenge")
     void authenticatedEndpoint_anonymous_returns401() throws Exception {
         mockMvc.perform(get("/api/v1/financial-transactions/import"))

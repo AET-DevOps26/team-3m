@@ -86,7 +86,6 @@ async def find_relevant_news(
     symbols: list[str],
     query_embedding: list[float] | None,
     embedding_model: str | None,
-    embedding_dim: int | None,
     limit: int = 5,
 ) -> list[NewsArticle]:
     found: dict = {}
@@ -109,12 +108,12 @@ async def find_relevant_news(
         for article in (await session.execute(symbol_stmt)).scalars():
             found[article.id] = article
 
-    if query_embedding is not None and embedding_model is not None and embedding_dim is not None:
+    if query_embedding is not None and embedding_model is not None:
         semantic_stmt = (
             select(NewsArticle)
             .where(
                 NewsArticle.embedding_model == embedding_model,
-                NewsArticle.embedding_dim == embedding_dim,
+                NewsArticle.embedding_dim == len(query_embedding),
             )
             .order_by(NewsArticle.embedding.cosine_distance(query_embedding))
             .limit(limit)

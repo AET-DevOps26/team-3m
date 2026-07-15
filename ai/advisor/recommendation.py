@@ -132,13 +132,11 @@ async def _retrieve_news(session: AsyncSession, settings: Settings, portfolio: P
 
     query_embedding: list[float] | None = None
     embedding_model: str | None = None
-    embedding_dim: int | None = None
     provider = resolve_embedding_provider(settings)
     if provider is not None:
         try:
             query_embedding = await embed_text(provider, _news_query_text(portfolio))
             embedding_model = provider.model
-            embedding_dim = len(query_embedding)
         except Exception as exc:
             logger.warning("News query embedding failed; falling back to symbol match", exc_info=exc)
 
@@ -148,7 +146,6 @@ async def _retrieve_news(session: AsyncSession, settings: Settings, portfolio: P
             symbols=symbols,
             query_embedding=query_embedding,
             embedding_model=embedding_model,
-            embedding_dim=embedding_dim,
             limit=NEWS_LIMIT,
         )
     except Exception as exc:

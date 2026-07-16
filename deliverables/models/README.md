@@ -24,18 +24,23 @@ publishes to RabbitMQ.
 
 Modeled but **not** implemented: performance metrics (return/volatility/IRR),
 allocation & benchmark comparison, dividends, watchlist, price alerts, tax
-(exemption/summary), budget envelopes, spending trends, and the news-driven RAG
-advisor (the built advisor uses only a portfolio payload — no news, no
-embeddings).
+(exemption/summary), budget envelopes, and spending trends.
+
+In progress: the news-driven RAG advisor (`News Processor`) is being built in
+open PR #177 — it makes the AI consume `news.articles`, embed articles into
+pgvector, and return news-grounded summaries. Until it merges, the built advisor
+uses only a portfolio payload.
 
 ## Architecture-model drift to correct
 
-- **Component Diagram:** `Tax`, `Budgeting`, `News Processor`, and `Watchlist`
-  are not built; `Stock Search` actually lives in `core` (`core/marketdata`), not
-  the news service; there is no `User/Auth` component (it exists in code).
-- **Deployment Diagram:** AI Postgres is the plain `postgres` image (not
-  pgvector); the AI → RabbitMQ (`consume news.articles`) edge is not implemented;
-  the AI → Logos "+ embeddings" label is aspirational.
+- **Component Diagram:** `Tax`, `Budgeting`, and `Watchlist` are not built;
+  `News Processor` is in progress (PR #177); `Stock Search` actually lives in
+  `core` (`core/marketdata`), not the news service; there is no `User/Auth`
+  component (it exists in code).
+- **Deployment Diagram:** on `main`, AI Postgres is the plain `postgres` image
+  (not pgvector), the AI → RabbitMQ (`consume news.articles`) edge is not wired,
+  and the AI → Logos "+ embeddings" label is aspirational — all three are being
+  corrected as part of PR #177.
 
 ## Editing
 

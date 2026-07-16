@@ -19,28 +19,23 @@ Design models for _Kontor_, in two categories:
 
 Implemented today: CSV import → transactions (list/filter/category) → portfolio
 overview + value-over-time chart → market data (Twelve Data search/quote/history)
-→ AI portfolio recommendation, plus a news aggregator that crawls RSS and
-publishes to RabbitMQ.
+→ AI portfolio recommendation. A news aggregator crawls RSS and publishes to
+RabbitMQ (`news.articles`); the AI service consumes that queue, embeds articles
+into a pgvector store, and returns news-grounded recommendation summaries
+(the `News Processor` RAG path).
 
 Modeled but **not** implemented: performance metrics (return/volatility/IRR),
 allocation & benchmark comparison, dividends, watchlist, price alerts, tax
 (exemption/summary), budget envelopes, and spending trends.
 
-In progress: the news-driven RAG advisor (`News Processor`) is being built in
-open PR #177 — it makes the AI consume `news.articles`, embed articles into
-pgvector, and return news-grounded summaries. Until it merges, the built advisor
-uses only a portfolio payload.
-
 ## Architecture-model drift to correct
 
 - **Component Diagram:** `Tax`, `Budgeting`, and `Watchlist` are not built;
-  `News Processor` is in progress (PR #177); `Stock Search` actually lives in
-  `core` (`core/marketdata`), not the news service; there is no `User/Auth`
-  component (it exists in code).
-- **Deployment Diagram:** on `main`, AI Postgres is the plain `postgres` image
-  (not pgvector), the AI → RabbitMQ (`consume news.articles`) edge is not wired,
-  and the AI → Logos "+ embeddings" label is aspirational — all three are being
-  corrected as part of PR #177.
+  `Stock Search` actually lives in `core` (`core/marketdata`), not the news
+  service; there is no `User/Auth` component (it exists in code).
+- **Deployment Diagram:** in sync with the code (the AI pgvector store, the
+  AI → RabbitMQ `news.articles` consumer, and the AI → Logos embeddings are all
+  built).
 
 ## Editing
 

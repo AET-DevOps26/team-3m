@@ -77,8 +77,10 @@ spec:
             {{- end }}
             - name: KEYCLOAK_AUDIENCE
               value: {{ .Values.oidc.audience | quote }}
+            {{- with .Values.ai.embedding.localModel }}
             - name: LOCAL_EMBEDDING_MODEL
-              value: {{ .Values.ai.embedding.localModel | quote }}
+              value: {{ . | quote }}
+            {{- end }}
             {{- with .Values.ai.embedding.logosModel }}
             - name: LOGOS_EMBEDDING_MODEL
               value: {{ . | quote }}

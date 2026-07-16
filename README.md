@@ -51,6 +51,8 @@ docker compose up --build
 
 The client redirects to Keycloak for login. Sign in with a seeded local user — username **`dev`**, password **`dev`** (the password comes from `KEYCLOAK_DEV_USERS_PASSWORD`, default `dev`). Two more seeded users exist: `analyst` (regular user) and `admin-user` (also holds the `kontor-admin` role required to trigger news-aggregation runs). Add or edit users in `infra/keycloak/realms/kontor-users-0.json`.
 
+The `dev` user comes pre-loaded with example data (several months of transactions and a multi-asset portfolio), so the dashboard is populated on first login. To try the CSV import flow yourself, upload the sample file at [`resources/example-data/transaction-csv.example.csv`](resources/example-data/transaction-csv.example.csv). Note that an import **replaces** the signed-in user's existing transactions, so it overwrites the seeded data.
+
 ### Market data (Twelve Data)
 
 Live stock/ETF market data — quotes, price history, and the holdings chart — comes from [Twelve Data](https://twelvedata.com). You need a free `TWELVE_DATA_API_KEY` in `.env` for it to work; the free tier is enough for local development.

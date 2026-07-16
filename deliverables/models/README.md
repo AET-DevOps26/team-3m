@@ -1,7 +1,6 @@
 # Models
 
-Design models for _Kontor_, grouped into two kinds. Knowing which kind you are
-looking at tells you whether it describes what we _want_ or what we _have_:
+Design models for _Kontor_, grouped into two kinds:
 
 - **Problem-domain models** capture the _intended product_ — the full set of
   requirements from [`../PROBLEM_STATEMENT.md`](../PROBLEM_STATEMENT.md). They
@@ -38,7 +37,7 @@ allocation and benchmark comparison, dividends, watchlist, price alerts, tax
 ## Keeping the models in sync
 
 The **Implemented Component Diagram** and the **Deployment Diagram** track the
-current code — update them whenever the running system changes.
+current code, update them whenever the running system changes.
 
 The `.json` files are [Apollon](https://apollon.ese.in.tum.de/) sources and the
 `.svg` files are their exported renders, so re-export the `.svg` after editing a

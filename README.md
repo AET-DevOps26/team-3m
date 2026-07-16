@@ -17,7 +17,19 @@
 
 ## Setup
 
-The repository includes a root `.env.example` and a local `.env` with the default compose values. Update `.env` if you want to change the Postgres credentials, Keycloak database credentials, or shared local Keycloak dev-user password.
+### Prerequisites
+
+Running the full stack locally needs only [Docker](https://docs.docker.com/get-docker/) (Docker Desktop or Docker Engine) with Compose v2. The rest of the toolchain (Node, Java 25, uv) is required only for the non-Docker [Local Development](#local-development) workflow.
+
+### Configuration
+
+Create your local environment file from the tracked template:
+
+```sh
+cp .env.example .env
+```
+
+The defaults in `.env` match the Compose defaults, so the stack runs as-is. Update `.env` to change the Postgres credentials, Keycloak database credentials, or the shared local Keycloak dev-user password — and to set the API keys described below.
 
 The AI service uses a **Logos API key** (`LOGOS_API_KEY=lg-…`) in `.env` when available. The Logos endpoint is only reachable from the TUM network or via eduVPN. When the key is missing, the AI service **automatically falls back to a local LLM** (see [Local LLM (offline AI)](#local-llm-offline-ai) below). If no local LLM is configured either (`LOCAL_LLM_BASE_URL` empty), recommendation calls return `503`; if a local LLM is configured but not running, they return `502` ("Local LLM is not reachable").
 
@@ -36,6 +48,8 @@ docker compose up --build
 | Client      | <http://localhost:5173> |
 | Server      | <http://localhost:8080> |
 | AI Service  | <http://localhost:8000> |
+
+The client redirects to Keycloak for login. Sign in with a seeded local user — username **`dev`**, password **`dev`** (the password comes from `KEYCLOAK_DEV_USERS_PASSWORD`, default `dev`). Two more seeded users exist: `analyst` (regular user) and `admin-user` (also holds the `kontor-admin` role required to trigger news-aggregation runs). Add or edit users in `infra/keycloak/realms/kontor-users-0.json`.
 
 ### Market data (Twelve Data)
 
@@ -72,7 +86,7 @@ When `LOGOS_API_KEY` is empty, the AI service falls back to a local [Ollama](htt
 ```sh
 brew install ollama        # or download the app from ollama.com
 ollama pull llama3.2       # one-time model download
-ollama serve               # keep running (the app starts this for you)
+ollama serve               # start this yourself and keep it running
 ```
 
 The default `docker compose up` reaches it via `host.docker.internal:11434`. No extra flags needed.

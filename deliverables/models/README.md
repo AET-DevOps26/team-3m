@@ -12,8 +12,13 @@ Design models for _Kontor_, in two categories:
 |-------|------|----------|
 | Use Case Diagram | `USE_CASE_DIAGRAM.{json,svg}` | Problem domain |
 | Analysis Object Model | `ANALYSIS_OBJECT_MODEL.{json,svg}` | Problem domain |
-| Component Diagram | `COMPONENT_DIAGRAM.{json,svg}` | Solution / architecture |
+| Component Diagram (Vision) | `COMPONENT_DIAGRAM_VISION.{json,svg}` | Problem domain |
+| Component Diagram (Implemented) | `COMPONENT_DIAGRAM_IMPLEMENTED.{json,svg}` | Solution / architecture |
 | Deployment Diagram | `DEPLOYMENT_DIAGRAM.{json,svg}` | Solution / architecture |
+
+The Component Diagram comes in two variants: **Vision** shows the full intended
+component set (including unbuilt parts), and **Implemented** shows only what
+exists in the code today.
 
 ## What's actually built
 
@@ -28,11 +33,14 @@ Modeled but **not** implemented: performance metrics (return/volatility/IRR),
 allocation & benchmark comparison, dividends, watchlist, price alerts, tax
 (exemption/summary), budget envelopes, and spending trends.
 
+The **Vision** variant additionally shows `Tax` and `Budgeting` (under Kontor)
+and `Watchlist` (under Market News & Research) — all still unbuilt.
+
 ## Architecture-model drift to correct
 
-- **Component Diagram:** `Tax`, `Budgeting`, and `Watchlist` are not built;
-  `Stock Search` actually lives in `core` (`core/marketdata`), not the news
-  service; there is no `User/Auth` component (it exists in code).
+- **Component Diagram (Implemented):** in sync with the code, except there is no
+  explicit `User/Auth` component (auth exists in `core/security` + `core/user` +
+  Keycloak).
 - **Deployment Diagram:** in sync with the code (the AI pgvector store, the
   AI → RabbitMQ `news.articles` consumer, and the AI → Logos embeddings are all
   built).

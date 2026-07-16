@@ -48,6 +48,11 @@ news:
       cpu: 500m
       memory: 640Mi
 
+ai:
+  baseUrl: https://logos.aet.cit.tum.de/v1
+  chatModel: openai/gpt-oss-120b
+  embeddingModel: Qwen/Qwen3-Embedding-8B
+
 networkPolicy:
   restrictEgress: true
 

@@ -51,6 +51,13 @@ news:
       cpu: 500m
       memory: 512Mi
 
+ai:
+  # Pull-request code must not receive a reusable hosted-provider credential.
+  hostedEnabled: false
+  baseUrl: https://logos.aet.cit.tum.de/v1
+  chatModel: openai/gpt-oss-120b
+  embeddingModel: Qwen/Qwen3-Embedding-8B
+
 networkPolicy:
   restrictEgress: true
 

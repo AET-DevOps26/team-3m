@@ -227,20 +227,24 @@ ai:
   service:
     type: ClusterIP
     port: 8000
-  # -- Logos API key (lg-… key). Stored in a Secret and injected as LOGOS_API_KEY.
-  # Required for AI features. Supply via secrets.yaml or --set.
-  logosApiKey: ""
-  # -- When set, skip creating the AI Secret and mount this existing Secret instead.
-  # Expected keys: LOGOS_API_KEY (and optionally RABBITMQ_URL to override the in-chart broker).
+  # -- Enable the hosted OpenAI-compatible provider. PR previews disable this
+  # because their images and manifests are built from pull-request code.
+  hostedEnabled: true
+  # -- Hosted provider base URL and model IDs. Defaults target OpenAI; environment
+  # overlays or CI variables can point the same service at another compatible API.
+  baseUrl: "https://api.openai.com/v1"
+  chatModel: "gpt-5.4-mini-2026-03-17"
+  embeddingModel: "text-embedding-3-small"
+  # -- Existing Secret containing AI_API_KEY. Required when hostedEnabled=true.
+  # Keeping provider credentials out of Helm values prevents them from being
+  # retained in Helm release history.
   existingSecret: ""
+  # -- Non-secret revision marker for an externally managed provider Secret.
+  # Change this value to roll the AI pods after rotating AI_API_KEY.
+  secretRevision: ""
   env: {}
-  # Embedding config for news RAG (query embeddings + news ingest). Mirrors the LLM
-  # provider resolution: Logos in hosted mode, Ollama in local mode.
-  embedding:
-    # -- Ollama embedding model (local mode). Pulled/served outside the chart.
-    localModel: "nomic-embed-text"
-    # -- Logos embedding model (hosted mode). Required for hosted news ingest.
-    logosModel: "Qwen/Qwen3-Embedding-8B"
+  # -- Ollama embedding model (local mode). Pulled/served outside the chart.
+  localEmbeddingModel: "nomic-embed-text"
   # News ingest consumer for the queue declared by the bundled news service.
   newsConsumer:
     enabled: true

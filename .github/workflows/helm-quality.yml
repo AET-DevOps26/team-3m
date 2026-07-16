@@ -16,6 +16,7 @@ env:
     --set news.db.password=ci
     --set keycloak.admin.password=ci
     --set keycloak.db.password=ci
+    --set ai.existingSecret=ci-ai-provider
     --set ai.db.password=ci
 
 jobs:

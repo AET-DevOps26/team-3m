@@ -316,7 +316,9 @@ spec:
           port: 8080
 ---
 # AI service: ingress from ingress-nginx only, so in-cluster pods cannot bypass
-# the /ai ingress rate limits on the paid LLM endpoint.
+# the /ai ingress rate limits on the paid LLM endpoint. Restricted profiles
+# allow only its database, broker, identity/telemetry dependencies, DNS, and
+# public HTTPS for the configured hosted provider or an external OIDC service.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -331,6 +333,9 @@ spec:
       app.kubernetes.io/component: ai
   policyTypes:
     - Ingress
+    {{- if .Values.networkPolicy.restrictEgress }}
+    - Egress
+    {{- end }}
   ingress:
     - from:
         - namespaceSelector:
@@ -339,6 +344,91 @@ spec:
       ports:
         - protocol: TCP
           port: 8000
+  {{- if .Values.networkPolicy.restrictEgress }}
+  egress:
+    # DNS
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Dedicated AI Postgres in this release (also used by the migration init container).
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "kontor.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: ai-db
+      ports:
+        - protocol: TCP
+          port: 5432
+    {{- if .Values.ai.newsConsumer.enabled }}
+    # RabbitMQ in this release.
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: rabbitmq
+              app.kubernetes.io/instance: {{ .Release.Name }}
+      ports:
+        - protocol: TCP
+          port: 5672
+    {{- end }}
+    {{- if .Values.keycloak.deploy }}
+    # Internal Keycloak JWKS endpoint.
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "kontor.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: keycloak
+      ports:
+        - protocol: TCP
+          port: 8080
+    {{- end }}
+    {{- if .Values.observability.enabled }}
+    # OTLP export to the Alloy gateway in the shared monitoring namespace.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.observability.collectorNamespace }}
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: alloy-gateway
+      ports:
+        - protocol: TCP
+          port: 4317
+        - protocol: TCP
+          port: 4318
+    {{- end }}
+    {{- if or .Values.ai.hostedEnabled (not .Values.keycloak.deploy) }}
+    # Hosted provider or external OIDC over HTTPS. Kubernetes NetworkPolicy is
+    # L3/L4-only, so private, link-local, cluster, and reserved IPv4 ranges are
+    # excluded while the configured HTTPS hostname is validated by the app.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 0.0.0.0/8
+              - 10.0.0.0/8
+              - 100.64.0.0/10
+              - 127.0.0.0/8
+              - 169.254.0.0/16
+              - 172.16.0.0/12
+              - 192.0.0.0/24
+              - 192.0.2.0/24
+              - 192.168.0.0/16
+              - 198.18.0.0/15
+              - 198.51.100.0/24
+              - 203.0.113.0/24
+              - 224.0.0.0/4
+              - 240.0.0.0/4
+      ports:
+        - protocol: TCP
+          port: 443
+    {{- end }}
+  {{- end }}
 ---
 # AI DB: only accept traffic from the AI service (migrations run as an AI init container).
 apiVersion: networking.k8s.io/v1

@@ -8,13 +8,13 @@ Design models for _Kontor_, in two categories:
 - **Solution / architecture models** describe the _system as built_ and should
   track the code.
 
-| Model | File | Category |
-|-------|------|----------|
-| Use Case Diagram | `USE_CASE_DIAGRAM.{json,svg}` | Problem domain |
-| Analysis Object Model | `ANALYSIS_OBJECT_MODEL.{json,svg}` | Problem domain |
-| Component Diagram (Vision) | `COMPONENT_DIAGRAM_VISION.{json,svg}` | Problem domain |
-| Component Diagram (Implemented) | `COMPONENT_DIAGRAM_IMPLEMENTED.{json,svg}` | Solution / architecture |
-| Deployment Diagram | `DEPLOYMENT_DIAGRAM.{json,svg}` | Solution / architecture |
+| Model                           | File                                       | Category                 |
+| ------------------------------- | ------------------------------------------ | ------------------------ |
+| Use Case Diagram                | `USE_CASE_DIAGRAM.{json,svg}`              | Problem domain           |
+| Analysis Object Model           | `ANALYSIS_OBJECT_MODEL.{json,svg}`         | Problem domain           |
+| Component Diagram (Vision)      | `COMPONENT_DIAGRAM_VISION.{json,svg}`      | Solution domain (Vision) |
+| Component Diagram (Implemented) | `COMPONENT_DIAGRAM_IMPLEMENTED.{json,svg}` | Solution / architecture  |
+| Deployment Diagram              | `DEPLOYMENT_DIAGRAM.{json,svg}`            | Solution / architecture  |
 
 The Component Diagram comes in two variants: **Vision** shows the full intended
 component set (including unbuilt parts), and **Implemented** shows only what

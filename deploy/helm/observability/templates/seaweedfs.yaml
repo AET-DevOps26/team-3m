@@ -37,9 +37,15 @@ spec:
     - name: master
       port: 9333
       targetPort: 9333
+    - name: master-grpc
+      port: 19333
+      targetPort: 19333
     - name: filer
       port: 8888
       targetPort: 8888
+    - name: filer-grpc
+      port: 18888
+      targetPort: 18888
 ---
 apiVersion: apps/v1
 kind: StatefulSet

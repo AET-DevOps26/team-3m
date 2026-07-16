@@ -181,7 +181,7 @@ services:
     restart: unless-stopped
 
   rabbitmq:
-    image: rabbitmq:4.2-management-alpine
+    image: rabbitmq:4.3-management-alpine
     environment:
       RABBITMQ_DEFAULT_USER: "${RABBITMQ_USER:-news}"
       RABBITMQ_DEFAULT_PASS: "${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}"
@@ -214,6 +214,7 @@ services:
       NEWS_POSTGRES_DB: "${NEWS_POSTGRES_DB:-news}"
       NEWS_POSTGRES_USER: "${NEWS_POSTGRES_USER:-news}"
       NEWS_POSTGRES_PASSWORD: "${NEWS_POSTGRES_PASSWORD:?NEWS_POSTGRES_PASSWORD is required}"
+      NEWS_AGGREGATION_INTERVAL: "${NEWS_AGGREGATION_INTERVAL:-PT6H}"
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: "5672"
       RABBITMQ_USERNAME: "${RABBITMQ_USER:-news}"
@@ -224,7 +225,7 @@ services:
       JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.news.rule=Host(`${DOMAIN}`) && (PathPrefix(`/news/swagger-ui`) || PathPrefix(`/news/v3/api-docs`))"
+      - "traefik.http.routers.news.rule=Host(`${DOMAIN}`) && (PathPrefix(`/api/v1/news`) || PathPrefix(`/news/swagger-ui`) || PathPrefix(`/news/v3/api-docs`))"
       - "traefik.http.routers.news.entrypoints=websecure"
       - "traefik.http.routers.news.tls.certresolver=le"
       - "traefik.http.services.news.loadbalancer.server.port=8080"
@@ -289,7 +290,7 @@ services:
       ai-migrate:
         condition: service_completed_successfully
       news:
-        condition: service_healthy
+        condition: service_started
     environment:
       DATABASE_URL: "postgresql+asyncpg://${AI_POSTGRES_USER:-kontor_ai}:${AI_POSTGRES_PASSWORD}@ai-db:5432/${AI_POSTGRES_DB:-kontor_ai}"
       KEYCLOAK_ISSUER: "https://${KEYCLOAK_DOMAIN:-auth.${DOMAIN}}/realms/kontor"

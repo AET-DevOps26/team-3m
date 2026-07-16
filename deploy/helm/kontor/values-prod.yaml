@@ -32,6 +32,8 @@ core:
       memory: 704Mi
 
 news:
+  aggregation:
+    interval: PT6H
   db:
     resources:
       requests:
@@ -67,6 +69,10 @@ postgres:
 
 oidc:
   issuerUrl: https://auth.kontor.live/realms/kontor
+  # With restrictEgress, fetching JWKS via the public issuer URL hairpins
+  # through the cluster LB to the ingress-nginx pod, whose IP falls in the
+  # excluded private ranges — use the in-cluster Keycloak Service instead.
+  internalJwks: true
 
 keycloak:
   deploy: true

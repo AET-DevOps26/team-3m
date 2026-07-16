@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     local_llm_base_url: str = ""
     local_llm_model: str = "llama3.2"
     local_embedding_model: str = "nomic-embed-text"
+    news_retention_days: int = 7
+    news_retention_sweep_interval_seconds: int = 3600
     rabbitmq_url: str = ""
     rabbitmq_host: str = ""
     rabbitmq_port: int = 5672

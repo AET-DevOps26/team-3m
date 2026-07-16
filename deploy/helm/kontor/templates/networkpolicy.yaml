@@ -156,8 +156,9 @@ spec:
         - protocol: TCP
           port: 5672
 ---
-# News: ingress from ingress-nginx only, for the public API-docs paths routed
-# through the ingress (in-cluster consumers get added here when they exist).
+# News: ingress from ingress-nginx only, for the public API (/api/v1/news) and
+# API-docs paths routed through the ingress (in-cluster consumers get added
+# here when they exist).
 # Egress stays open unless restrictEgress is set; then, in addition to
 # DNS/Postgres/Keycloak/RabbitMQ/OTLP, allow HTTPS to non-cluster addresses
 # because the aggregator fetches public RSS feeds and article pages.

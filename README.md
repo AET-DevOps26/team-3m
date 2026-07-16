@@ -1,6 +1,6 @@
 # Kontor
 
-**Kontor** is a Progressive Web App that consolidates personal finance data - transactions, portfolios, and market data - and uses a GenAI layer to surface personalised, actionable insights. Stock and ETF data is sourced via Yahoo Finance; the AI component uses Retrieval-Augmented Generation (RAG) over the user's own financial data and curated financial news.
+**Kontor** consolidates personal finance data - transactions, portfolios, and market data - and uses a GenAI layer to surface personalised, actionable insights. Stock and ETF data is sourced from [Twelve Data](https://twelvedata.com); the AI component uses Retrieval-Augmented Generation (RAG) over the user's own financial data and curated financial news.
 
 ---
 
@@ -18,7 +18,19 @@
 
 ## Setup
 
-The repository includes a root `.env.example` and a local `.env` with the default compose values. Update `.env` if you want to change the Postgres credentials, Keycloak database credentials, or shared local Keycloak dev-user password.
+### Prerequisites
+
+Running the full stack locally needs only [Docker](https://docs.docker.com/get-docker/) (Docker Desktop or Docker Engine) with Compose v2. The rest of the toolchain (Node, Java 25, uv) is required only for the non-Docker [Local Development](#local-development) workflow.
+
+### Configuration
+
+Create your local environment file from the tracked template:
+
+```sh
+cp .env.example .env
+```
+
+The defaults in `.env` match the Compose defaults, so the stack runs as-is. Update `.env` to change the Postgres credentials, Keycloak database credentials, or the shared local Keycloak dev-user password — and to set the API keys described below.
 
 The AI service accepts any hosted OpenAI-compatible provider through
 `AI_API_KEY`, `AI_BASE_URL`, `AI_CHAT_MODEL`, and `AI_EMBEDDING_MODEL`. The local
@@ -30,7 +42,7 @@ configured either (`LOCAL_LLM_BASE_URL` empty), recommendation calls return
 `503`; if a local LLM is configured but not running, they return `502`
 ("Local LLM is not reachable").
 
-Live stock/ETF market data (quotes, price history, the holdings chart) is sourced from [Twelve Data](https://twelvedata.com) via a **`TWELVE_DATA_API_KEY`** in `.env`. Get a free key at <https://twelvedata.com/pricing> — the free tier is enough for local testing. When the key is missing, market-data endpoints return `502` with a message telling you the key is not configured, and the holdings chart shows that message instead of a chart; the rest of the app works normally.
+Live stock/ETF market data (quotes, price history, the holdings chart) is sourced from [Twelve Data](https://twelvedata.com) via a **`TWELVE_DATA_API_KEY`** in `.env`. See [Market data (Twelve Data)](#market-data-twelve-data) below for how to get a free key and what the free-tier rate limit means for the app.
 
 Hosted news ingest uses the same provider key and base URL as chat, with an
 independently configurable `AI_EMBEDDING_MODEL`.
@@ -51,6 +63,36 @@ docker compose up --build
 | AI Service   | <http://localhost:8000>  |
 | RabbitMQ UI  | <http://localhost:15672> |
 
+The client redirects to Keycloak for login. Sign in with a seeded local user — username **`dev`**, password **`dev`** (the password comes from `KEYCLOAK_DEV_USERS_PASSWORD`, default `dev`). Two more seeded users exist: `analyst` (regular user) and `admin-user` (also holds the `kontor-admin` role required to trigger news-aggregation runs). Add or edit users in `infra/keycloak/realms/kontor-users-0.json`.
+
+The `dev` user comes pre-loaded with example data (several months of transactions and a multi-asset portfolio), so the dashboard is populated on first login. To try the CSV import flow yourself, upload the sample file at [`resources/example-data/transaction-csv.example.csv`](resources/example-data/transaction-csv.example.csv). Note that an import **replaces** the signed-in user's existing transactions, so it overwrites the seeded data.
+
+### Market data (Twelve Data)
+
+Live stock/ETF market data — quotes, price history, and the holdings chart — comes from [Twelve Data](https://twelvedata.com). You need a free `TWELVE_DATA_API_KEY` in `.env` for it to work; the free tier is enough for local development.
+
+**How to get an API key:**
+
+1. Create a free account at <https://twelvedata.com/pricing> (the free plan needs no card).
+2. After signing in, open your [API dashboard](https://twelvedata.com/account) — it shows your unique API key.
+3. Copy the key into the root `.env` file:
+
+   ```sh
+   TWELVE_DATA_API_KEY=your-key-here
+   ```
+
+4. (Re)start the stack so `core` picks up the key:
+
+   ```sh
+   docker compose up --build
+   ```
+
+The holdings chart on the dashboard should now render live prices.
+
+**Rate limit.** The free tier caps how often you can call the API (currently 8 API credits per minute and 800 requests per day). When you exceed it, Twelve Data responds with `429`; `core` passes that through as a `429`, and the holdings chart dialog shows a "Live market data paused" notice with the provider's rate-limit message instead of the chart. Wait for the limit window to reset and reopen the chart — no key change is needed.
+
+**No key configured.** When `TWELVE_DATA_API_KEY` is empty, market-data endpoints return `502` with a message explaining the key is missing, and the chart shows that message instead of prices. The rest of the app works normally.
+
 ### Local LLM (offline AI)
 
 When `AI_API_KEY` is empty, the AI service falls back to a local
@@ -66,7 +108,7 @@ require an API key. There are two ways to provide it.
 brew install ollama        # or download the app from ollama.com
 ollama pull llama3.2       # one-time model download
 ollama pull nomic-embed-text # one-time news embedding model download
-ollama serve               # keep running (the app starts this for you)
+ollama serve               # start this yourself and keep it running
 ```
 
 The default `docker compose up` reaches it via `host.docker.internal:11434`. No extra flags needed.
@@ -152,6 +194,19 @@ CI's `openapi-sync` workflow fails if the committed files are out of sync.
 ---
 
 ## Deployment
+
+The production stack runs on the TUM Kubernetes cluster and is served at:
+
+| Environment | URL                          |
+| ----------- | ---------------------------- |
+| App         | <https://kontor.live>        |
+| Auth (Keycloak) | <https://auth.kontor.live> |
+| Grafana     | <https://grafana.kontor.live> |
+
+Unlike the local stack, prod is **not** pre-seeded with example data — new
+accounts start empty, so import a CSV (e.g. the sample at
+[`resources/example-data/transaction-csv.example.csv`](resources/example-data/transaction-csv.example.csv))
+to populate the dashboard.
 
 The Kontor stack ships as a single Helm chart in
 [`deploy/helm/kontor/`](deploy/helm/kontor/README.md) that bundles the client,

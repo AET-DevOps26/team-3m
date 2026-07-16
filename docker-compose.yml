@@ -144,7 +144,7 @@ services:
       start_period: 30s
 
   rabbitmq:
-    image: rabbitmq:4.2-management-alpine
+    image: rabbitmq:4.3-management-alpine
     environment:
       RABBITMQ_DEFAULT_USER: "${RABBITMQ_USER:-news}"
       RABBITMQ_DEFAULT_PASS: "${RABBITMQ_PASSWORD:-change-me-rabbit-local}"
@@ -237,7 +237,7 @@ services:
       ai-migrate:
         condition: service_completed_successfully
       news:
-        condition: service_healthy
+        condition: service_started
     environment:
       <<: *keycloak-oidc-env
       DATABASE_URL: "postgresql+asyncpg://${AI_POSTGRES_USER:-kontor_ai}:${AI_POSTGRES_PASSWORD:-change-me-local}@ai-db:5432/${AI_POSTGRES_DB:-kontor_ai}"

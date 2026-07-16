@@ -24,7 +24,6 @@ const techStack = [
   { name: "React", url: "https://react.dev" },
   { name: "TypeScript", url: "https://www.typescriptlang.org" },
   { name: "Vite", url: "https://vite.dev" },
-  { name: "PWA", url: "https://web.dev/explore/progressive-web-apps" },
   { name: "Java", url: "https://openjdk.org" },
   { name: "Spring", url: "https://spring.io" },
   { name: "PostgreSQL", url: "https://www.postgresql.org" },

@@ -9,8 +9,9 @@ source, meant to be replaced later.
 
 ## How it works
 
-- **Scheduled aggregation**: every `news.aggregation.interval` (default 15 min)
-  all configured feeds are fetched and parsed (RSS/Atom via ROME).
+- **Scheduled aggregation**: every `news.aggregation.interval` (default 15 min,
+  used locally and in PR previews; prod and Azure override it to 6 h) all
+  configured feeds are fetched and parsed (RSS/Atom via ROME).
 - **Manual asynchronous aggregation**: `POST /api/v1/news/aggregation/runs`
   starts a run in the background and returns `202` with the run to poll
   (`GET /api/v1/news/aggregation/runs/{id}`). A second trigger while a run is
@@ -98,8 +99,10 @@ Springdoc serves the OpenAPI spec at `/news/v3/api-docs` and the Swagger UI at
 `/news/swagger-ui/index.html` without authentication. The `/news` prefix keeps
 the docs distinct from core's, which occupy the root `/swagger-ui` and
 `/v3/api-docs` paths on the shared public domain. Locally they are on
-`http://localhost:8082`; in k8s and on Azure only these two doc paths are
-routed publicly — the API itself stays internal.
+`http://localhost:8082`; in k8s and on Azure the doc paths and the news API
+under `/api/v1/news` are routed publicly, while all other `/api` traffic goes
+to core. Every `/api/v1/news` endpoint except the health checks
+(`/api/v1/news/health/*`) requires a bearer token.
 
 ## Manual testing
 

@@ -142,7 +142,10 @@ in the `azure` GitHub environment and needs the following configuration:
 `AZURE_SUBSCRIPTION_ID` (service principal), `AZURE_POSTGRES_PASSWORD`,
 `AZURE_AI_POSTGRES_PASSWORD`, `AZURE_KEYCLOAK_POSTGRES_PASSWORD`,
 `AZURE_KEYCLOAK_ADMIN_PASSWORD`, `AZURE_KEYCLOAK_DEV_PASSWORD`, and
-`AI_API_KEY` (the deployer's OpenAI project API key).
+`AI_API_KEY` (the deployer's OpenAI project API key). The deploy also
+reads the repository-level `TWELVE_DATA_API_KEY` secret (shared with the Helm
+deploy; free key from <https://twelvedata.com>) so live market data works —
+without it the holdings chart falls back to the "key not configured" message.
 
 **Variables:** `AZURE_SSH_PUBLIC_KEY` (contents of the `.pub` key from the
 prerequisites), `AZURE_ACME_EMAIL`, `AZURE_KEYCLOAK_ADMIN_USER`, `AZURE_DOMAIN`

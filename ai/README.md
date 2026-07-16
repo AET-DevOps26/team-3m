@@ -49,6 +49,11 @@ subscribes to a RabbitMQ queue, embeds each article, and upserts it into the
 `news_article` table (pgvector). Each row also stores the embedding model + dimension,
 so switching embedding provider never mixes vector dimensions at query time.
 
+A background sweeper deletes articles older than `NEWS_RETENTION_DAYS` (default 7) every
+`NEWS_RETENTION_SWEEP_INTERVAL_SECONDS` (default 3600), independently of ingest, so
+append-only RSS ingest can't exhaust the shared database and take recommendation
+persistence down with it.
+
 Embeddings mirror the LLM provider resolution: the hosted OpenAI-compatible
 provider uses `AI_API_KEY`, `AI_BASE_URL`, and `AI_EMBEDDING_MODEL`; otherwise
 the service uses Ollama (`LOCAL_EMBEDDING_MODEL`, default

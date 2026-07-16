@@ -1,11 +1,12 @@
 # Kontor News Aggregator
 
 Crawls market news from public RSS feeds and **pushes every new article onto a
-RabbitMQ queue** for the future **news processor** (the component that will do
-embeddings/chunking/RAG — out of scope here). Locally the aggregator stores only
-**crawl metadata**, so it never publishes the same article twice and only
-crawls what is new. The current feed set is an intentionally simple placeholder
-source, meant to be replaced later.
+RabbitMQ queue** for the **AI service**, which embeds the articles into its
+pgvector store and retrieves them to ground portfolio recommendations (RAG —
+see [`ai/README.md`](../ai/README.md)). The aggregator stores only **crawl
+metadata**, so it never publishes the same article twice and only crawls what
+is new. The current feed set is an intentionally simple placeholder source,
+meant to be replaced later.
 
 ## How it works
 
@@ -31,16 +32,22 @@ source, meant to be replaced later.
   published again on the next run. This is deliberately at-least-once delivery;
   the consumer must deduplicate on `messageId`.
 
-## Contract for the news processor
+## Contract for the AI consumer
 
-The contract is the **queue**, documented in [`docs/asyncapi.yml`](docs/asyncapi.yml):
+The contract is the **queue**, documented in [`docs/asyncapi.yml`](docs/asyncapi.yml)
+(shared example: [`docs/examples/article-crawled.json`](docs/examples/article-crawled.json)):
 subscribe to `news.articles`, treat delivery as at-least-once, deduplicate on
-`messageId`/`id`. The aggregator declares the durable topology itself, so
-messages accumulate until the processor exists. Inspect the queue via the
-RabbitMQ management UI (`http://localhost:15672`, credentials from `.env`).
+`messageId`/`id`. The AI service's in-process consumer does exactly that
+(`ai/advisor/news_consumer.py`) and republishes terminal failures to the
+dead-letter queue `news.articles.dead` (direct exchange `kontor.news.dlx`).
+The aggregator owns and declares the durable topology — main queue, dead-letter
+queue, exchanges, and bindings — so messages accumulate safely while no
+consumer is connected. Inspect both queues via the RabbitMQ management UI
+(`http://localhost:15672`, credentials from `.env`).
 
 No embeddings and no chunking happen here by design — both are coupled to the
-embedding model the processor will choose.
+embedding model, which is the consumer's choice (the AI service resolves it
+from its LLM provider configuration).
 
 ## Storage
 

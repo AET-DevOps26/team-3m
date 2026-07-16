@@ -90,6 +90,7 @@ async def _dead_letter(
             raise RuntimeError("dead-letter publish was not confirmed")
     except Exception as exc:
         logger.error("Failed to publish news message to dead-letter queue; requeueing", exc_info=exc)
+        await asyncio.sleep(TRANSIENT_BACKOFF_SECONDS)
         await message.nack(requeue=True)
         return
     await message.ack()

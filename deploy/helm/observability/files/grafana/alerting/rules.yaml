@@ -44,7 +44,7 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: kontor-ai (prod) reported no HTTP telemetry for 10 minutes — the service is down or not exporting metrics.
+          summary: kontor-ai (prod) reported no runtime telemetry for 10 minutes — the service is down or not exporting metrics.
         data:
           - refId: A
             relativeTimeRange: { from: 600, to: 0 }
@@ -52,7 +52,7 @@ groups:
             model:
               refId: A
               instant: true
-              expr: absent_over_time({__name__=~"http_server_(duration_milliseconds|request_duration_seconds)_count", service="kontor-ai", deployment_environment="prod"}[10m])
+              expr: absent_over_time({__name__=~"process(_runtime_cpython)?_cpu_time_seconds_total", service="kontor-ai", deployment_environment="prod"}[10m])
           - refId: C
             relativeTimeRange: { from: 0, to: 0 }
             datasourceUid: __expr__

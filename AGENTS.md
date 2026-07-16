@@ -6,7 +6,7 @@ _Kontor_ consolidates personal finance data — transactions, portfolios, market
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | React 19, TypeScript 5.9, Vite 7, Tailwind CSS 4, shadcn/ui, Radix UI |
+| Frontend | React 19, TypeScript 6, Vite 8, Tailwind CSS 4, shadcn/ui, Radix UI |
 | Backend | Java 25, Spring Boot 4, Gradle (microservices) |
 | AI Service | Python 3.14, FastAPI, uv |
 | Linting/Formatting | Biome (frontend), Spotless (Palantir Java Format) + Checkstyle + Error Prone (backend), Ruff (AI) |
@@ -24,6 +24,7 @@ _Kontor_ consolidates personal finance data — transactions, portfolios, market
 | Unit tests | `npm test` |
 | Unit tests (watch) | `npm run test:watch` |
 | Unit tests (coverage) | `npm run test:coverage` |
+| E2E tests | `npm run e2e` |
 | Lint | `npm run lint` |
 | Lint (autofix) | `npm run lint:fix` |
 | Format (autofix) | `npm run format` |

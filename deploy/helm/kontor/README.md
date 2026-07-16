@@ -4,20 +4,22 @@ Deploys the Kontor stack into a single Kubernetes namespace:
 
 - **client** — React SPA served by nginx, configured at runtime via `vite-envs`.
 - **core** — Spring Boot API.
-- **postgres** — single-instance StatefulSet with `pgvector`.
+- **news** — Spring Boot news aggregator with its own dedicated Postgres.
+- **ai** — FastAPI GenAI service with its own dedicated Postgres.
+- **postgres** — single-instance StatefulSet with `pgvector` (core's database).
+- **rabbitmq** — message broker for the news queue (CloudPirates subchart).
 - **keycloak** _(optional)_ — bundled identity provider, with its own dedicated
   Postgres or an in-memory H2 for throwaway PR previews.
 
-Designed for the shared AET student cluster (RKE2 + nginx ingress + cert-manager
-
-- Ceph RBD storage), but everything is value-driven so it runs on any compliant
-  cluster.
+Designed for the shared AET student cluster (RKE2, nginx ingress, cert-manager,
+Ceph RBD storage), but everything is value-driven so it runs on any compliant
+cluster.
 
 ## Prerequisites
 
 - Namespace `team-3m` exists: `kubectl create namespace team-3m`
-- Images pushed to `ghcr.io/aet-devops26/team-3m/kontor-core`, `…/kontor-news`,
-  `…/kontor-ai`, and `…/kontor-client`
+- Images pushed to `ghcr.io/aet-devops26/team-3m/kontor-core`, `…/kontor-client`,
+  `…/kontor-news`, `…/kontor-ai`, and `…/kontor-keycloak`
 - cert-manager `ClusterIssuer` (default `letsencrypt-prod`) available
 
 ## Install
@@ -93,10 +95,10 @@ Kubernetes Secret before Helm runs, which keeps it out of Helm release history.
 | Kind                       | Name                                                                                             | Notes                                                                     |
 | -------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
 | Variable                   | `RANCHER_PROJECT_ID`                                                                             | `c-f49m7:p-xj8vv` — places namespaces in the team project (quota + RBAC). |
-| Secret (repo)              | `KUBECONFIG_B64`                                                                                 | base64 of `deploy/rbac/extract-kubeconfig.sh` output.                     |
-| Secret (env `k8s-prod`)    | `POSTGRES_PASSWORD`, `NEWS_POSTGRES_PASSWORD`, `KEYCLOAK_ADMIN_PASSWORD`, `KEYCLOAK_DB_PASSWORD`, `AI_API_KEY` | `AI_API_KEY` authenticates the hosted OpenAI-compatible provider. |
-| Secret (env `k8s-preview`) | `POSTGRES_PASSWORD`, `NEWS_POSTGRES_PASSWORD`, `KEYCLOAK_ADMIN_PASSWORD` | `dev-mem` Keycloak needs no DB password; hosted AI is disabled. |
 | Variable (env `k8s-prod`)  | `AI_BASE_URL`, `AI_CHAT_MODEL`, `AI_EMBEDDING_MODEL` | Hosted provider endpoint and models; CI has course-gateway fallbacks. |
+| Secret (repo)              | `KUBECONFIG_B64`                                                                                 | base64 of `deploy/rbac/extract-kubeconfig.sh` output.                     |
+| Secret (env `k8s-prod`)    | `POSTGRES_PASSWORD`, `NEWS_POSTGRES_PASSWORD`, `AI_DB_PASSWORD`, `KEYCLOAK_ADMIN_PASSWORD`, `KEYCLOAK_DB_PASSWORD`, `AI_API_KEY`, `TWELVE_DATA_API_KEY` | `NEWS_POSTGRES_PASSWORD` / `AI_DB_PASSWORD` are the dedicated news/AI DB credentials (`AI_DB_PASSWORD` falls back to `POSTGRES_PASSWORD` when unset). `AI_API_KEY` authenticates the hosted OpenAI-compatible provider; `TWELVE_DATA_API_KEY` enables market data. |
+| Secret (env `k8s-preview`) | `POSTGRES_PASSWORD`, `NEWS_POSTGRES_PASSWORD`, `AI_DB_PASSWORD`, `KEYCLOAK_ADMIN_PASSWORD`, `TWELVE_DATA_API_KEY` | `dev-mem` Keycloak needs no DB password; hosted AI is disabled. |
 
 The `k8s-prod` / `k8s-preview` GitHub Environments can be created with the
 `Bootstrap Environments` workflow (`workflow_dispatch`, takes the environment
@@ -203,9 +205,14 @@ empty, unless `*.existingSecret` is set):
 | `keycloak.admin.password` | When `keycloak.deploy=true`.                                  |
 | `keycloak.db.password`    | When `keycloak.deploy=true` and `keycloak.database=postgres`. |
 
+The hosted AI credential (`AI_API_KEY`, supplied via `ai.existingSecret`) and
+`core.twelveDataApiKey` are not render-required, but without them the AI
+recommendations (unless a local LLM fallback is reachable) and live market data
+are disabled at runtime.
+
 - Pass them via the gitignored `secrets.yaml` (templated from
   `secrets.example.yaml`) or `--set` on the CLI; never commit real secrets.
-- `.gitignore` matches `deploy/helm/**/secrets.yaml` so the real file cannot
+- `.gitignore` matches `deploy/helm/*/secrets.yaml` so the real file cannot
   be accidentally committed; `.helmignore` keeps it out of packaged charts.
 - When `ai.hostedEnabled=true`, create a Secret containing `AI_API_KEY`
   out-of-band and set `ai.existingSecret` to its name. The chart intentionally
@@ -270,8 +277,8 @@ The chart pulls the [CloudPirates RabbitMQ chart](https://github.com/CloudPirate
 `helm dependency build deploy/helm/kontor` before lint/template/deploy (CI does
 this automatically; `Chart.lock` is committed, `charts/` is gitignored). The
 news aggregator publishes crawled articles to the durable queue `news.articles`
-(exchange `kontor.news`); the future news processor consumes from it. Contract:
-`news/docs/asyncapi.yml`.
+(exchange `kontor.news`); the AI service consumes from it and dead-letters
+terminal failures to `news.articles.dead`. Contract: `news/docs/asyncapi.yml`.
 
 Credentials: the subchart generates the password and Erlang cookie into the
 Secret `<release>-rabbitmq` (`helm.sh/resource-policy: keep` — values survive

@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://kontor_ai:change-me-local@localhost:5432/kontor_ai"
     ai_api_key: str = ""
     ai_base_url: str = "https://api.openai.com/v1"
-    ai_chat_model: str = "gpt-5.4-mini-2026-03-17"
+    ai_chat_model: str = "gpt-5.4-mini"
     ai_embedding_model: str = "text-embedding-3-small"
     local_llm_base_url: str = ""
     local_llm_model: str = "llama3.2"

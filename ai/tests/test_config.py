@@ -15,7 +15,7 @@ def test_settings_defaults_to_openai_provider(monkeypatch: pytest.MonkeyPatch) -
     settings = Settings()
 
     assert settings.ai_base_url == "https://api.openai.com/v1"
-    assert settings.ai_chat_model == "gpt-5.4-mini-2026-03-17"
+    assert settings.ai_chat_model == "gpt-5.4-mini"
     assert settings.ai_embedding_model == "text-embedding-3-small"
 
 

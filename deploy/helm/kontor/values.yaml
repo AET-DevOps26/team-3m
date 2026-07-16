@@ -236,7 +236,7 @@ ai:
   # -- Hosted provider base URL and model IDs. Defaults target OpenAI; environment
   # overlays or CI variables can point the same service at another compatible API.
   baseUrl: "https://api.openai.com/v1"
-  chatModel: "gpt-5.4-mini-2026-03-17"
+  chatModel: "gpt-5.4-mini"
   embeddingModel: "text-embedding-3-small"
   # -- Existing Secret containing AI_API_KEY. Required when hostedEnabled=true.
   # Keeping provider credentials out of Helm values prevents them from being

@@ -13,12 +13,12 @@ group, Terraform state storage, DNS) or for manual debugging.
 The app is served from the custom domain `azure.kontor.live` (configurable via the
 `AZURE_DOMAIN` GitHub variable or the `domain` workflow input).
 
-| URL | Service |
-| --- | ------- |
-| `https://azure.kontor.live`      | Client (SPA) |
+| URL                              | Service            |
+| -------------------------------- | ------------------ |
+| `https://azure.kontor.live`      | Client (SPA)       |
 | `https://azure.kontor.live/api`  | Core (Spring Boot) |
-| `https://azure.kontor.live/ai`   | AI (FastAPI) |
-| `https://auth.azure.kontor.live` | Keycloak |
+| `https://azure.kontor.live/ai`   | AI (FastAPI)       |
+| `https://auth.azure.kontor.live` | Keycloak           |
 
 ### DNS model
 
@@ -154,7 +154,7 @@ prerequisites), `AZURE_ACME_EMAIL`, `AZURE_KEYCLOAK_ADMIN_USER`, `AZURE_DOMAIN`
 `AZURE_AI_IMAGE_TAG` and `AZURE_KEYCLOAK_IMAGE_TAG` (optional, default
 `latest`; pin a `pr-<N>` build to deploy unmerged images). The optional
 `AI_BASE_URL`, `AI_CHAT_MODEL`, and `AI_EMBEDDING_MODEL` variables default to
-OpenAI (`https://api.openai.com/v1`, `gpt-5.4-mini-2026-03-17`, and
+OpenAI (`https://api.openai.com/v1`, `gpt-5.4-mini`, and
 `text-embedding-3-small`).
 
 Add the deployer's key as the `AI_API_KEY` secret in the `azure` GitHub
@@ -183,8 +183,8 @@ via the Docker provider and round-robins across every container that shares a
 service's `traefik.http.services.<name>.loadbalancer.*` labels. To put it to work,
 the stateless services run **two replicas each** by default:
 
-| Service | Replicas | Memory limit |
-| ------- | -------- | ------------ |
+| Service | Replicas                      | Memory limit                          |
+| ------- | ----------------------------- | ------------------------------------- |
 | `core`  | `CORE_REPLICAS` (default `2`) | `CORE_MEMORY_LIMIT` (default `1536m`) |
 | `ai`    | `AI_REPLICAS` (default `2`)   | `AI_MEMORY_LIMIT` (default `512m`)    |
 

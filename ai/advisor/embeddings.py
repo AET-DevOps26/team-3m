@@ -16,12 +16,12 @@ class EmbeddingProvider:
 
 
 def resolve_embedding_provider(settings: Settings) -> EmbeddingProvider | None:
-    """Logos when a key + model are set, else local Ollama when configured, else None (feature off)."""
-    if settings.logos_api_key and settings.logos_embedding_model:
-        logger.info("Embedding provider: logos (%s)", settings.logos_embedding_model)
+    """Use the hosted provider when keyed, else local Ollama when configured."""
+    if settings.ai_api_key and settings.ai_embedding_model:
+        logger.info("Embedding provider: hosted (%s)", settings.ai_embedding_model)
         return EmbeddingProvider(
-            client=shared_async_openai(api_key=settings.logos_api_key, base_url=settings.logos_base_url),
-            model=settings.logos_embedding_model,
+            client=shared_async_openai(api_key=settings.ai_api_key, base_url=settings.ai_base_url),
+            model=settings.ai_embedding_model,
         )
 
     if settings.local_llm_base_url:

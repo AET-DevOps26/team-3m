@@ -49,9 +49,10 @@ subscribes to a RabbitMQ queue, embeds each article, and upserts it into the
 `news_article` table (pgvector). Each row also stores the embedding model + dimension,
 so switching embedding provider never mixes vector dimensions at query time.
 
-Embeddings mirror the LLM provider resolution: **Logos** in hosted mode
-(`LOGOS_API_KEY` + `LOGOS_EMBEDDING_MODEL`), else **Ollama** (`LOCAL_EMBEDDING_MODEL`,
-default `nomic-embed-text`).
+Embeddings mirror the LLM provider resolution: the hosted OpenAI-compatible
+provider uses `AI_API_KEY`, `AI_BASE_URL`, and `AI_EMBEDDING_MODEL`; otherwise
+the service uses Ollama (`LOCAL_EMBEDDING_MODEL`, default
+`nomic-embed-text`).
 
 ### Retrieval
 

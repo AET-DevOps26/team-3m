@@ -46,8 +46,8 @@ def authenticated() -> Generator[None]:
 
 @pytest.fixture
 def not_configured(authenticated: None) -> Generator[None]:
-    """No Logos key and no local LLM base URL → the AI service is unconfigured."""
-    app.dependency_overrides[get_settings] = lambda: Settings(logos_api_key="", local_llm_base_url="")
+    """No hosted key and no local LLM base URL means the AI service is unconfigured."""
+    app.dependency_overrides[get_settings] = lambda: Settings(ai_api_key="", local_llm_base_url="")
     yield
     app.dependency_overrides.pop(get_settings, None)
 
@@ -82,7 +82,7 @@ async def test_recommendation_returns_structured_response(transport: ASGITranspo
     assert "financial advice" in data["disclaimer"]
 
 
-async def test_recommendation_falls_back_to_local_when_no_logos_key(
+async def test_recommendation_falls_back_to_local_when_no_hosted_key(
     transport: ASGITransport, authenticated: None
 ) -> None:
     captured_kwargs: dict[str, object] = {}

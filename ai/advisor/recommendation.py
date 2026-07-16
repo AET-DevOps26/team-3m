@@ -142,6 +142,8 @@ async def _retrieve_news(session: AsyncSession, settings: Settings, portfolio: P
             )
             embedding_model = provider.model
         except Exception as exc:
+            # ponytail: symbol-match is a no-op until the aggregator emits ticker tags (articles are
+            # stored with symbols=[]), so an embedding outage degrades news to empty, not symbols.
             logger.warning("News query embedding failed; falling back to symbol match", exc_info=exc)
 
     try:
@@ -203,7 +205,7 @@ async def generate_recommendation(
                 {"role": "user", "content": _build_prompt(portfolio, articles)},
             ],
             response_format={"type": "json_object"},
-            # Local small models need determinism; leave Logos at its default.
+            # Local small models need determinism; leave hosted providers at their default.
             temperature=0.0 if provider.is_local else omit,
         )
     except Exception as exc:

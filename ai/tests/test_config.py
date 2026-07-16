@@ -4,22 +4,43 @@ from advisor.config import Settings
 from advisor.llm import resolve_llm_provider
 
 
-def test_settings_reads_logos_api_key(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("LOGOS_API_KEY", "lg-test-key")
+def test_settings_reads_ai_api_key(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("AI_API_KEY", "hosted-test-key")
     settings = Settings()
-    assert settings.logos_api_key == "lg-test-key"
+    assert settings.ai_api_key == "hosted-test-key"
 
 
-def test_settings_defaults_logos_base_url(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("LOGOS_API_KEY", raising=False)
+def test_settings_defaults_to_openai_provider(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("AI_API_KEY", raising=False)
     settings = Settings()
-    assert settings.logos_base_url == "https://logos.aet.cit.tum.de/v1"
+
+    assert settings.ai_base_url == "https://api.openai.com/v1"
+    assert settings.ai_chat_model == "gpt-5.4-mini-2026-03-17"
+    assert settings.ai_embedding_model == "text-embedding-3-small"
 
 
-def test_logos_api_key_defaults_to_empty(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("LOGOS_API_KEY", raising=False)
+def test_ai_api_key_defaults_to_empty(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("AI_API_KEY", raising=False)
     settings = Settings()
-    assert settings.logos_api_key == ""
+    assert settings.ai_api_key == ""
+
+
+@pytest.mark.parametrize(
+    "base_url",
+    [
+        "http://provider.test/v1",
+        "provider.test/v1",
+        "https://user:password@provider.test/v1",
+    ],
+)
+def test_hosted_provider_requires_safe_https_url(base_url: str) -> None:
+    with pytest.raises(ValueError, match="AI_BASE_URL"):
+        Settings(ai_api_key="hosted-test-key", ai_base_url=base_url)
+
+
+def test_hosted_provider_accepts_absolute_https_url() -> None:
+    settings = Settings(ai_api_key="hosted-test-key", ai_base_url="https://provider.test/v1")
+    assert settings.ai_base_url == "https://provider.test/v1"
 
 
 def test_news_consumer_defaults_match_aggregator_contract() -> None:
@@ -35,26 +56,32 @@ def test_news_consumer_is_configured_by_host_or_url() -> None:
     assert Settings(rabbitmq_host="", rabbitmq_url="").is_news_consumer_configured is False
 
 
-def test_resolve_llm_provider_uses_logos_when_key_present() -> None:
-    settings = Settings(logos_api_key="lg-test-key", logos_base_url="https://logos.test/v1")
+def test_resolve_llm_provider_uses_hosted_provider_when_key_present() -> None:
+    settings = Settings(
+        ai_api_key="hosted-test-key",
+        ai_base_url="https://provider.test/v1",
+        ai_chat_model="hosted-chat-model",
+    )
     provider = resolve_llm_provider(settings)
+
     assert provider is not None
     assert provider.is_local is False
-    assert provider.model == settings.logos_model
-    assert provider.client.api_key == "lg-test-key"
-    assert str(provider.client.base_url) == "https://logos.test/v1/"
+    assert provider.model == "hosted-chat-model"
+    assert provider.client.api_key == "hosted-test-key"
+    assert str(provider.client.base_url) == "https://provider.test/v1/"
 
 
-def test_resolve_llm_provider_prefers_logos_when_both_configured() -> None:
-    settings = Settings(logos_api_key="lg-test-key", local_llm_base_url="http://localhost:11434/v1")
+def test_resolve_llm_provider_prefers_hosted_provider_when_both_configured() -> None:
+    settings = Settings(ai_api_key="hosted-test-key", local_llm_base_url="http://localhost:11434/v1")
     provider = resolve_llm_provider(settings)
+
     assert provider is not None
     assert provider.is_local is False
 
 
 def test_resolve_llm_provider_falls_back_to_local_without_key() -> None:
     settings = Settings(
-        logos_api_key="",
+        ai_api_key="",
         local_llm_base_url="http://localhost:11434/v1",
         local_llm_model="llama3.2",
     )
@@ -67,5 +94,5 @@ def test_resolve_llm_provider_falls_back_to_local_without_key() -> None:
 
 
 def test_resolve_llm_provider_returns_none_when_nothing_configured() -> None:
-    settings = Settings(logos_api_key="", local_llm_base_url="")
+    settings = Settings(ai_api_key="", local_llm_base_url="")
     assert resolve_llm_provider(settings) is None

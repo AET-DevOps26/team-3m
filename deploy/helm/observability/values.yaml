@@ -149,7 +149,12 @@ alloy:
         cpu: 500m
         memory: 512Mi
 
-# Optional defense-in-depth. The app chart opens egress to this stack from its side;
-# enabling here additionally restricts who may reach the backends.
+# Ingress lockdown for the stack (the app chart opens egress to this stack from
+# its side). SeaweedFS's unauthenticated master/filer APIs, the query backends,
+# and Grafana only accept their known clients; the Alloy gateway accepts OTLP
+# from every namespace carrying the team's Rancher project label.
 networkPolicy:
-  enabled: false
+  enabled: true
+  # -- Project label stamped on all team namespaces by deploy/rbac/namespace.tpl
+  # (prod + PR previews). CI overrides it from the RANCHER_PROJECT_ID variable.
+  rancherProjectLabel: p-xj8vv

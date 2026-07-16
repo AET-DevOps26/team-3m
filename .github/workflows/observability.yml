@@ -80,12 +80,14 @@ jobs:
           GRAFANA_OAUTH_CLIENT_SECRET: ${{ secrets.GRAFANA_OAUTH_CLIENT_SECRET }}
           GRAFANA_OAUTH_ISSUER_URL: ${{ vars.GRAFANA_OAUTH_ISSUER_URL }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          RANCHER_PROJECT_ID: ${{ vars.RANCHER_PROJECT_ID }}
         run: |
           set -euo pipefail
           EXTRA=()
           [ -n "${GRAFANA_ADMIN_PASSWORD}" ] && EXTRA+=(--set-string "grafana.adminPassword=${GRAFANA_ADMIN_PASSWORD}")
           [ -n "${S3_ACCESS_KEY}" ] && EXTRA+=(--set-string "s3.accessKey=${S3_ACCESS_KEY}")
           [ -n "${S3_SECRET_KEY}" ] && EXTRA+=(--set-string "s3.secretKey=${S3_SECRET_KEY}")
+          [ -n "${RANCHER_PROJECT_ID}" ] && EXTRA+=(--set-string "networkPolicy.rancherProjectLabel=${RANCHER_PROJECT_ID#*:}")
           # Discord alerting: enabled only when the webhook secret exists (created
           # outside Helm above); the checksum rolls Grafana on webhook rotation.
           if [ -n "${DISCORD_WEBHOOK_URL}" ]; then

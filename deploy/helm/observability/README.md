@@ -58,6 +58,22 @@ browser ──Faro──▶ alloy(gateway:/collect) ──▶ Tempo (traces) + L
 - **Prometheus** — global 15d + size cap (no per-label retention; PR series age out
   after teardown).
 
+## NetworkPolicies
+
+Enabled by default (`networkPolicy.enabled`). SeaweedFS accepts S3 traffic
+(8333) only from Loki and Tempo, and its unauthenticated master/filer APIs
+only from the bucket-init job; Loki/Tempo/Prometheus accept only the Alloy
+collectors, Tempo's metrics-generator remote-write, and Grafana; Grafana
+accepts only `ingress-nginx`; the Alloy gateway's self-metrics port is
+reserved for the Prometheus scrape job. The Alloy gateway accepts OTLP from every
+namespace carrying the team's Rancher project label
+(`networkPolicy.rancherProjectLabel`, overridden in CI from the
+`RANCHER_PROJECT_ID` variable) — this is what lets prod **and** ephemeral
+`team-3m-pr-<N>` namespaces ship telemetry — plus Faro/OTLP-HTTP from
+`ingress-nginx`. `alloy-logs` has no policy: it only pulls pod logs via the
+Kubernetes API and pushes them out (egress), which policies here never
+restrict.
+
 ## Alerting (Grafana → Discord)
 
 Grafana-managed alerting is provisioned from `files/grafana/alerting/` — a Discord

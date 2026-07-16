@@ -1,0 +1,196 @@
+{{- if .Values.networkPolicy.enabled }}
+---
+# SeaweedFS: S3 only from Loki and Tempo; master/filer (HTTP + gRPC) only from
+# the bucket-init hook job. The filer HTTP API is unauthenticated and exposes
+# every stored object, so nothing else may reach these ports.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: seaweedfs
+  labels:
+    {{- include "obs.componentLabels" (dict "root" . "component" "seaweedfs") | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "obs.selectorLabels" (dict "root" . "component" "seaweedfs") | nindent 6 }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "obs.selectorLabels" (dict "root" . "component" "loki") | nindent 14 }}
+        - podSelector:
+            matchLabels:
+              {{- include "obs.selectorLabels" (dict "root" . "component" "tempo") | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: 8333
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "obs.selectorLabels" (dict "root" . "component" "seaweedfs-init") | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: 9333
+        - protocol: TCP
+          port: 19333
+        - protocol: TCP
+          port: 8888
+        - protocol: TCP
+          port: 18888
+---
+# Loki: push from the Alloy collectors, queries from Grafana.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: loki
+  labels:
+    {{- include "obs.componentLabels" (dict "root" . "component" "loki") | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "obs.selectorLabels" (dict "root" . "component" "loki") | nindent 6 }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "obs.selectorLabels" (dict "root" . "component" "alloy-gateway") | nindent 14 }}
+        - podSelector:
+            matchLabels:
+              {{- include "obs.selectorLabels" (dict "root" . "component" "alloy-logs") | nindent 14 }}
+        - podSelector:
+            matchLabels:
+              {{- include "obs.selectorLabels" (dict "root" . "component" "grafana") | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: 3100
+---
+# Tempo: OTLP from the Alloy gateway, queries from Grafana.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: tempo
+  labels:
+    {{- include "obs.componentLabels" (dict "root" . "component" "tempo") | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "obs.selectorLabels" (dict "root" . "component" "tempo") | nindent 6 }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "obs.selectorLabels" (dict "root" . "component" "alloy-gateway") | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: 4317
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "obs.selectorLabels" (dict "root" . "component" "grafana") | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: 3200
+---
+# Prometheus: remote-write from the Alloy collectors and Tempo's metrics
+# generator, queries from Grafana.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: prometheus
+  labels:
+    {{- include "obs.componentLabels" (dict "root" . "component" "prometheus") | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "obs.selectorLabels" (dict "root" . "component" "prometheus") | nindent 6 }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "obs.selectorLabels" (dict "root" . "component" "alloy-gateway") | nindent 14 }}
+        - podSelector:
+            matchLabels:
+              {{- include "obs.selectorLabels" (dict "root" . "component" "alloy-logs") | nindent 14 }}
+        - podSelector:
+            matchLabels:
+              {{- include "obs.selectorLabels" (dict "root" . "component" "grafana") | nindent 14 }}
+        - podSelector:
+            matchLabels:
+              {{- include "obs.selectorLabels" (dict "root" . "component" "tempo") | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: 9090
+---
+# Grafana: only via the cluster ingress controller.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: grafana
+  labels:
+    {{- include "obs.componentLabels" (dict "root" . "component" "grafana") | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "obs.selectorLabels" (dict "root" . "component" "grafana") | nindent 6 }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 3000
+---
+# Alloy gateway: OTLP from every namespace in the team's Rancher project
+# (prod + ephemeral PR previews share the projectId label stamped by
+# deploy/rbac/namespace.tpl), Faro/OTLP-HTTP from the browser ingress, and
+# the self-metrics endpoint for the Prometheus scrape job.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: alloy-gateway
+  labels:
+    {{- include "obs.componentLabels" (dict "root" . "component" "alloy-gateway") | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "obs.selectorLabels" (dict "root" . "component" "alloy-gateway") | nindent 6 }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              field.cattle.io/projectId: {{ .Values.networkPolicy.rancherProjectLabel | quote }}
+      ports:
+        - protocol: TCP
+          port: 4317
+        - protocol: TCP
+          port: 4318
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 12347
+        - protocol: TCP
+          port: 4318
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "obs.selectorLabels" (dict "root" . "component" "prometheus") | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: 12345
+{{- end }}

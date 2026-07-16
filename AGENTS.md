@@ -1,6 +1,6 @@
 # Project Overview
 
-_Kontor_ is a Progressive Web App (mobile and desktop) that consolidates personal finance data — transactions, portfolios, market data — and uses a GenAI layer to surface personalized, actionable insights. Stock and ETF data is sourced via Yahoo Finance; the AI component uses Retrieval-Augmented Generation (RAG) over the user's own financial data and curated financial news.
+_Kontor_ consolidates personal finance data — transactions, portfolios, market data — and uses a GenAI layer to surface personalized, actionable insights. Stock and ETF data is sourced from Twelve Data; the AI component uses Retrieval-Augmented Generation (RAG) over the user's own financial data and curated financial news.
 
 ## Tech Stack
 

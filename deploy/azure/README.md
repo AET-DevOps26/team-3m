@@ -141,7 +141,10 @@ in the `azure` GitHub environment and needs the following configuration:
 **Secrets:** `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, `AZURE_TENANT_ID`,
 `AZURE_SUBSCRIPTION_ID` (service principal), `AZURE_POSTGRES_PASSWORD`,
 `AZURE_AI_POSTGRES_PASSWORD`, `AZURE_KEYCLOAK_POSTGRES_PASSWORD`,
-`AZURE_KEYCLOAK_ADMIN_PASSWORD`, `AZURE_KEYCLOAK_DEV_PASSWORD`.
+`AZURE_KEYCLOAK_ADMIN_PASSWORD`, `AZURE_KEYCLOAK_DEV_PASSWORD`. The deploy also
+reads the repository-level `TWELVE_DATA_API_KEY` secret (shared with the Helm
+deploy; free key from <https://twelvedata.com>) so live market data works —
+without it the holdings chart falls back to the "key not configured" message.
 
 **Variables:** `AZURE_SSH_PUBLIC_KEY` (contents of the `.pub` key from the
 prerequisites), `AZURE_ACME_EMAIL`, `AZURE_KEYCLOAK_ADMIN_USER`, `AZURE_DOMAIN`
@@ -172,6 +175,7 @@ AI_POSTGRES_PASSWORD=change-me
 KEYCLOAK_POSTGRES_PASSWORD=change-me
 KEYCLOAK_ADMIN_USER=admin
 KEYCLOAK_ADMIN_PASSWORD=change-me
+TWELVE_DATA_API_KEY=your-twelve-data-key
 EOF
     cd /home/azureuser/team-3m
     docker compose -f docker-compose.azure.yml up -d

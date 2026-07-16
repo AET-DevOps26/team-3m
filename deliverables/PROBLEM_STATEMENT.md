@@ -4,7 +4,7 @@
 
 Young professionals and retail investors in German-speaking markets lack a unified tool that connects personal expense tracking, investment portfolio management, and AI-driven financial guidance in one place. Existing solutions are fragmented: budgeting apps ignore investment portfolios, brokerage dashboards ignore daily cash flow, and none provide context-aware, tax-relevant advice for the German regulatory environment (Freistellungsauftrag, Vorabpauschale, Quellensteuer).
 
-_Kontor_ is a Progressive Web App (mobile and desktop) that consolidates personal finance data — transactions, portfolios, market data — and uses a GenAI layer to surface personalized, actionable insights. Stock and ETF data is sourced via Yahoo Finance; the AI component uses Retrieval-Augmented Generation (RAG) over the user's own financial data and curated financial news.
+_Kontor_ consolidates personal finance data — transactions, portfolios, market data — and uses a GenAI layer to surface personalized, actionable insights. Stock and ETF data is sourced from Twelve Data; the AI component uses Retrieval-Augmented Generation (RAG) over the user's own financial data and curated financial news.
 
 ---
 

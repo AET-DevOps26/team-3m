@@ -1,6 +1,6 @@
 # Kontor
 
-**Kontor** is a Progressive Web App that consolidates personal finance data - transactions, portfolios, and market data - and uses a GenAI layer to surface personalised, actionable insights. Stock and ETF data is sourced via Yahoo Finance; the AI component uses Retrieval-Augmented Generation (RAG) over the user's own financial data and curated financial news.
+**Kontor** consolidates personal finance data - transactions, portfolios, and market data - and uses a GenAI layer to surface personalised, actionable insights. Stock and ETF data is sourced from [Twelve Data](https://twelvedata.com); the AI component uses Retrieval-Augmented Generation (RAG) over the user's own financial data and curated financial news.
 
 ---
 
@@ -21,7 +21,7 @@ The repository includes a root `.env.example` and a local `.env` with the defaul
 
 The AI service uses a **Logos API key** (`LOGOS_API_KEY=lg-…`) in `.env` when available. The Logos endpoint is only reachable from the TUM network or via eduVPN. When the key is missing, the AI service **automatically falls back to a local LLM** (see [Local LLM (offline AI)](#local-llm-offline-ai) below). If no local LLM is configured either (`LOCAL_LLM_BASE_URL` empty), recommendation calls return `503`; if a local LLM is configured but not running, they return `502` ("Local LLM is not reachable").
 
-Live stock/ETF market data (quotes, price history, the holdings chart) is sourced from [Twelve Data](https://twelvedata.com) via a **`TWELVE_DATA_API_KEY`** in `.env`. Get a free key at <https://twelvedata.com/pricing> — the free tier is enough for local testing. When the key is missing, market-data endpoints return `502` with a message telling you the key is not configured, and the holdings chart shows that message instead of a chart; the rest of the app works normally.
+Live stock/ETF market data (quotes, price history, the holdings chart) is sourced from [Twelve Data](https://twelvedata.com) via a **`TWELVE_DATA_API_KEY`** in `.env`. See [Market data (Twelve Data)](#market-data-twelve-data) below for how to get a free key and what the free-tier rate limit means for the app.
 
 The Compose Keycloak service is for local development only. It builds the custom Keycloak image from `infra/keycloak/theme/` (Keycloak with the Kontor login theme baked in), runs `start-dev`, imports `infra/keycloak/realms/kontor-realm.json`, and stores Keycloak state in the `keycloak_postgres_data` Docker volume. The realm import is skipped once the realm already exists, so delete that volume if you need to re-apply the import from scratch. The first `docker compose up --build` builds the theme image (Node + Maven), which takes a few minutes; subsequent runs use the cached layer.
 
@@ -36,6 +36,32 @@ docker compose up --build
 | Client      | <http://localhost:5173> |
 | Server      | <http://localhost:8080> |
 | AI Service  | <http://localhost:8000> |
+
+### Market data (Twelve Data)
+
+Live stock/ETF market data — quotes, price history, and the holdings chart — comes from [Twelve Data](https://twelvedata.com). You need a free `TWELVE_DATA_API_KEY` in `.env` for it to work; the free tier is enough for local development.
+
+**How to get an API key:**
+
+1. Create a free account at <https://twelvedata.com/pricing> (the free plan needs no card).
+2. After signing in, open your [API dashboard](https://twelvedata.com/account) — it shows your unique API key.
+3. Copy the key into the root `.env` file:
+
+   ```sh
+   TWELVE_DATA_API_KEY=your-key-here
+   ```
+
+4. (Re)start the stack so `core` picks up the key:
+
+   ```sh
+   docker compose up --build
+   ```
+
+The holdings chart on the dashboard should now render live prices.
+
+**Rate limit.** The free tier caps how often you can call the API (currently 8 requests per minute and 800 per day). When you exceed it, Twelve Data responds with `429`; `core` passes that through as a `429`, and the holdings chart dialog shows a "Live market data paused" notice with the provider's rate-limit message instead of the chart. Wait for the limit window to reset and reopen the chart — no key change is needed.
+
+**No key configured.** When `TWELVE_DATA_API_KEY` is empty, market-data endpoints return `502` with a message explaining the key is missing, and the chart shows that message instead of prices. The rest of the app works normally.
 
 ### Local LLM (offline AI)
 

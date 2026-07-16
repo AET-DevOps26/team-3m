@@ -1,5 +1,11 @@
+data "azurerm_client_config" "current" {}
+
 data "azurerm_resource_group" "existing" {
   name = var.resource_group_name
+}
+
+locals {
+  key_vault_name = substr(replace("${var.name_prefix}ai${data.azurerm_client_config.current.subscription_id}", "-", ""), 0, 24)
 }
 
 resource "azurerm_virtual_network" "main" {
@@ -91,6 +97,10 @@ resource "azurerm_linux_virtual_machine" "main" {
   custom_data                     = base64encode(templatefile("${path.module}/cloud-init.yaml.tftpl", { admin_username = var.admin_username }))
   disable_password_authentication = true
 
+  identity {
+    type = "SystemAssigned"
+  }
+
   admin_ssh_key {
     username   = var.admin_username
     public_key = file(pathexpand(var.admin_ssh_public_key_path))
@@ -110,4 +120,25 @@ resource "azurerm_linux_virtual_machine" "main" {
   }
 
   boot_diagnostics {}
+}
+
+resource "azurerm_key_vault" "ai" {
+  name                       = local.key_vault_name
+  location                   = var.location
+  resource_group_name        = data.azurerm_resource_group.existing.name
+  tenant_id                  = data.azurerm_client_config.current.tenant_id
+  sku_name                   = "standard"
+  rbac_authorization_enabled = false
+  soft_delete_retention_days = 7
+  purge_protection_enabled   = false
+}
+
+resource "azurerm_key_vault_access_policy" "deployer" {
+  key_vault_id = azurerm_key_vault.ai.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = data.azurerm_client_config.current.object_id
+
+  secret_permissions = [
+    "Set",
+  ]
 }

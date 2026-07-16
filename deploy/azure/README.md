@@ -53,9 +53,9 @@ This means: no static-IP costs (the Standard-SKU public IP is the cheapest
 option after the Basic SKU retirement on 2025-09-30), no GoDaddy API
 integration, and no DNS update when the VM is recreated.
 
-The Azure FQDN and the current public IP are both exposed as Terraform
-outputs (`domain` and `public_ip_address`) and printed in the deploy workflow
-log for reference.
+The Azure FQDN, current public IP, and AI Key Vault name are exposed as
+Terraform outputs (`domain`, `public_ip_address`, and `app_key_vault_name`) and
+used by the deploy workflow.
 
 ---
 
@@ -141,42 +141,29 @@ in the `azure` GitHub environment and needs the following configuration:
 **Secrets:** `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, `AZURE_TENANT_ID`,
 `AZURE_SUBSCRIPTION_ID` (service principal), `AZURE_POSTGRES_PASSWORD`,
 `AZURE_AI_POSTGRES_PASSWORD`, `AZURE_KEYCLOAK_POSTGRES_PASSWORD`,
-`AZURE_KEYCLOAK_ADMIN_PASSWORD`, `AZURE_KEYCLOAK_DEV_PASSWORD`.
+`AZURE_KEYCLOAK_ADMIN_PASSWORD`, `AZURE_KEYCLOAK_DEV_PASSWORD`, and
+`AI_API_KEY` (the deployer's OpenAI project API key).
 
 **Variables:** `AZURE_SSH_PUBLIC_KEY` (contents of the `.pub` key from the
 prerequisites), `AZURE_ACME_EMAIL`, `AZURE_KEYCLOAK_ADMIN_USER`, `AZURE_DOMAIN`
 (optional, default `azure.kontor.live`), `AZURE_KEYCLOAK_SEED_DEV_USER`
 (optional; `true` seeds a demo Keycloak user plus example transactions),
 `AZURE_AI_IMAGE_TAG` and `AZURE_KEYCLOAK_IMAGE_TAG` (optional, default
-`latest`; pin a `pr-<N>` build to deploy unmerged images).
+`latest`; pin a `pr-<N>` build to deploy unmerged images). The optional
+`AI_BASE_URL`, `AI_CHAT_MODEL`, and `AI_EMBEDDING_MODEL` variables default to
+OpenAI (`https://api.openai.com/v1`, `gpt-5.4-mini-2026-03-17`, and
+`text-embedding-3-small`).
 
-For a local manual deploy, use Azure Run Command to create `.env` and start the
-stack. **Replace all placeholder passwords with strong, unique values before running.**
-
-```sh
-az vm run-command invoke \
-  --resource-group Kontor \
-  --name kontor-vm \
-  --command-id RunShellScript \
-  --scripts '
-    set -eu
-    cloud-init status --wait
-    git clone --depth 1 https://github.com/AET-DevOps26/team-3m.git /home/azureuser/team-3m 2>/dev/null \
-      || git -C /home/azureuser/team-3m pull
-    cat > /home/azureuser/team-3m/.env <<EOF
-DOMAIN=azure.kontor.live
-ACME_EMAIL=you@example.com
-POSTGRES_PASSWORD=change-me
-NEWS_POSTGRES_PASSWORD=change-me-different
-AI_POSTGRES_PASSWORD=change-me
-KEYCLOAK_POSTGRES_PASSWORD=change-me
-KEYCLOAK_ADMIN_USER=admin
-KEYCLOAK_ADMIN_PASSWORD=change-me
-EOF
-    cd /home/azureuser/team-3m
-    docker compose -f docker-compose.azure.yml up -d
-  '
-```
+Add the deployer's key as the `AI_API_KEY` secret in the `azure` GitHub
+environment, then run **Deploy to Azure**. Before provisioning, the workflow
+performs small embedding and chat requests so an invalid key, inaccessible
+model, or incompatible endpoint fails early. Terraform provisions a Key Vault
+and a system-assigned VM identity; GitHub writes the complete runtime environment
+to the vault without exposing it in Terraform state or the Azure Run Command
+payload. Before granting temporary `Get` access, the workflow installs a
+persistent host firewall rule that blocks Docker containers from Azure Instance
+Metadata. The VM retrieves the environment through its identity, writes a
+root-only file, and loses Key Vault access again before Compose starts.
 
 The app is available at `https://azure.kontor.live` once Traefik has issued the TLS certificate (first start can take ~30 s).
 
@@ -228,26 +215,17 @@ replica (stateful stores, or Traefik binds the host ports).
 
 ## AI service & LLM
 
-The `ai` service is deployed and routed at `/ai`, and its compose block already
-wires `DATABASE_URL`, the `KEYCLOAK_*` settings, and `LOGOS_API_KEY`
-(`LOGOS_API_KEY: "${LOGOS_API_KEY:-}"`). A `LOGOS_API_KEY` set in `.env`
-therefore reaches the container and switches the provider to Logos (see
-`ai/advisor/llm.py`). The gap is narrower: `LOGOS_BASE_URL` and `LOGOS_MODEL`
-are **not** forwarded, so they stay at the built-in TUM default
-(`https://logos.aet.cit.tum.de/v1`). That gateway is reachable only from the
-TUM network, which the Azure VM is not on, so a key alone just points a valid
-credential at an unreachable URL; with no key at all the service falls back to
-`http://localhost:11434/v1` inside its own container, where nothing listens.
-Either way `/ai/advisor/*` calls that hit the LLM fail even though the health
-checks report ready.
+The `ai` service is deployed and routed at `/ai`. Azure uses the public OpenAI
+API by default, and the deployer only has to provide the `AI_API_KEY` GitHub
+environment secret. The workflow includes it in the Key Vault-backed runtime
+environment; the VM retrieves that bundle with its managed identity and writes
+the Compose `.env` file with mode `0600`. The Compose file fails immediately
+when the key is missing instead of deploying an AI feature that cannot work.
 
-The provider settings are plain env vars and any OpenAI-compatible API works,
-so the fix is to add `LOGOS_BASE_URL` and `LOGOS_MODEL` to the `ai` service's
-`environment` block and point all three variables at a publicly reachable
-provider (e.g. Groq serves the same `openai/gpt-oss-120b` model that Logos does,
-with a free tier). Running Ollama on the VM instead is not viable on the default
-`Standard_D2s_v3` (2 vCPUs, CPU-only inference, 8 GB shared with the whole
-stack).
+The variables remain fully OpenAI-compatible, so a different publicly reachable
+provider can be selected without rebuilding the image. Running Ollama on the VM
+is not recommended on the default `Standard_D2s_v3` (2 vCPUs, CPU-only
+inference, 8 GB shared with the whole stack).
 
 ---
 

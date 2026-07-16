@@ -138,7 +138,8 @@ public class TwelveDataClient {
             @JsonProperty("instrument_name") String instrumentName,
             String exchange,
             @JsonProperty("instrument_type") String instrumentType,
-            String currency) {}
+            String currency,
+            String country) {}
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record QuotePayload(

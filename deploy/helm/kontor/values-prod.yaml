@@ -32,6 +32,8 @@ core:
       memory: 704Mi
 
 news:
+  aggregation:
+    interval: PT6H
   db:
     resources:
       requests:

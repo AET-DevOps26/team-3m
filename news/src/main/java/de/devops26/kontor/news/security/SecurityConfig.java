@@ -27,7 +27,7 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     private static final String[] PUBLIC_ENDPOINTS = {
-        "/api/health/**", "/api/v1/health/**", "/api/info", "/error", "/news/swagger-ui/**", "/news/v3/api-docs/**"
+        "/api/health/**", "/api/v1/news/health/**", "/api/info", "/error", "/news/swagger-ui/**", "/news/v3/api-docs/**"
     };
 
     private final String jwkSetUri;

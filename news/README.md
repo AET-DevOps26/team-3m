@@ -98,8 +98,10 @@ Springdoc serves the OpenAPI spec at `/news/v3/api-docs` and the Swagger UI at
 `/news/swagger-ui/index.html` without authentication. The `/news` prefix keeps
 the docs distinct from core's, which occupy the root `/swagger-ui` and
 `/v3/api-docs` paths on the shared public domain. Locally they are on
-`http://localhost:8082`; in k8s and on Azure only these two doc paths are
-routed publicly — the API itself stays internal.
+`http://localhost:8082`; in k8s and on Azure the doc paths and the news API
+under `/api/v1/news` are routed publicly, while all other `/api` traffic goes
+to core. Every `/api/v1/news` endpoint except the health checks
+(`/api/v1/news/health/*`) requires a bearer token.
 
 ## Manual testing
 

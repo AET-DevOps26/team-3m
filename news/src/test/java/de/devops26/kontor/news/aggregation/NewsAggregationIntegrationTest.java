@@ -228,7 +228,7 @@ class NewsAggregationIntegrationTest {
     void endpoints_requireAuthentication() throws Exception {
         mockMvc.perform(get("/api/v1/news/aggregation/runs")).andExpect(status().isUnauthorized());
         mockMvc.perform(post("/api/v1/news/aggregation/runs")).andExpect(status().isUnauthorized());
-        mockMvc.perform(get("/api/v1/health/server")).andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/news/health/server")).andExpect(status().isOk());
     }
 
     @Test

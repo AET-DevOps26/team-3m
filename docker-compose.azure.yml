@@ -216,7 +216,7 @@ services:
       JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.news.rule=Host(`${DOMAIN}`) && (PathPrefix(`/news/swagger-ui`) || PathPrefix(`/news/v3/api-docs`))"
+      - "traefik.http.routers.news.rule=Host(`${DOMAIN}`) && (PathPrefix(`/api/v1/news`) || PathPrefix(`/news/swagger-ui`) || PathPrefix(`/news/v3/api-docs`))"
       - "traefik.http.routers.news.entrypoints=websecure"
       - "traefik.http.routers.news.tls.certresolver=le"
       - "traefik.http.services.news.loadbalancer.server.port=8080"

@@ -8,7 +8,7 @@
 
 | Layer              | Technology                                                   |
 | ------------------ | ------------------------------------------------------------ |
-| Client             | React 19, TypeScript 5.9, Vite 7, Tailwind CSS 4, shadcn/ui  |
+| Client             | React 19, TypeScript 6, Vite 8, Tailwind CSS 4, shadcn/ui   |
 | Server             | Java 25, Spring Boot 4, Gradle                               |
 | AI Service         | Python 3.14, FastAPI, uv                                     |
 | Linting/Formatting | Biome (client), Spotless + Checkstyle + Error Prone (server), Ruff (AI) |
@@ -43,11 +43,18 @@ Local Keycloak users live in `infra/keycloak/realms/kontor-users-0.json`. Add an
 docker compose up --build
 ```
 
-| Service     | URL                     |
-| ----------- | ----------------------- |
-| Client      | <http://localhost:5173> |
-| Server      | <http://localhost:8080> |
-| AI Service  | <http://localhost:8000> |
+| Service             | URL                      |
+| ------------------- | ------------------------ |
+| Client              | <http://localhost:5173>  |
+| Server (core)       | <http://localhost:8080>  |
+| AI Service          | <http://localhost:8000>  |
+| News Aggregator     | <http://localhost:8082>  |
+| Keycloak            | <http://localhost:8081>  |
+| RabbitMQ management | <http://localhost:15672> |
+
+The news aggregator and its RabbitMQ broker are documented in
+[`news/README.md`](news/README.md); each service directory has its own README
+([`client/`](client/README.md), [`core/`](core/README.md), [`ai/`](ai/README.md)).
 
 The client redirects to Keycloak for login. Sign in with a seeded local user — username **`dev`**, password **`dev`** (the password comes from `KEYCLOAK_DEV_USERS_PASSWORD`, default `dev`). Two more seeded users exist: `analyst` (regular user) and `admin-user` (also holds the `kontor-admin` role required to trigger news-aggregation runs). Add or edit users in `infra/keycloak/realms/kontor-users-0.json`.
 
@@ -113,13 +120,17 @@ npm install
 npm run dev
 ```
 
-| Task             | Command             |
-| ---------------- | ------------------- |
-| Type check       | `npm run typecheck` |
-| Lint             | `npm run lint`      |
-| Lint (autofix)   | `npm run lint:fix`  |
-| Format (autofix) | `npm run format`    |
-| Build            | `npm run build`     |
+| Task                  | Command                 |
+| --------------------- | ----------------------- |
+| Type check            | `npm run typecheck`     |
+| Unit tests            | `npm test`              |
+| Unit tests (watch)    | `npm run test:watch`    |
+| Unit tests (coverage) | `npm run test:coverage` |
+| E2E tests             | `npm run e2e`           |
+| Lint                  | `npm run lint`          |
+| Lint (autofix)        | `npm run lint:fix`      |
+| Format (autofix)      | `npm run format`        |
+| Build                 | `npm run build`         |
 
 #### Server (`core/`)
 
@@ -177,16 +188,22 @@ CI's `openapi-sync` workflow fails if the committed files are out of sync.
 
 The Kontor stack ships as a single Helm chart in
 [`deploy/helm/kontor/`](deploy/helm/kontor/README.md) that bundles the client,
-core, Postgres (with `pgvector`), and an optional Keycloak. The chart README
-documents environment overlays (`values-prod.yaml`,
+core, the news aggregator, the AI service, their Postgres instances (core's
+with `pgvector`), a RabbitMQ broker (subchart), and an optional Keycloak. The
+chart README documents environment overlays (`values-prod.yaml`,
 `values-pr.template.yaml`), required secrets, and the install / upgrade flow.
+
+Deployment is CI-driven: a push to `main` releases and deploys prod into the
+`team-3m` namespace, and adding the `deploy:preview` label to a PR stands up an
+ephemeral preview in `team-3m-pr-<N>` (torn down when the label is removed or
+the PR closes). Manually triggering the `CI/CD` workflow redeploys the latest
+version without a code change.
 
 There is also a standalone single-VM deployment on Azure (Terraform + Docker
 Compose + Traefik), served at `https://azure.kontor.live` and documented in
 [`deploy/azure/README.md`](deploy/azure/README.md).
 
-
-Copy `deploy/helm/kontor/secrets.example.yaml` to `secrets.yaml` and fill in all `REPLACE_ME` values, including `ai.logosApiKey` (the `lg-…` key from your tutor — requires TUM network / eduVPN):
+For a manual install, copy `deploy/helm/kontor/secrets.example.yaml` to `secrets.yaml` and fill in all `REPLACE_ME` values, including `ai.logosApiKey` (the `lg-…` key from your tutor — requires TUM network / eduVPN):
 
 ```sh
 helm upgrade --install kontor ./deploy/helm/kontor \
@@ -207,6 +224,28 @@ to `ghcr.io/aet-devops26/team-3m/kontor-keycloak`; the realm selects it via
 
 ---
 
+## Observability
+
+A single shared LGTM stack (Loki, Grafana, Tempo, Prometheus) with a Grafana
+Alloy OTLP gateway serves all environments (prod and every PR preview). It has
+its own chart ([`deploy/helm/observability/`](deploy/helm/observability/README.md)),
+namespace (`team-3m-monitoring`), and `workflow_dispatch` workflow
+(`.github/workflows/observability.yml`) — PR deploy/teardown never touches it.
+Core and the AI service push traces/metrics via OTel, the client ships browser
+RUM via Grafana Faro, and pod logs are collected into Loki. Every signal is
+tagged with `deployment_environment`, so one Grafana variable switches between
+environments.
+
+The same configuration runs locally as a compose overlay:
+
+```sh
+docker compose -f docker-compose.yml -f docker-compose.observability.yml up -d
+```
+
+Grafana is then available at <http://localhost:3001>.
+
+---
+
 ### Top Level Architecture
 
 ![Component Diagram](deliverables/models/COMPONENT_DIAGRAM.svg)
@@ -218,6 +257,10 @@ to `ghcr.io/aet-devops26/team-3m/kontor-keycloak`; the realm selects it via
 ### Analysis Object Model
 
 ![Analysis Object Model](deliverables/models/ANALYSIS_OBJECT_MODEL.svg)
+
+### Deployment Diagram
+
+![Deployment Diagram](deliverables/models/DEPLOYMENT_DIAGRAM.svg)
 
 ---
 
@@ -244,9 +287,14 @@ Coding rules live in `.claude/rules/` and are automatically loaded based on the 
 │   ├── coding-style.md  # Records, sealed classes, Optional, modern Java (16+)
 │   ├── patterns.md      # Constructor injection, Spring conventions, Flyway, jOOQ
 │   └── testing.md       # JUnit Jupiter 5, AssertJ, Mockito, Testcontainers
+├── python/              # Apply to *.py, pyproject.toml
+│   ├── coding-style.md  # Ruff, type hints, PEP 8 naming, modern Python (3.13+)
+│   ├── patterns.md      # FastAPI routers, pydantic models, uv workflow
+│   └── testing.md       # pytest with asyncio, httpx ASGITransport
 └── typescript/          # Apply to *.ts, *.tsx, *.js, *.jsx
     ├── coding-style.md  # Biome, kebab-case files, React patterns, Zod, shadcn/ui
     ├── patterns.md      # Custom hooks, data fetching, repository pattern
+    ├── shadcn-components.md  # shadcn/ui component usage
     └── testing.md       # Vitest for unit tests, Playwright for E2E
 ```
 

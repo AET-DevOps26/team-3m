@@ -72,6 +72,7 @@ jobs:
             jq -n --arg model "$AI_EMBEDDING_MODEL" \
               '{model: $model, input: "Kontor deployment check"}' \
               | curl --silent --show-error \
+                  --connect-timeout 10 --max-time 60 \
                   --output "$EMBEDDING_RESPONSE" \
                   --write-out '%{http_code}' \
                   --request POST "${AI_BASE_URL%/}/embeddings" \
@@ -99,6 +100,7 @@ jobs:
                 ]
               }' \
               | curl --silent --show-error \
+                  --connect-timeout 10 --max-time 60 \
                   --output "$CHAT_RESPONSE" \
                   --write-out '%{http_code}' \
                   --request POST "${AI_BASE_URL%/}/chat/completions" \
@@ -250,12 +252,12 @@ jobs:
 
               APP_ENV=
               for i in \$(seq 1 12); do
-                TOKEN=\$(curl -fsS -H Metadata:true \
+                TOKEN=\$(curl -fsS --connect-timeout 5 --max-time 15 -H Metadata:true \
                   'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fvault.azure.net' \
                   | python3 -c 'import json, sys; print(json.load(sys.stdin).get(\"access_token\", \"\"))' \
                   || true)
                 if [ -n \"\$TOKEN\" ]; then
-                  RESPONSE=\$(curl -fsS \
+                  RESPONSE=\$(curl -fsS --connect-timeout 5 --max-time 15 \
                     -H \"Authorization: Bearer \$TOKEN\" \
                     \"https://${APP_KEY_VAULT_NAME}.vault.azure.net/secrets/app-env?api-version=7.4\" \
                     || true)

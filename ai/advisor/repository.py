@@ -7,6 +7,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .models import NewsArticle, Recommendation
 
+# ponytail: lenient cosine-distance cut (pgvector 0=identical, 2=opposite) so clearly
+# unrelated news is not grounded as evidence. Tune against real embeddings if recall suffers.
+MAX_NEWS_COSINE_DISTANCE = 0.6
+
 
 async def save_recommendation(
     session: AsyncSession,
@@ -123,6 +127,7 @@ async def find_relevant_news(
             .where(
                 NewsArticle.embedding_model == embedding_model,
                 NewsArticle.embedding_dim == len(query_embedding),
+                NewsArticle.embedding.cosine_distance(query_embedding) <= MAX_NEWS_COSINE_DISTANCE,
             )
             .order_by(NewsArticle.embedding.cosine_distance(query_embedding))
             .limit(limit)

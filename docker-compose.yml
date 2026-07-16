@@ -245,7 +245,7 @@ services:
       AI_BASE_URL: "${AI_BASE_URL:-https://logos.aet.cit.tum.de/v1}"
       AI_CHAT_MODEL: "${AI_CHAT_MODEL:-openai/gpt-oss-120b}"
       AI_EMBEDDING_MODEL: "${AI_EMBEDDING_MODEL:-Qwen/Qwen3-Embedding-8B}"
-      LOCAL_LLM_BASE_URL: "${LOCAL_LLM_BASE_URL:-http://host.docker.internal:11434/v1}"
+      LOCAL_LLM_BASE_URL: "${LOCAL_LLM_BASE_URL-http://host.docker.internal:11434/v1}"
       LOCAL_LLM_MODEL: "${LOCAL_LLM_MODEL:-llama3.2}"
       LOCAL_EMBEDDING_MODEL: "${LOCAL_EMBEDDING_MODEL:-nomic-embed-text}"
       # An explicit URL remains available for TLS/vhost deployments. Otherwise the

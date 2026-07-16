@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 MAX_NEWS_CHARS = 2000
 PREFETCH_COUNT = 10
 TRANSIENT_BACKOFF_SECONDS = 2.0
+EMBEDDING_TIMEOUT_SECONDS = 30.0
 
 _CONTROL_CHARS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 _WHITESPACE = re.compile(r"\s+")
@@ -53,7 +54,7 @@ async def _store(provider: EmbeddingProvider, news: NewsMessage, raw: dict) -> N
     title = sanitize(news.title)
     content = sanitize(news.content_text or news.summary or "")
     embed_input = f"{title}\n\n{content}".strip()
-    embedding = await embed_text(provider, embed_input)
+    embedding = await asyncio.wait_for(embed_text(provider, embed_input), timeout=EMBEDDING_TIMEOUT_SECONDS)
     async with session_factory() as session:
         await save_news_article(
             session,

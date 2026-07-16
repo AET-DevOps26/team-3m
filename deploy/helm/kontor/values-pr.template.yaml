@@ -54,6 +54,8 @@ news:
 ai:
   # Pull-request code must not receive a reusable hosted-provider credential.
   hostedEnabled: false
+  # ...but the credentialless Logos endpoint still needs restricted HTTPS egress.
+  externalProviderEgress: true
   baseUrl: https://logos.aet.cit.tum.de/v1
   chatModel: openai/gpt-oss-120b
   embeddingModel: Qwen/Qwen3-Embedding-8B

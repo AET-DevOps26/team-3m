@@ -230,6 +230,9 @@ ai:
   # -- Enable the hosted OpenAI-compatible provider. PR previews disable this
   # because their images and manifests are built from pull-request code.
   hostedEnabled: true
+  # -- Allow HTTPS egress to an external AI provider even when hostedEnabled=false
+  # (e.g. a credentialless PR-preview endpoint). Prod relies on hostedEnabled.
+  externalProviderEgress: false
   # -- Hosted provider base URL and model IDs. Defaults target OpenAI; environment
   # overlays or CI variables can point the same service at another compatible API.
   baseUrl: "https://api.openai.com/v1"

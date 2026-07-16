@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from openai import AsyncOpenAI
 
 from .config import Settings
+from .openai_client import shared_async_openai
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ def resolve_embedding_provider(settings: Settings) -> EmbeddingProvider | None:
     if settings.logos_api_key and settings.logos_embedding_model:
         logger.info("Embedding provider: logos (%s)", settings.logos_embedding_model)
         return EmbeddingProvider(
-            client=AsyncOpenAI(api_key=settings.logos_api_key, base_url=settings.logos_base_url),
+            client=shared_async_openai(api_key=settings.logos_api_key, base_url=settings.logos_base_url),
             model=settings.logos_embedding_model,
         )
 
@@ -27,7 +28,7 @@ def resolve_embedding_provider(settings: Settings) -> EmbeddingProvider | None:
         logger.info("Embedding provider: local (%s @ %s)", settings.local_embedding_model, settings.local_llm_base_url)
         return EmbeddingProvider(
             # Ollama ignores the key but the OpenAI client requires a non-empty one.
-            client=AsyncOpenAI(api_key="ollama", base_url=settings.local_llm_base_url),
+            client=shared_async_openai(api_key="ollama", base_url=settings.local_llm_base_url),
             model=settings.local_embedding_model,
         )
 

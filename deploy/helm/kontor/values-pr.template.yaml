@@ -51,12 +51,6 @@ news:
       cpu: 500m
       memory: 512Mi
 
-ai:
-  # Pull-request code must not receive a reusable hosted-provider credential.
-  hostedEnabled: false
-  # ...but the credentialless Logos endpoint still needs restricted HTTPS egress.
-  externalProviderEgress: true
-
 networkPolicy:
   restrictEgress: true
 

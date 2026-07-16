@@ -58,7 +58,7 @@ jobs:
         run: |
           set -euo pipefail
           : "${AI_API_KEY:?AI_API_KEY GitHub environment secret is required}"
-          python - <<'PY'
+          python3 - <<'PY'
           import os
           from urllib.parse import urlparse
 

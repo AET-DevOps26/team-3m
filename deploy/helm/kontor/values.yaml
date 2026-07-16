@@ -233,11 +233,12 @@ ai:
   # -- Allow HTTPS egress to an external AI provider even when hostedEnabled=false
   # (e.g. a credentialless PR-preview endpoint). Prod relies on hostedEnabled.
   externalProviderEgress: false
-  # -- Hosted provider base URL and model IDs. Defaults target OpenAI; environment
-  # overlays or CI variables can point the same service at another compatible API.
-  baseUrl: "https://api.openai.com/v1"
-  chatModel: "gpt-5.4-mini"
-  embeddingModel: "text-embedding-3-small"
+  # -- Hosted provider base URL and model IDs. Defaults target the Logos course
+  # gateway (shared by all k8s environments); CI variables or the Azure compose
+  # can point the same service at OpenAI or another compatible API.
+  baseUrl: "https://logos.aet.cit.tum.de/v1"
+  chatModel: "openai/gpt-oss-120b"
+  embeddingModel: "Qwen/Qwen3-Embedding-8B"
   # -- Existing Secret containing AI_API_KEY. Required when hostedEnabled=true.
   # Keeping provider credentials out of Helm values prevents them from being
   # retained in Helm release history.

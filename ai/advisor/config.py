@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     logos_base_url: str = "https://logos.aet.cit.tum.de/v1"
     logos_model: str = "openai/gpt-oss-120b"
     logos_embedding_model: str = "Qwen/Qwen3-Embedding-8B"
-    local_llm_base_url: str = ""
+    local_llm_base_url: str = "http://localhost:11434/v1"
     local_llm_model: str = "llama3.2"
     local_embedding_model: str = "nomic-embed-text"
     news_retention_days: int = 7

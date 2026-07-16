@@ -36,8 +36,8 @@ oidc:
 core:
   image:
     repository: aet-devops26/team-3m/kontor-core
-    tag: ""              # defaults to .Chart.AppVersion
-    pullPolicy: ""       # falls back to image.pullPolicy
+    tag: "" # defaults to .Chart.AppVersion
+    pullPolicy: "" # falls back to image.pullPolicy
   replicaCount: 1
   service:
     type: ClusterIP
@@ -97,14 +97,14 @@ core:
 
 # Spring Boot market-news aggregator service. ClusterIP; only the API docs
 # (/news/swagger-ui, /news/v3/api-docs) are exposed through the ingress — the
-# API itself stays in-cluster (the future news processor / debugging via
-# port-forward). Public HTTPS egress is explicitly allowed when egress is
+# API itself stays in-cluster (the AI consumer reads via RabbitMQ / debugging
+# via port-forward). Public HTTPS egress is explicitly allowed when egress is
 # restricted.
 news:
   image:
     repository: aet-devops26/team-3m/kontor-news
-    tag: ""              # defaults to .Chart.AppVersion
-    pullPolicy: ""       # falls back to image.pullPolicy
+    tag: "" # defaults to .Chart.AppVersion
+    pullPolicy: "" # falls back to image.pullPolicy
   # Runs coordinate through a Postgres advisory lock across replicas.
   replicaCount: 1
   service:
@@ -198,7 +198,7 @@ news:
 
 # RabbitMQ message broker (CloudPirates subchart, official rabbitmq image).
 # The news aggregator publishes crawled articles to the durable queue
-# `news.articles`; the future news processor consumes from it. The subchart
+# `news.articles`; the AI service consumes from it. The subchart
 # auto-generates the password + erlang cookie into a Secret named
 # `<release>-rabbitmq` (helm.sh/resource-policy: keep, values preserved across
 # upgrades); the news deployment reads RABBITMQ_PASSWORD from that Secret.
@@ -231,9 +231,21 @@ ai:
   # Required for AI features. Supply via secrets.yaml or --set.
   logosApiKey: ""
   # -- When set, skip creating the AI Secret and mount this existing Secret instead.
-  # Expected key: LOGOS_API_KEY.
+  # Expected keys: LOGOS_API_KEY (and optionally RABBITMQ_URL to override the in-chart broker).
   existingSecret: ""
   env: {}
+  # Embedding config for news RAG (query embeddings + news ingest). Mirrors the LLM
+  # provider resolution: Logos in hosted mode, Ollama in local mode.
+  embedding:
+    # -- Ollama embedding model (local mode). Pulled/served outside the chart.
+    localModel: "nomic-embed-text"
+    # -- Logos embedding model (hosted mode). Required for hosted news ingest.
+    logosModel: "Qwen/Qwen3-Embedding-8B"
+  # News ingest consumer for the queue declared by the bundled news service.
+  newsConsumer:
+    enabled: true
+  # -- Producer-owned queue documented in news/docs/asyncapi.yml.
+  newsQueue: "news.articles"
   # -- Per-path protection for the /ai ingress (the AI service calls a paid LLM
   # backend). Rendered as nginx-ingress annotations on a dedicated /ai Ingress so
   # the limits do not affect the SPA (/) or core (/api). Set rateLimit.enabled
@@ -254,8 +266,8 @@ ai:
   db:
     image:
       registry: docker.io
-      repository: postgres
-      tag: "18-trixie"
+      repository: pgvector/pgvector
+      tag: "pg18-trixie"
       pullPolicy: ""
     database: kontor_ai
     username: kontor_ai
@@ -353,14 +365,14 @@ client:
     failureThreshold: 3
   podSecurityContext:
     runAsNonRoot: true
-    runAsUser: 101    # nginx-unprivileged user
+    runAsUser: 101 # nginx-unprivileged user
     runAsGroup: 101
     fsGroup: 101
     seccompProfile:
       type: RuntimeDefault
   containerSecurityContext:
     allowPrivilegeEscalation: false
-    readOnlyRootFilesystem: false   # nginx writes pid + temp files
+    readOnlyRootFilesystem: false # nginx writes pid + temp files
     capabilities:
       drop: ["ALL"]
   nodeSelector: {}

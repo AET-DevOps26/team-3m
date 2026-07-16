@@ -1,4 +1,5 @@
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Iterator
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -28,3 +29,11 @@ async def db() -> AsyncIterator[async_sessionmaker[AsyncSession]]:
     yield factory
     app.dependency_overrides.pop(get_session, None)
     await engine.dispose()
+
+
+@pytest.fixture(autouse=True)
+def news_disabled() -> Iterator[None]:
+    """News RAG is best-effort and off by default in tests (no embedding network calls,
+    no pgvector). News-specific tests patch `_retrieve_news` themselves to opt in."""
+    with patch("advisor.recommendation._retrieve_news", new=AsyncMock(return_value=[])):
+        yield

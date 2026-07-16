@@ -5,10 +5,12 @@ name: Deploy to Azure
 # Secrets: AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_TENANT_ID,
 #          AZURE_SUBSCRIPTION_ID, AZURE_POSTGRES_PASSWORD,
 #          AZURE_NEWS_POSTGRES_PASSWORD, AZURE_RABBITMQ_PASSWORD,
-#          AZURE_AI_POSTGRES_PASSWORD, AZURE_KEYCLOAK_POSTGRES_PASSWORD,
+#          AZURE_AI_POSTGRES_PASSWORD, LOGOS_API_KEY,
+#          AZURE_KEYCLOAK_POSTGRES_PASSWORD,
 #          AZURE_KEYCLOAK_ADMIN_PASSWORD, AZURE_KEYCLOAK_DEV_PASSWORD
 # Variables: AZURE_SSH_PUBLIC_KEY, AZURE_ACME_EMAIL, AZURE_KEYCLOAK_ADMIN_USER,
 #            AZURE_DOMAIN, AZURE_KEYCLOAK_SEED_DEV_USER, AZURE_AI_IMAGE_TAG,
+#            AZURE_NEWS_IMAGE_TAG, LOGOS_EMBEDDING_MODEL,
 #            AZURE_KEYCLOAK_IMAGE_TAG
 #
 # DNS model: `AZURE_DOMAIN` (default azure.kontor.live) is fronted by a single
@@ -98,6 +100,8 @@ jobs:
             AI_POSTGRES_DB=kontor_ai
             AI_POSTGRES_USER=kontor_ai
             AI_POSTGRES_PASSWORD=${{ secrets.AZURE_AI_POSTGRES_PASSWORD }}
+            LOGOS_API_KEY=${{ secrets.LOGOS_API_KEY }}
+            LOGOS_EMBEDDING_MODEL=${{ vars.LOGOS_EMBEDDING_MODEL || 'Qwen/Qwen3-Embedding-8B' }}
             KEYCLOAK_POSTGRES_PASSWORD=${{ secrets.AZURE_KEYCLOAK_POSTGRES_PASSWORD }}
             KEYCLOAK_ADMIN_USER=${{ vars.AZURE_KEYCLOAK_ADMIN_USER }}
             KEYCLOAK_ADMIN_PASSWORD=${{ secrets.AZURE_KEYCLOAK_ADMIN_PASSWORD }}
@@ -105,6 +109,7 @@ jobs:
             KEYCLOAK_DEV_PASSWORD=${{ secrets.AZURE_KEYCLOAK_DEV_PASSWORD }}
             TWELVE_DATA_API_KEY=${{ secrets.TWELVE_DATA_API_KEY }}
             KONTOR_AI_IMAGE_TAG=${{ vars.AZURE_AI_IMAGE_TAG || 'latest' }}
+            KONTOR_NEWS_IMAGE_TAG=${{ vars.AZURE_NEWS_IMAGE_TAG || 'latest' }}
             KONTOR_KEYCLOAK_IMAGE_TAG=${{ vars.AZURE_KEYCLOAK_IMAGE_TAG || 'latest' }}
           DEPLOY_REF: ${{ github.ref }}
         run: |
@@ -141,7 +146,6 @@ jobs:
               cd \"\$REPO_DIR\"
               docker compose -f docker-compose.azure.yml pull
               docker compose -f docker-compose.azure.yml up -d db
-              docker compose -f docker-compose.azure.yml up -d --force-recreate news-db-init
               docker compose -f docker-compose.azure.yml up -d
 
               # When the demo dev user is seeded, also seed the example

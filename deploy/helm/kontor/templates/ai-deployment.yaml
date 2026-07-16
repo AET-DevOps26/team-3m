@@ -77,6 +77,29 @@ spec:
             {{- end }}
             - name: KEYCLOAK_AUDIENCE
               value: {{ .Values.oidc.audience | quote }}
+            {{- with .Values.ai.embedding.localModel }}
+            - name: LOCAL_EMBEDDING_MODEL
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.ai.embedding.logosModel }}
+            - name: LOGOS_EMBEDDING_MODEL
+              value: {{ . | quote }}
+            {{- end }}
+            {{- if .Values.ai.newsConsumer.enabled }}
+            - name: RABBITMQ_HOST
+              value: {{ include "kontor.rabbitmq.fullname" . | quote }}
+            - name: RABBITMQ_PORT
+              value: {{ dig "service" "amqpPort" 5672 .Values.rabbitmq | quote }}
+            - name: RABBITMQ_USERNAME
+              value: {{ .Values.rabbitmq.auth.username | quote }}
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ default (include "kontor.rabbitmq.fullname" .) .Values.rabbitmq.auth.existingSecret }}
+                  key: password
+            - name: NEWS_QUEUE
+              value: {{ .Values.ai.newsQueue | quote }}
+            {{- end }}
             {{- range $key, $value := .Values.ai.env }}
             - name: {{ $key }}
               value: {{ $value | quote }}

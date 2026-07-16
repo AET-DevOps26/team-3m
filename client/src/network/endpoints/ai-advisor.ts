@@ -6,13 +6,14 @@ import type {
   PortfolioOverview,
 } from "../generated/types.gen"
 import type {
+  NewsReference,
   PortfolioHoldingInput,
   PortfolioInput,
   RecommendationResponse,
 } from "../generated-ai/types.gen"
 import type { RiskTolerance } from "./profile"
 
-export type { RecommendationResponse }
+export type { NewsReference, RecommendationResponse }
 
 interface GenerateRecommendationParams {
   overview: PortfolioOverview

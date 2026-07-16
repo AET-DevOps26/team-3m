@@ -1,0 +1,11 @@
+{
+  "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "source": "yahoo-finance",
+  "feedUrl": "https://finance.yahoo.com/news/rssindex",
+  "url": "https://finance.yahoo.com/news/example",
+  "title": "Markets rally on strong earnings",
+  "summary": "Stocks rose after a positive earnings session.",
+  "contentText": "Global markets rallied after several companies beat earnings expectations.",
+  "publishedAt": "2026-07-14T08:30:00Z",
+  "fetchedAt": "2026-07-14T08:35:00Z"
+}

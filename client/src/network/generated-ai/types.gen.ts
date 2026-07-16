@@ -15,6 +15,32 @@ export type HttpValidationError = {
 }
 
 /**
+ * NewsReference
+ */
+export type NewsReference = {
+  /**
+   * Title
+   */
+  title: string
+  /**
+   * Url
+   */
+  url?: string | null
+  /**
+   * Source
+   */
+  source?: string | null
+  /**
+   * Published At
+   */
+  published_at?: string | null
+  /**
+   * Symbols
+   */
+  symbols?: Array<string>
+}
+
+/**
  * PortfolioHoldingInput
  */
 export type PortfolioHoldingInput = {
@@ -86,6 +112,14 @@ export type RecommendationResponse = {
    * Disclaimer
    */
   disclaimer: string
+  /**
+   * News Summary
+   */
+  news_summary?: string
+  /**
+   * News References
+   */
+  news_references?: Array<NewsReference>
 }
 
 /**

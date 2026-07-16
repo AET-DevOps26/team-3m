@@ -1,14 +1,16 @@
 # Models
 
-Design models for _Kontor_, in two categories:
+Design models for _Kontor_, grouped into two kinds. Knowing which kind you are
+looking at tells you whether it describes what we _want_ or what we _have_:
 
-- **Problem-domain models** describe the _intended product_ (full scope from
-  [`../PROBLEM_STATEMENT.md`](../PROBLEM_STATEMENT.md)). They **intentionally model
-  all requirements some of which are not implemented yet**
-- **Solution / architecture models** describe the _system as built_ and should
-  track the code.
+- **Problem-domain models** capture the _intended product_ — the full set of
+  requirements from [`../PROBLEM_STATEMENT.md`](../PROBLEM_STATEMENT.md). They
+  deliberately include features that are not built yet, so read them as scope,
+  not as a description of the running system.
+- **Solution / architecture models** describe the _system as built_ and are kept
+  in sync with the code.
 
-| Model                           | File                                       | Category                         |
+| Model                           | File                                       | Kind                             |
 | ------------------------------- | ------------------------------------------ | -------------------------------- |
 | Use Case Diagram                | `USE_CASE_DIAGRAM.{json,svg}`              | Problem domain                   |
 | Analysis Object Model           | `ANALYSIS_OBJECT_MODEL.{json,svg}`         | Problem domain                   |
@@ -16,30 +18,29 @@ Design models for _Kontor_, in two categories:
 | Component Diagram (Implemented) | `COMPONENT_DIAGRAM_IMPLEMENTED.{json,svg}` | Solution / architecture          |
 | Deployment Diagram              | `DEPLOYMENT_DIAGRAM.{json,svg}`            | Solution / architecture          |
 
-The Component Diagram comes in two variants: **Vision** shows the full intended
-component set (including unbuilt parts), and **Implemented** shows only what
+The Component Diagram exists in two variants: **Vision** shows the full intended
+component set (including unbuilt parts), while **Implemented** shows only what
 exists in the code today.
 
 ## What's actually built
 
-Implemented today: CSV import → transactions (list/filter/category) → portfolio
-overview + value-over-time chart → market data (Twelve Data search/quote/history)
-→ AI portfolio recommendation. A news aggregator crawls RSS and publishes to
-RabbitMQ (`news.articles`); the AI service consumes that queue, embeds articles
-into a pgvector store, and returns news-grounded recommendation summaries
-(the `News Processor` RAG path).
+CSV import → transactions (list / filter / category) → portfolio overview and
+value-over-time chart → market data (Twelve Data search, quotes, history) → AI
+portfolio recommendation. Separately, a news aggregator crawls RSS and publishes
+to RabbitMQ (`news.articles`); the AI service consumes that queue, embeds
+articles into a pgvector store, and returns news-grounded recommendation
+summaries (the `News Processor` RAG path).
 
-Modeled but **not** implemented: performance metrics (return/volatility/IRR),
-allocation & benchmark comparison, dividends, watchlist, price alerts, tax
-(exemption/summary), budget envelopes, and spending trends.
+**Modeled but not built yet:** performance metrics (return / volatility / IRR),
+allocation and benchmark comparison, dividends, watchlist, price alerts, tax
+(exemption tracking, summaries), budget envelopes, and spending trends.
 
-## Architecture-model status
+## Keeping the models in sync
 
-- **Component Diagram (Implemented):** the component set matches the code.
-- **Deployment Diagram:** the component set matches the code.
+The **Implemented Component Diagram** and the **Deployment Diagram** track the
+current code — update them whenever the running system changes.
 
-## Editing
-
-The `.json` files are [Apollon](https://apollon.ese.in.tum.de/) sources; the
-`.svg` files are exported renders — re-export after editing a `.json`. Update
-this README as requirements move from planned to built.
+The `.json` files are [Apollon](https://apollon.ese.in.tum.de/) sources and the
+`.svg` files are their exported renders, so re-export the `.svg` after editing a
+`.json`. As a requirement moves from planned to built, move it out of the list
+above too, so this README stays trustworthy.

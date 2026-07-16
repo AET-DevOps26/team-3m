@@ -1,6 +1,6 @@
 [project]
 name = "kontor-ai"
-version = "0.27.1"
+version = "0.27.2"
 requires-python = ">=3.14"
 dependencies = [
     "fastapi>=0.136",

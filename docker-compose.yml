@@ -140,7 +140,7 @@ services:
       start_period: 30s
 
   rabbitmq:
-    image: rabbitmq:4.2-management-alpine
+    image: rabbitmq:4.3-management-alpine
     environment:
       RABBITMQ_DEFAULT_USER: "${RABBITMQ_USER:-news}"
       RABBITMQ_DEFAULT_PASS: "${RABBITMQ_PASSWORD:-change-me-rabbit-local}"

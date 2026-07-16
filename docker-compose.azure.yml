@@ -173,7 +173,7 @@ services:
     restart: unless-stopped
 
   rabbitmq:
-    image: rabbitmq:4.2-management-alpine
+    image: rabbitmq:4.3-management-alpine
     environment:
       RABBITMQ_DEFAULT_USER: "${RABBITMQ_USER:-news}"
       RABBITMQ_DEFAULT_PASS: "${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}"

@@ -36,11 +36,9 @@ allocation & benchmark comparison, dividends, watchlist, price alerts, tax
 The **Vision** variant additionally shows `Tax` and `Budgeting` (under Kontor)
 and `Watchlist` (under Market News & Research) — all still unbuilt.
 
-## Architecture-model drift to correct
+## Architecture-model status
 
-- **Component Diagram (Implemented):** in sync with the code, except there is no
-  explicit `User/Auth` component (auth exists in `core/security` + `core/user` +
-  Keycloak).
+- **Component Diagram (Implemented):** the component set matches the code.
 - **Deployment Diagram:** in sync with the code (the AI pgvector store, the
   AI → RabbitMQ `news.articles` consumer, and the AI → Logos embeddings are all
   built).

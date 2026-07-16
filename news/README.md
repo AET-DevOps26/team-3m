@@ -9,8 +9,9 @@ source, meant to be replaced later.
 
 ## How it works
 
-- **Scheduled aggregation**: every `news.aggregation.interval` (default 15 min)
-  all configured feeds are fetched and parsed (RSS/Atom via ROME).
+- **Scheduled aggregation**: every `news.aggregation.interval` (default 15 min,
+  used locally and in PR previews; prod and Azure override it to 6 h) all
+  configured feeds are fetched and parsed (RSS/Atom via ROME).
 - **Manual asynchronous aggregation**: `POST /api/v1/news/aggregation/runs`
   starts a run in the background and returns `202` with the run to poll
   (`GET /api/v1/news/aggregation/runs/{id}`). A second trigger while a run is

@@ -183,6 +183,19 @@ CI's `openapi-sync` workflow fails if the committed files are out of sync.
 
 ## Deployment
 
+The production stack runs on the TUM Kubernetes cluster and is served at:
+
+| Environment | URL                          |
+| ----------- | ---------------------------- |
+| App         | <https://kontor.live>        |
+| Auth (Keycloak) | <https://auth.kontor.live> |
+| Grafana     | <https://grafana.kontor.live> |
+
+Unlike the local stack, prod is **not** pre-seeded with example data — new
+accounts start empty, so import a CSV (e.g. the sample at
+[`resources/example-data/transaction-csv.example.csv`](resources/example-data/transaction-csv.example.csv))
+to populate the dashboard.
+
 The Kontor stack ships as a single Helm chart in
 [`deploy/helm/kontor/`](deploy/helm/kontor/README.md) that bundles the client,
 core, news aggregator, RabbitMQ, AI service, Postgres (with `pgvector`), and an

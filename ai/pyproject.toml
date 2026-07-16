@@ -1,6 +1,6 @@
 [project]
 name = "kontor-ai"
-version = "0.28.1"
+version = "0.29.0"
 requires-python = ">=3.14"
 dependencies = [
     "fastapi>=0.136",
@@ -17,6 +17,8 @@ dependencies = [
     "opentelemetry-instrumentation-fastapi>=0.50b0",
     "opentelemetry-instrumentation-logging>=0.50b0",
     "opentelemetry-instrumentation-system-metrics>=0.50b0",
+    "aio-pika>=10.0.1",
+    "pgvector>=0.5.0",
 ]
 
 [project.scripts]

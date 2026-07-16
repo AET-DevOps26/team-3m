@@ -126,9 +126,8 @@ spec:
           port: 443
   {{- end }}
 ---
-# RabbitMQ (subchart pods): AMQP (5672) only from the news aggregator; the
-# future news processor gets added here when it exists. The management UI
-# (15672) stays cluster-internal (kubectl port-forward).
+# RabbitMQ (subchart pods): AMQP (5672) only from the news producer and the AI
+# consumer. The management UI (15672) stays cluster-internal (kubectl port-forward).
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -149,6 +148,10 @@ spec:
             matchLabels:
               {{- include "kontor.selectorLabels" . | nindent 14 }}
               app.kubernetes.io/component: news
+        - podSelector:
+            matchLabels:
+              {{- include "kontor.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: ai
       ports:
         - protocol: TCP
           port: 5672

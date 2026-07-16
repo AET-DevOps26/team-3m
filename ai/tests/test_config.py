@@ -22,6 +22,19 @@ def test_logos_api_key_defaults_to_empty(monkeypatch: pytest.MonkeyPatch) -> Non
     assert settings.logos_api_key == ""
 
 
+def test_news_consumer_defaults_match_aggregator_contract() -> None:
+    settings = Settings()
+
+    assert settings.news_queue == "news.articles"
+    assert settings.rabbitmq_port == 5672
+
+
+def test_news_consumer_is_configured_by_host_or_url() -> None:
+    assert Settings(rabbitmq_host="rabbitmq").is_news_consumer_configured is True
+    assert Settings(rabbitmq_url="amqps://broker.example/kontor").is_news_consumer_configured is True
+    assert Settings(rabbitmq_host="", rabbitmq_url="").is_news_consumer_configured is False
+
+
 def test_resolve_llm_provider_uses_logos_when_key_present() -> None:
     settings = Settings(logos_api_key="lg-test-key", logos_base_url="https://logos.test/v1")
     provider = resolve_llm_provider(settings)

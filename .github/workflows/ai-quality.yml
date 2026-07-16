@@ -49,6 +49,8 @@ jobs:
         run: uv run ty check
 
       - name: Run Tests (pytest)
+        env:
+          TEST_DATABASE_URL: postgresql+asyncpg://kontor_ai:ci@localhost:5432/kontor_ai
         run: uv run pytest
 
       - name: Migration smoke test (Postgres)

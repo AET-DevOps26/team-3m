@@ -3,6 +3,17 @@
 import * as z from "zod"
 
 /**
+ * NewsReference
+ */
+export const newsReferenceSchema = z.object({
+  title: z.string(),
+  url: z.string().nullish(),
+  source: z.string().nullish(),
+  published_at: z.iso.datetime().nullish(),
+  symbols: z.array(z.string()).optional().default([]),
+})
+
+/**
  * PortfolioHoldingInput
  */
 export const portfolioHoldingInputSchema = z.object({
@@ -32,6 +43,8 @@ export const recommendationResponseSchema = z.object({
   recommendation: z.string(),
   rationale: z.string(),
   disclaimer: z.string(),
+  news_summary: z.string().optional().default(""),
+  news_references: z.array(newsReferenceSchema).optional().default([]),
 })
 
 /**

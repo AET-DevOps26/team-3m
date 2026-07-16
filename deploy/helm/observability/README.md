@@ -32,7 +32,7 @@ chart falls back to placeholder credentials for the cluster-internal SeaweedFS),
 ## Signal flow
 
 - **Traces** — apps push OTLP → Alloy gateway → Tempo.
-- **Metrics** — core/ai push OTLP → Alloy → Prometheus remote-write; Keycloak's
+- **Metrics** — core/news/ai push OTLP → Alloy → Prometheus remote-write; Keycloak's
   built-in Micrometer `/metrics` (mgmt port 9000) is scraped by Alloy.
 - **Logs** — the Alloy log collector reads pod logs through the Kubernetes API (no
   hostPath / no `/var/log` mount), labels them `deployment_environment`, `service`,

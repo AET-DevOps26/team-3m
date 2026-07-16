@@ -54,6 +54,7 @@ spec:
         {{- include "obs.componentLabels" (dict "root" . "component" "loki") | nindent 8 }}
       annotations:
         checksum/config: {{ .Files.Get "files/loki/loki.yaml" | sha256sum }}
+        checksum/s3-credentials: {{ printf "%s:%s" .Values.s3.accessKey .Values.s3.secretKey | sha256sum }}
     spec:
       securityContext:
         runAsNonRoot: true

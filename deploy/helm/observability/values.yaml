@@ -68,7 +68,9 @@ prometheus:
 
 grafana:
   adminUser: admin
+  # REQUIRED when grafana.existingSecret is empty — the render fails otherwise.
   adminPassword: ""
+  # Existing Secret with keys: admin-user, admin-password, oauth-client-secret.
   existingSecret: ""
   # Keycloak SSO via generic OAuth. The admin password stays as a break-glass login.
   # Needs a confidential `grafana` client in the Keycloak realm (kontor chart:

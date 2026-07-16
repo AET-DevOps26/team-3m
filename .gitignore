@@ -10,9 +10,10 @@
 
 .env
 
-# Helm — never commit real secret values
-deploy/helm/**/secrets.yaml
-!deploy/helm/**/secrets.example.yaml
+# Helm — never commit real secret values (chart-root values files only;
+# ** would also swallow chart templates like observability/templates/secrets.yaml)
+deploy/helm/*/secrets.yaml
+!deploy/helm/*/secrets.example.yaml
 
 # Python
 __pycache__/

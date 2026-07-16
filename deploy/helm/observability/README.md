@@ -9,6 +9,14 @@ It lives in its own namespace (`team-3m-monitoring`) and its own
 `workflow_dispatch` GitHub workflow (`.github/workflows/observability.yml`), so PR
 deploy/teardown never touches it.
 
+The workflow needs these GitHub secrets (env `k8s-prod` unless noted):
+`GRAFANA_ADMIN_PASSWORD` (**required** unless `grafana.existingSecret` names a
+pre-created Secret — the chart fails the render otherwise),
+`OBSERVABILITY_S3_ACCESS_KEY` / `OBSERVABILITY_S3_SECRET_KEY` (recommended; the
+chart falls back to placeholder credentials for the cluster-internal SeaweedFS),
+`GRAFANA_OAUTH_CLIENT_SECRET` (optional — enables Keycloak SSO), and the
+`DISCORD_WEBHOOK_URL` repo secret (optional — enables alerting, see below).
+
 ## Components
 
 | Component | Role | Storage |

@@ -389,17 +389,6 @@
       }
     },
     {
-      "id": "d1c09f29-a89e-4616-a382-5e0b490ef0a8",
-      "source": "ab192d9c-3df2-4951-9679-17f7079c51f2",
-      "target": "b5186a85-ac90-41f2-b2d3-627a4e8848c2",
-      "type": "ComponentDependency",
-      "sourceHandle": "right",
-      "targetHandle": "top",
-      "data": {
-        "points": []
-      }
-    },
-    {
       "id": "046c6402-72c3-4a30-8bb7-89060f9d2094",
       "source": "1409b6eb-eec5-4172-9b77-9702d528001c",
       "target": "050f2546-79a7-4d90-91a1-b2061bc729b6",

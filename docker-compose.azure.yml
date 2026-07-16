@@ -289,7 +289,7 @@ services:
       ai-migrate:
         condition: service_completed_successfully
       news:
-        condition: service_healthy
+        condition: service_started
     environment:
       DATABASE_URL: "postgresql+asyncpg://${AI_POSTGRES_USER:-kontor_ai}:${AI_POSTGRES_PASSWORD}@ai-db:5432/${AI_POSTGRES_DB:-kontor_ai}"
       KEYCLOAK_ISSUER: "https://${KEYCLOAK_DOMAIN:-auth.${DOMAIN}}/realms/kontor"

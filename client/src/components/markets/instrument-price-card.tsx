@@ -121,7 +121,13 @@ function PriceChart({ symbol, range }: PriceChartProps) {
                   ? "end"
                   : "middle"
             return (
-              <text x={x} y={y} textAnchor={anchor} fontSize={11}>
+              <text
+                x={x}
+                y={y}
+                textAnchor={anchor}
+                fontSize={11}
+                className="fill-muted-foreground"
+              >
                 {formatAxisDate(payload.value, range)}
               </text>
             )

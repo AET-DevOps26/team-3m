@@ -97,7 +97,8 @@ spec:
         - protocol: TCP
           port: 3200
 ---
-# Prometheus: remote-write from the Alloy collectors, queries from Grafana.
+# Prometheus: remote-write from the Alloy collectors and Tempo's metrics
+# generator, queries from Grafana.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -121,6 +122,9 @@ spec:
         - podSelector:
             matchLabels:
               {{- include "obs.selectorLabels" (dict "root" . "component" "grafana") | nindent 14 }}
+        - podSelector:
+            matchLabels:
+              {{- include "obs.selectorLabels" (dict "root" . "component" "tempo") | nindent 14 }}
       ports:
         - protocol: TCP
           port: 9090
@@ -149,7 +153,8 @@ spec:
 ---
 # Alloy gateway: OTLP from every namespace in the team's Rancher project
 # (prod + ephemeral PR previews share the projectId label stamped by
-# deploy/rbac/namespace.tpl), plus Faro/OTLP-HTTP from the browser ingress.
+# deploy/rbac/namespace.tpl), Faro/OTLP-HTTP from the browser ingress, and
+# the self-metrics endpoint for the Prometheus scrape job.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -181,4 +186,11 @@ spec:
           port: 12347
         - protocol: TCP
           port: 4318
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "obs.selectorLabels" (dict "root" . "component" "prometheus") | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: 12345
 {{- end }}

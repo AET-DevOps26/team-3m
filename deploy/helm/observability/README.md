@@ -60,10 +60,12 @@ browser ──Faro──▶ alloy(gateway:/collect) ──▶ Tempo (traces) + L
 
 ## NetworkPolicies
 
-Enabled by default (`networkPolicy.enabled`). SeaweedFS's unauthenticated
-master/filer APIs accept traffic only from Loki, Tempo, and the bucket-init
-job; Loki/Tempo/Prometheus accept only the Alloy collectors and Grafana;
-Grafana accepts only `ingress-nginx`. The Alloy gateway accepts OTLP from every
+Enabled by default (`networkPolicy.enabled`). SeaweedFS accepts S3 traffic
+(8333) only from Loki and Tempo, and its unauthenticated master/filer APIs
+only from the bucket-init job; Loki/Tempo/Prometheus accept only the Alloy
+collectors, Tempo's metrics-generator remote-write, and Grafana; Grafana
+accepts only `ingress-nginx`; the Alloy gateway's self-metrics port is
+reserved for the Prometheus scrape job. The Alloy gateway accepts OTLP from every
 namespace carrying the team's Rancher project label
 (`networkPolicy.rancherProjectLabel`, overridden in CI from the
 `RANCHER_PROJECT_ID` variable) — this is what lets prod **and** ephemeral

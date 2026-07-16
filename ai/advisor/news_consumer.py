@@ -114,6 +114,10 @@ async def handle_message(
         await _store(provider, news, payload)
         await message.ack()
     except Exception as exc:
+        # ponytail: `redelivered` is the only retry signal the producer-owned queue exposes,
+        # so any broker/connection blip that redelivers an in-flight message dead-letters it
+        # (not lost) instead of retrying. Upgrade path: a quorum queue with x-delivery-count,
+        # or a producer-incremented retry-count header, once the producer adopts one.
         if message.redelivered:
             logger.error("News message failed after redelivery; dead-lettering", exc_info=exc)
             await _dead_letter(message, dead_letter_exchange, dead_letter_routing_key, "processing-failed")

@@ -99,6 +99,9 @@ async def find_relevant_news(
     found: dict = {}
 
     if symbols:
+        # Deliberate interim no-op today: _store persists symbols=[] until the aggregator
+        # emits ticker tags, so this branch matches nothing yet. The semantic path below is
+        # the live retrieval mechanism; symbol match goes live once articles carry symbols.
         # ponytail: unindexed jsonb-overlap filter; symbols are stored uppercased, so no
         # per-row normalization. Add a default-jsonb_ops GIN on (symbols::jsonb) if volume grows.
         symbol_stmt = (

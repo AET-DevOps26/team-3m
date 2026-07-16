@@ -142,6 +142,8 @@ async def _retrieve_news(session: AsyncSession, settings: Settings, portfolio: P
             )
             embedding_model = provider.model
         except Exception as exc:
+            # Symbol match is a deliberate interim no-op until the aggregator tags articles
+            # (see find_relevant_news), so today an embedding failure yields no news, not stale hits.
             logger.warning("News query embedding failed; falling back to symbol match", exc_info=exc)
 
     try:

@@ -181,7 +181,7 @@ services:
     restart: unless-stopped
 
   rabbitmq:
-    image: rabbitmq:4.2-management-alpine
+    image: rabbitmq:4.3-management-alpine
     environment:
       RABBITMQ_DEFAULT_USER: "${RABBITMQ_USER:-news}"
       RABBITMQ_DEFAULT_PASS: "${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}"
@@ -224,7 +224,7 @@ services:
       JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.news.rule=Host(`${DOMAIN}`) && (PathPrefix(`/news/swagger-ui`) || PathPrefix(`/news/v3/api-docs`))"
+      - "traefik.http.routers.news.rule=Host(`${DOMAIN}`) && (PathPrefix(`/api/v1/news`) || PathPrefix(`/news/swagger-ui`) || PathPrefix(`/news/v3/api-docs`))"
       - "traefik.http.routers.news.entrypoints=websecure"
       - "traefik.http.routers.news.tls.certresolver=le"
       - "traefik.http.services.news.loadbalancer.server.port=8080"

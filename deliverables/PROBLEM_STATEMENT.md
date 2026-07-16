@@ -124,7 +124,7 @@ Marco receives a reminder that his Freistellungsauftrag is 87 % consumed with tw
 ## Constraints
 
 - **Technology**: Python-based GenAI service; Java Spring Boot Server(s) with jOOQ and Flyway migrations into PostgreSQL; microservices architecture.
-- **Platform**: Progressive React Web App (no native app store distribution required).
+- **Platform**: React web app (no native app store distribution required).
 - **Regulatory**: AI outputs must comply with EU AI Act transparency requirements and must not constitute regulated investment advice under MiFID II.
 - **Language / Locale**: Primary locale is German (DE); tax features are scoped to the German regulatory framework in v1. Secondary language is English, but non-German tax features are out of scope for v1.
 - **Data**: No raw financial credentials (bank logins, broker passwords) are stored; only user-uploaded CSV data.

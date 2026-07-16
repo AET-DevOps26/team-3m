@@ -59,7 +59,7 @@ Live stock/ETF market data — quotes, price history, and the holdings chart —
 
 The holdings chart on the dashboard should now render live prices.
 
-**Rate limit.** The free tier caps how often you can call the API (currently 8 requests per minute and 800 per day). When you exceed it, Twelve Data responds with `429`; `core` passes that through as a `429`, and the holdings chart dialog shows a "Live market data paused" notice with the provider's rate-limit message instead of the chart. Wait for the limit window to reset and reopen the chart — no key change is needed.
+**Rate limit.** The free tier caps how often you can call the API (currently 8 API credits per minute and 800 requests per day). When you exceed it, Twelve Data responds with `429`; `core` passes that through as a `429`, and the holdings chart dialog shows a "Live market data paused" notice with the provider's rate-limit message instead of the chart. Wait for the limit window to reset and reopen the chart — no key change is needed.
 
 **No key configured.** When `TWELVE_DATA_API_KEY` is empty, market-data endpoints return `502` with a message explaining the key is missing, and the chart shows that message instead of prices. The rest of the app works normally.
 

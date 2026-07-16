@@ -40,7 +40,7 @@ spec:
                 echo "waiting for seaweedfs master... ($i)"; sleep 3
               done
               echo "failed to create buckets; last weed shell output:" >&2
-              echo "$out" >&2; exit 1
+              printf '%s\n' "$out" >&2; exit 1
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true

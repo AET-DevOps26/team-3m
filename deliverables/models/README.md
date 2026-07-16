@@ -38,8 +38,3 @@ allocation and benchmark comparison, dividends, watchlist, price alerts, tax
 
 The **Implemented Component Diagram** and the **Deployment Diagram** track the
 current code, update them whenever the running system changes.
-
-The `.json` files are [Apollon](https://apollon.ese.in.tum.de/) sources and the
-`.svg` files are their exported renders, so re-export the `.svg` after editing a
-`.json`. As a requirement moves from planned to built, move it out of the list
-above too, so this README stays trustworthy.

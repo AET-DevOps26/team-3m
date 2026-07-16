@@ -139,7 +139,7 @@ function NewsSummary({
               >
                 {isSafeHttpUrl(reference.url) ? (
                   <a
-                    href={reference.url ?? undefined}
+                    href={reference.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="underline underline-offset-2 hover:text-foreground"

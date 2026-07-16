@@ -201,7 +201,7 @@ Required secret values (the render `fail`s if these are empty, unless
 - Use `*.existingSecret: <name>` to reference a Secret created out-of-band
   (e.g. by SealedSecrets/ESO once available).
 - Hosted news ingest defaults `ai.embedding.logosModel` to
-  `qwen/Qwen3-Embedding-8B`. Deployment workflows allow the
+  `Qwen/Qwen3-Embedding-8B`. Deployment workflows allow the
   `LOGOS_EMBEDDING_MODEL` repository variable to override it.
 
 ## RabbitMQ

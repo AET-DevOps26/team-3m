@@ -242,7 +242,7 @@ services:
       <<: *keycloak-oidc-env
       DATABASE_URL: "postgresql+asyncpg://${AI_POSTGRES_USER:-kontor_ai}:${AI_POSTGRES_PASSWORD:-change-me-local}@ai-db:5432/${AI_POSTGRES_DB:-kontor_ai}"
       LOGOS_API_KEY: "${LOGOS_API_KEY:-}"
-      LOGOS_EMBEDDING_MODEL: "${LOGOS_EMBEDDING_MODEL:-qwen/Qwen3-Embedding-8B}"
+      LOGOS_EMBEDDING_MODEL: "${LOGOS_EMBEDDING_MODEL:-Qwen/Qwen3-Embedding-8B}"
       LOCAL_LLM_BASE_URL: "${LOCAL_LLM_BASE_URL:-http://host.docker.internal:11434/v1}"
       LOCAL_LLM_MODEL: "${LOCAL_LLM_MODEL:-llama3.2}"
       LOCAL_EMBEDDING_MODEL: "${LOCAL_EMBEDDING_MODEL:-nomic-embed-text}"

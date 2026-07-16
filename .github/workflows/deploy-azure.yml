@@ -101,7 +101,7 @@ jobs:
             AI_POSTGRES_USER=kontor_ai
             AI_POSTGRES_PASSWORD=${{ secrets.AZURE_AI_POSTGRES_PASSWORD }}
             LOGOS_API_KEY=${{ secrets.LOGOS_API_KEY }}
-            LOGOS_EMBEDDING_MODEL=${{ vars.LOGOS_EMBEDDING_MODEL || 'qwen/Qwen3-Embedding-8B' }}
+            LOGOS_EMBEDDING_MODEL=${{ vars.LOGOS_EMBEDDING_MODEL || 'Qwen/Qwen3-Embedding-8B' }}
             KEYCLOAK_POSTGRES_PASSWORD=${{ secrets.AZURE_KEYCLOAK_POSTGRES_PASSWORD }}
             KEYCLOAK_ADMIN_USER=${{ vars.AZURE_KEYCLOAK_ADMIN_USER }}
             KEYCLOAK_ADMIN_PASSWORD=${{ secrets.AZURE_KEYCLOAK_ADMIN_PASSWORD }}

@@ -141,7 +141,7 @@ jobs:
           KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
           KEYCLOAK_DB_PASSWORD: ${{ secrets.KEYCLOAK_DB_PASSWORD }}
           LOGOS_API_KEY: ${{ secrets.LOGOS_API_KEY }}
-          LOGOS_EMBEDDING_MODEL: ${{ vars.LOGOS_EMBEDDING_MODEL || 'qwen/Qwen3-Embedding-8B' }}
+          LOGOS_EMBEDDING_MODEL: ${{ vars.LOGOS_EMBEDDING_MODEL || 'Qwen/Qwen3-Embedding-8B' }}
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
           AI_DB_PASSWORD: ${{ secrets.AI_DB_PASSWORD }}
           GRAFANA_OAUTH_CLIENT_SECRET: ${{ secrets.GRAFANA_OAUTH_CLIENT_SECRET }}
@@ -178,7 +178,7 @@ jobs:
           NEWS_POSTGRES_PASSWORD: ${{ secrets.NEWS_POSTGRES_PASSWORD }}
           KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
           LOGOS_API_KEY: ${{ secrets.LOGOS_API_KEY }}
-          LOGOS_EMBEDDING_MODEL: ${{ vars.LOGOS_EMBEDDING_MODEL || 'qwen/Qwen3-Embedding-8B' }}
+          LOGOS_EMBEDDING_MODEL: ${{ vars.LOGOS_EMBEDDING_MODEL || 'Qwen/Qwen3-Embedding-8B' }}
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
           AI_DB_PASSWORD: ${{ secrets.AI_DB_PASSWORD }}
           PR_NUMBER: ${{ inputs.pr-number }}

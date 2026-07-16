@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     logos_api_key: str = ""
     logos_base_url: str = "https://logos.aet.cit.tum.de/v1"
     logos_model: str = "openai/gpt-oss-120b"
-    logos_embedding_model: str = "qwen/Qwen3-Embedding-8B"
+    logos_embedding_model: str = "Qwen/Qwen3-Embedding-8B"
     local_llm_base_url: str = ""
     local_llm_model: str = "llama3.2"
     local_embedding_model: str = "nomic-embed-text"

@@ -240,7 +240,7 @@ ai:
     # -- Ollama embedding model (local mode). Pulled/served outside the chart.
     localModel: "nomic-embed-text"
     # -- Logos embedding model (hosted mode). Required for hosted news ingest.
-    logosModel: "qwen/Qwen3-Embedding-8B"
+    logosModel: "Qwen/Qwen3-Embedding-8B"
   # News ingest consumer for the queue declared by the bundled news service.
   newsConsumer:
     enabled: true

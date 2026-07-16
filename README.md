@@ -24,7 +24,7 @@ The AI service uses a **Logos API key** (`LOGOS_API_KEY=lg-…`) in `.env` when 
 
 Live stock/ETF market data (quotes, price history, the holdings chart) is sourced from [Twelve Data](https://twelvedata.com) via a **`TWELVE_DATA_API_KEY`** in `.env`. Get a free key at <https://twelvedata.com/pricing> — the free tier is enough for local testing. When the key is missing, market-data endpoints return `502` with a message telling you the key is not configured, and the holdings chart shows that message instead of a chart; the rest of the app works normally.
 
-Hosted news ingest uses `qwen/Qwen3-Embedding-8B` by default through Logos'
+Hosted news ingest uses `Qwen/Qwen3-Embedding-8B` by default through Logos'
 OpenAI-compatible embeddings endpoint. The `LOGOS_EMBEDDING_MODEL` repository
 variable can override that model for Helm and Azure deployments.
 

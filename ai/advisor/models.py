@@ -41,6 +41,8 @@ class NewsArticle(Base):
     symbols: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    # ponytail: dimensionless Vector (rows mix embedding models/dims), so no single HNSW/IVFFlat
+    # index — cosine search full-scans. Add per-model partial indexes on a fixed dim before scale.
     embedding: Mapped[list[float]] = mapped_column(Vector, nullable=False)
     embedding_model: Mapped[str] = mapped_column(Text, nullable=False)
     embedding_dim: Mapped[int] = mapped_column(Integer, nullable=False)

@@ -90,6 +90,8 @@ async def _dead_letter(
             raise RuntimeError("dead-letter publish was not confirmed")
     except Exception as exc:
         logger.error("Failed to publish news message to dead-letter queue; requeueing", exc_info=exc)
+        # ponytail: a persistently unroutable DLX hot-loops (parse-fail -> DLX-fail -> requeue),
+        # bounded only by this sleep. Add a redelivery cap / alert if the DLX can stay broken.
         await asyncio.sleep(TRANSIENT_BACKOFF_SECONDS)
         await message.nack(requeue=True)
         return
@@ -114,6 +116,10 @@ async def handle_message(
         await _store(provider, news, payload)
         await message.ack()
     except Exception as exc:
+        # ponytail: `redelivered` doubles as our retry counter, but connect_robust also sets it after
+        # a connection drop, so an in-flight message during an infra blip is dead-lettered (to the
+        # DLQ, not lost) rather than retried. Switch to a quorum queue's x-delivery-count if the
+        # producer adopts one.
         if message.redelivered:
             logger.error("News message failed after redelivery; dead-lettering", exc_info=exc)
             await _dead_letter(message, dead_letter_exchange, dead_letter_routing_key, "processing-failed")

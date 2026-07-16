@@ -91,8 +91,9 @@ async def find_relevant_news(
     found: dict = {}
 
     if symbols:
-        # ponytail: unindexed jsonb-overlap filter; symbols are stored uppercased, so no
-        # per-row normalization. Add a default-jsonb_ops GIN on (symbols::jsonb) if volume grows.
+        # ponytail: dead until the news aggregator emits ticker tags — _store persists symbols=[],
+        # so this branch matches no rows today. Unindexed jsonb-overlap filter; symbols are stored
+        # uppercased, so no per-row normalization. Add a default-jsonb_ops GIN if volume grows.
         symbol_stmt = (
             select(NewsArticle)
             .where(

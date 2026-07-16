@@ -244,6 +244,23 @@
       }
     },
     {
+      "id": "3f7957b1-a448-4714-9ebd-b02eede63a17",
+      "width": 30,
+      "height": 30,
+      "type": "componentInterface",
+      "position": {
+        "x": 1545,
+        "y": 1295
+      },
+      "data": {
+        "name": "News Service"
+      },
+      "measured": {
+        "width": 30,
+        "height": 30
+      }
+    },
+    {
       "id": "a17e364a-1041-49bc-8291-86da31ba3204",
       "width": 30,
       "height": 30,
@@ -276,11 +293,30 @@
     },
     {
       "id": "1226ed0d-a20d-4077-9da2-04c203cc4b00",
-      "source": "bb8eade9-73d7-458a-9227-f19ef4f5ff74",
+      "source": "0630fbc8-c342-4836-b6ed-da36ea1de9ce",
       "target": "b5186a85-ac90-41f2-b2d3-627a4e8848c2",
       "type": "ComponentProvidedInterface",
-      "sourceHandle": "top",
-      "targetHandle": "bottom",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": [],
+        "sourceAnchor": {
+          "side": "right",
+          "ratio": 0.4583333333333333
+        },
+        "targetAnchor": {
+          "side": "left",
+          "ratio": 0.5
+        }
+      }
+    },
+    {
+      "id": "d1c09f29-a89e-4616-a382-5e0b490ef0a8",
+      "source": "ab192d9c-3df2-4951-9679-17f7079c51f2",
+      "target": "b5186a85-ac90-41f2-b2d3-627a4e8848c2",
+      "type": "ComponentDependency",
+      "sourceHandle": "right",
+      "targetHandle": "top",
       "data": {
         "points": []
       }
@@ -294,6 +330,21 @@
       "targetHandle": "left",
       "data": {
         "points": []
+      }
+    },
+    {
+      "id": "4a48800b-2f4c-4825-9da6-f8cf2a1a7940",
+      "source": "7fc29f11-5212-4aa9-9640-7ccd90371003",
+      "target": "b5186a85-ac90-41f2-b2d3-627a4e8848c2",
+      "type": "ComponentRequiredInterface",
+      "sourceHandle": "left",
+      "targetHandle": "right",
+      "data": {
+        "points": [],
+        "sourceAnchor": {
+          "side": "left",
+          "ratio": 0.5416666666666666
+        }
       }
     },
     {
@@ -353,6 +404,17 @@
       }
     },
     {
+      "id": "f36b8921-ae81-4313-b0c7-d27933ef796d",
+      "source": "13817ac9-aec7-4db0-83b4-652bc5e522fe",
+      "target": "3f7957b1-a448-4714-9ebd-b02eede63a17",
+      "type": "ComponentRequiredInterface",
+      "sourceHandle": "right",
+      "targetHandle": "left",
+      "data": {
+        "points": []
+      }
+    },
+    {
       "id": "d3543e2a-3cf0-4131-851f-7fa3cc1bb77e",
       "source": "7fc29f11-5212-4aa9-9640-7ccd90371003",
       "target": "a17e364a-1041-49bc-8291-86da31ba3204",
@@ -372,6 +434,46 @@
       "targetHandle": "left",
       "data": {
         "points": []
+      }
+    },
+    {
+      "id": "0d02e0ae-1645-456c-b94f-0e5e06384e59",
+      "source": "7fc29f11-5212-4aa9-9640-7ccd90371003",
+      "target": "bb8eade9-73d7-458a-9227-f19ef4f5ff74",
+      "type": "ComponentDependency",
+      "sourceHandle": "bottom",
+      "targetHandle": "right",
+      "data": {
+        "points": [
+          {
+            "x": 980,
+            "y": 1020
+          },
+          {
+            "x": 980,
+            "y": 1115
+          },
+          {
+            "x": 535,
+            "y": 1115
+          },
+          {
+            "x": 535,
+            "y": 1250
+          },
+          {
+            "x": 505,
+            "y": 1250
+          }
+        ],
+        "targetAnchor": {
+          "side": "right",
+          "ratio": 0.4583333333333333
+        },
+        "sourceAnchor": {
+          "side": "bottom",
+          "ratio": 0.5
+        }
       }
     },
     {

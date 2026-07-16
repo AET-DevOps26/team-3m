@@ -1,6 +1,7 @@
 from datetime import datetime
+from typing import cast
 
-from sqlalchemy import select, text
+from sqlalchemy import CursorResult, delete, select, text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -78,6 +79,13 @@ async def save_news_article(
     )
     await session.execute(stmt)
     await session.commit()
+
+
+async def delete_news_older_than(session: AsyncSession, cutoff: datetime) -> int:
+    """Delete news articles ingested before ``cutoff``; returns the number removed."""
+    result = cast(CursorResult, await session.execute(delete(NewsArticle).where(NewsArticle.created_at < cutoff)))
+    await session.commit()
+    return result.rowcount or 0
 
 
 async def find_relevant_news(

@@ -8,6 +8,7 @@ from .config import get_settings
 from .health import router as health_router
 from .news_consumer import run_consumer
 from .recommendation import router as recommendation_router
+from .retention import run_retention_sweeper
 
 logger = logging.getLogger(__name__)
 
@@ -32,14 +33,17 @@ async def _supervise_consumer() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    task: asyncio.Task | None = None
-    if get_settings().is_news_consumer_configured:
-        task = asyncio.create_task(_supervise_consumer())
+    tasks: list[asyncio.Task] = []
+    settings = get_settings()
+    if settings.is_news_consumer_configured:
+        tasks.append(asyncio.create_task(_supervise_consumer()))
+        tasks.append(asyncio.create_task(run_retention_sweeper(settings)))
     try:
         yield
     finally:
-        if task is not None:
+        for task in tasks:
             task.cancel()
+        for task in tasks:
             try:
                 await task
             except asyncio.CancelledError:

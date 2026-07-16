@@ -38,7 +38,7 @@ are out of sync.
 
 ## Financial news (RAG)
 
-The `POST /ai/advisor/recommendation` usecase grounds its advice in relevant
+The `POST /ai/advisor/recommendation` use case grounds its advice in relevant
 financial news retrieved from a pgvector store. News is ingested by a background
 consumer and matched to the caller's holdings at generation time.
 

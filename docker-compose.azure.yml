@@ -127,7 +127,11 @@ services:
       # Health probes live on the management port (9000) at /health/*.
       # The image ships neither curl nor wget, so probe via Bash's /dev/tcp
       # and parse the HTTP status line.
-      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.0\\r\\nHost: localhost\\r\\n\\r\\n' >&3 && head -n1 <&3 | grep -q '200 OK'"]
+      test:
+        [
+          "CMD-SHELL",
+          "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.0\\r\\nHost: localhost\\r\\n\\r\\n' >&3 && head -n1 <&3 | grep -q '200 OK'",
+        ]
       interval: 10s
       timeout: 5s
       retries: 30
@@ -165,7 +169,11 @@ services:
       - "traefik.http.routers.core.tls.certresolver=le"
       - "traefik.http.services.core.loadbalancer.server.port=8080"
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/health/liveness >/dev/null 2>&1 || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://localhost:8080/api/health/liveness >/dev/null 2>&1 || exit 1",
+        ]
       interval: 10s
       timeout: 3s
       retries: 5
@@ -221,7 +229,11 @@ services:
       - "traefik.http.routers.news.tls.certresolver=le"
       - "traefik.http.services.news.loadbalancer.server.port=8080"
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/health/liveness >/dev/null 2>&1 || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://localhost:8080/api/health/liveness >/dev/null 2>&1 || exit 1",
+        ]
       interval: 10s
       timeout: 3s
       retries: 5
@@ -245,7 +257,11 @@ services:
       - "traefik.http.routers.client.tls.certresolver=le"
       - "traefik.http.services.client.loadbalancer.server.port=8080"
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/ >/dev/null 2>&1 || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://127.0.0.1:8080/ >/dev/null 2>&1 || exit 1",
+        ]
       interval: 10s
       timeout: 3s
       retries: 5
@@ -280,7 +296,7 @@ services:
       KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/realms/kontor/protocol/openid-connect/certs"
       KEYCLOAK_AUDIENCE: "${KEYCLOAK_AUDIENCE:-kontor-api}"
       LOGOS_API_KEY: "${LOGOS_API_KEY:-}"
-      LOGOS_EMBEDDING_MODEL: "${LOGOS_EMBEDDING_MODEL:-qwen/qwen3-embedding-8b}"
+      LOGOS_EMBEDDING_MODEL: "${LOGOS_EMBEDDING_MODEL:-qwen/Qwen3-Embedding-8B}"
       LOCAL_LLM_BASE_URL: ""
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: "5672"
@@ -294,7 +310,11 @@ services:
       - "traefik.http.routers.ai.tls.certresolver=le"
       - "traefik.http.services.ai.loadbalancer.server.port=8000"
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8000/ai/health/readiness >/dev/null 2>&1 || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://localhost:8000/ai/health/readiness >/dev/null 2>&1 || exit 1",
+        ]
       interval: 10s
       timeout: 3s
       retries: 5

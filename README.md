@@ -6,12 +6,12 @@
 
 ## Tech Stack
 
-| Layer              | Technology                                                   |
-| ------------------ | ------------------------------------------------------------ |
-| Client             | React 19, TypeScript 5.9, Vite 7, Tailwind CSS 4, shadcn/ui  |
-| Server             | Java 25, Spring Boot 4, Gradle                               |
-| News Service       | Java 25, Spring Boot 4, RabbitMQ                             |
-| AI Service         | Python 3.14, FastAPI, uv                                     |
+| Layer              | Technology                                                              |
+| ------------------ | ----------------------------------------------------------------------- |
+| Client             | React 19, TypeScript 5.9, Vite 7, Tailwind CSS 4, shadcn/ui             |
+| Server             | Java 25, Spring Boot 4, Gradle                                          |
+| News Service       | Java 25, Spring Boot 4, RabbitMQ                                        |
+| AI Service         | Python 3.14, FastAPI, uv                                                |
 | Linting/Formatting | Biome (client), Spotless + Checkstyle + Error Prone (server), Ruff (AI) |
 
 ---
@@ -24,7 +24,7 @@ The AI service uses a **Logos API key** (`LOGOS_API_KEY=lg-…`) in `.env` when 
 
 Live stock/ETF market data (quotes, price history, the holdings chart) is sourced from [Twelve Data](https://twelvedata.com) via a **`TWELVE_DATA_API_KEY`** in `.env`. Get a free key at <https://twelvedata.com/pricing> — the free tier is enough for local testing. When the key is missing, market-data endpoints return `502` with a message telling you the key is not configured, and the holdings chart shows that message instead of a chart; the rest of the app works normally.
 
-Hosted news ingest uses `qwen/qwen3-embedding-8b` by default through Logos'
+Hosted news ingest uses `qwen/Qwen3-Embedding-8B` by default through Logos'
 OpenAI-compatible embeddings endpoint. The `LOGOS_EMBEDDING_MODEL` repository
 variable can override that model for Helm and Azure deployments.
 
@@ -36,13 +36,13 @@ Local Keycloak users live in `infra/keycloak/realms/kontor-users-0.json`. Add an
 docker compose up --build
 ```
 
-| Service     | URL                     |
-| ----------- | ----------------------- |
-| Client      | <http://localhost:5173> |
-| Server      | <http://localhost:8080> |
-| News Service | <http://localhost:8082> |
-| AI Service  | <http://localhost:8000> |
-| RabbitMQ UI | <http://localhost:15672> |
+| Service      | URL                      |
+| ------------ | ------------------------ |
+| Client       | <http://localhost:5173>  |
+| Server       | <http://localhost:8080>  |
+| News Service | <http://localhost:8082>  |
+| AI Service   | <http://localhost:8000>  |
+| RabbitMQ UI  | <http://localhost:15672> |
 
 ### Local LLM (offline AI)
 
@@ -112,16 +112,16 @@ uv sync
 uv run uvicorn advisor.main:app --reload
 ```
 
-| Task             | Command                        |
-| ---------------- | ------------------------------ |
-| Install deps     | `uv sync`                      |
-| Dev server       | `uv run uvicorn advisor.main:app --reload` |
-| Test             | `uv run pytest`                |
-| Type check       | `uv run ty check`              |
-| Format check     | `uv run ruff format --check .` |
-| Format fix       | `uv run ruff format .`         |
-| Lint             | `uv run ruff check .`          |
-| Lint (autofix)   | `uv run ruff check --fix .`    |
+| Task           | Command                                    |
+| -------------- | ------------------------------------------ |
+| Install deps   | `uv sync`                                  |
+| Dev server     | `uv run uvicorn advisor.main:app --reload` |
+| Test           | `uv run pytest`                            |
+| Type check     | `uv run ty check`                          |
+| Format check   | `uv run ruff format --check .`             |
+| Format fix     | `uv run ruff format .`                     |
+| Lint           | `uv run ruff check .`                      |
+| Lint (autofix) | `uv run ruff check --fix .`                |
 
 ### Generated API Client
 
@@ -151,7 +151,6 @@ documents environment overlays (`values-prod.yaml`,
 There is also a standalone single-VM deployment on Azure (Terraform + Docker
 Compose + Traefik), served at `https://azure.kontor.live` and documented in
 [`deploy/azure/README.md`](deploy/azure/README.md).
-
 
 Copy `deploy/helm/kontor/secrets.example.yaml` to `secrets.yaml` and fill in all `REPLACE_ME` values, including `ai.logosApiKey` (the `lg-…` key from your tutor — requires TUM network / eduVPN). Set `ai.embedding.logosModel` to a Logos embedding model to enable hosted news ingest:
 

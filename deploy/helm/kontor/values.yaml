@@ -36,8 +36,8 @@ oidc:
 core:
   image:
     repository: aet-devops26/team-3m/kontor-core
-    tag: ""              # defaults to .Chart.AppVersion
-    pullPolicy: ""       # falls back to image.pullPolicy
+    tag: "" # defaults to .Chart.AppVersion
+    pullPolicy: "" # falls back to image.pullPolicy
   replicaCount: 1
   service:
     type: ClusterIP
@@ -103,8 +103,8 @@ core:
 news:
   image:
     repository: aet-devops26/team-3m/kontor-news
-    tag: ""              # defaults to .Chart.AppVersion
-    pullPolicy: ""       # falls back to image.pullPolicy
+    tag: "" # defaults to .Chart.AppVersion
+    pullPolicy: "" # falls back to image.pullPolicy
   # Runs coordinate through a Postgres advisory lock across replicas.
   replicaCount: 1
   service:
@@ -240,7 +240,7 @@ ai:
     # -- Ollama embedding model (local mode). Pulled/served outside the chart.
     localModel: "nomic-embed-text"
     # -- Logos embedding model (hosted mode). Required for hosted news ingest.
-    logosModel: "qwen/qwen3-embedding-8b"
+    logosModel: "qwen/Qwen3-Embedding-8B"
   # News ingest consumer for the queue declared by the bundled news service.
   newsConsumer:
     enabled: true
@@ -365,14 +365,14 @@ client:
     failureThreshold: 3
   podSecurityContext:
     runAsNonRoot: true
-    runAsUser: 101    # nginx-unprivileged user
+    runAsUser: 101 # nginx-unprivileged user
     runAsGroup: 101
     fsGroup: 101
     seccompProfile:
       type: RuntimeDefault
   containerSecurityContext:
     allowPrivilegeEscalation: false
-    readOnlyRootFilesystem: false   # nginx writes pid + temp files
+    readOnlyRootFilesystem: false # nginx writes pid + temp files
     capabilities:
       drop: ["ALL"]
   nodeSelector: {}

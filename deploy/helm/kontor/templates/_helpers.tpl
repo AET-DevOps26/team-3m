@@ -320,6 +320,43 @@ spec:
               mountPath: /var/run/postgresql
             - name: tmp
               mountPath: /tmp
+        {{- if and .db.metrics .db.metrics.enabled }}
+        - name: postgres-exporter
+          image: {{ include "kontor.image" (dict "root" .root "component" .db.metrics) | quote }}
+          imagePullPolicy: {{ include "kontor.imagePullPolicy" (dict "root" .root "component" .db.metrics) }}
+          securityContext:
+            {{- toYaml .db.containerSecurityContext | nindent 12 }}
+          ports:
+            - name: metrics
+              containerPort: 9187
+              protocol: TCP
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .secretName }}
+                  key: POSTGRES_DB
+            - name: DATA_SOURCE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .secretName }}
+                  key: POSTGRES_USER
+            - name: DATA_SOURCE_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .secretName }}
+                  key: POSTGRES_PASSWORD
+            - name: DATA_SOURCE_URI
+              value: "127.0.0.1:5432/$(POSTGRES_DB)?sslmode=disable"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: metrics
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            {{- toYaml .db.metrics.resources | nindent 12 }}
+        {{- end }}
       {{- with .scheduling.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

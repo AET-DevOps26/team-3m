@@ -518,8 +518,10 @@ dependencies = [
     { name = "openai" },
     { name = "opentelemetry-distro" },
     { name = "opentelemetry-exporter-otlp" },
+    { name = "opentelemetry-instrumentation-aio-pika" },
     { name = "opentelemetry-instrumentation-fastapi" },
     { name = "opentelemetry-instrumentation-logging" },
+    { name = "opentelemetry-instrumentation-sqlalchemy" },
     { name = "opentelemetry-instrumentation-system-metrics" },
     { name = "pgvector" },
     { name = "pydantic" },
@@ -556,8 +558,10 @@ requires-dist = [
     { name = "openai", specifier = ">=2.41.1" },
     { name = "opentelemetry-distro", specifier = ">=0.50b0" },
     { name = "opentelemetry-exporter-otlp", specifier = ">=1.29" },
+    { name = "opentelemetry-instrumentation-aio-pika", specifier = ">=0.50b0" },
     { name = "opentelemetry-instrumentation-fastapi", specifier = ">=0.50b0" },
     { name = "opentelemetry-instrumentation-logging", specifier = ">=0.50b0" },
+    { name = "opentelemetry-instrumentation-sqlalchemy", specifier = ">=0.50b0" },
     { name = "opentelemetry-instrumentation-system-metrics", specifier = ">=0.50b0" },
     { name = "pgvector", specifier = ">=0.5.0" },
     { name = "pydantic", specifier = ">=2.13" },
@@ -794,6 +798,21 @@ wheels = [
 ]
 
 [[package]]
+name = "opentelemetry-instrumentation-aio-pika"
+version = "0.64b0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "opentelemetry-api" },
+    { name = "opentelemetry-instrumentation" },
+    { name = "opentelemetry-semantic-conventions" },
+    { name = "wrapt" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/46/e7/38a8f8c7fabe8dce1d51ba6c3b7451e639d34f051d739710c09bb49c1a36/opentelemetry_instrumentation_aio_pika-0.64b0.tar.gz", hash = "sha256:79bb25ad6a113bb4bee27bc11295c2c761f0b3468890d1d7c9ff1203ae4076f6", size = 10190, upload-time = "2026-06-24T15:19:13.716Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b6/ab/88dc22f4ff64935a91bf0e9f0b2309a608df96e724cc6e9acf131b92e35c/opentelemetry_instrumentation_aio_pika-0.64b0-py3-none-any.whl", hash = "sha256:b5d36d411a3e7bf1e6cd6c8359cbad3aba7edc34bf947469c0ee6e5f0291aebf", size = 11676, upload-time = "2026-06-24T15:18:18.321Z" },
+]
+
+[[package]]
 name = "opentelemetry-instrumentation-asgi"
 version = "0.64b0"
 source = { registry = "https://pypi.org/simple" }
@@ -837,6 +856,22 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/88/8e/3b7191ba5817f139867612e960fbe06a69fe0d522d3b2c5e9c8e89b3ef8c/opentelemetry_instrumentation_logging-0.64b0.tar.gz", hash = "sha256:6435b4d215bf8183e15f7e3416a10ebe1c411810d3411fbfc62667daae3abacb", size = 20000, upload-time = "2026-06-24T15:19:30.946Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8d/07/9f97b0ccbb38363d12c7a2bfe44912ae7440c97aae250e2eedb32739f662/opentelemetry_instrumentation_logging-0.64b0-py3-none-any.whl", hash = "sha256:9b56f19648798ddb331c206b74d36c5f2a71e5c6b771e96298f167b2b590e40d", size = 16062, upload-time = "2026-06-24T15:18:44.019Z" },
+]
+
+[[package]]
+name = "opentelemetry-instrumentation-sqlalchemy"
+version = "0.64b0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "opentelemetry-api" },
+    { name = "opentelemetry-instrumentation" },
+    { name = "opentelemetry-semantic-conventions" },
+    { name = "packaging" },
+    { name = "wrapt" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/46/d7/86e333dede47a67a0f989f383da5d0840162ee21e0b252ca56cf61351c59/opentelemetry_instrumentation_sqlalchemy-0.64b0.tar.gz", hash = "sha256:dd737e0b0a72500961aa0dbb6fb2a10525f8dbb5299f9315ddf82d415cc64719", size = 18006, upload-time = "2026-06-24T15:19:40.225Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/49/90/5424365cb111d2383747b36ca3dbc558e86ef5ec6694efb53bfcb771f046/opentelemetry_instrumentation_sqlalchemy-0.64b0-py3-none-any.whl", hash = "sha256:687ee4c453020c7db009a7f3e390bb2b28eab4e61517e6d267e6e448c3eedcfb", size = 14410, upload-time = "2026-06-24T15:18:57.287Z" },
 ]
 
 [[package]]

@@ -1,0 +1,167 @@
+{
+  "uid": "kontor-rabbitmq",
+  "title": "RabbitMQ",
+  "tags": ["kontor", "rabbitmq", "messaging"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "deployment_environment",
+        "label": "Environment",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "query": "label_values(rabbitmq_build_info, deployment_environment)",
+        "includeAll": true,
+        "multi": true,
+        "refresh": 2,
+        "sort": 1
+      }
+    ]
+  },
+  "panels": [
+    { "id": 100, "type": "row", "title": "News queue", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 } },
+    {
+      "id": 1, "title": "Messages ready", "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 500 }, { "color": "red", "value": 5000 } ] } }, "overrides": [] },
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [ { "refId": "A", "expr": "sum(rabbitmq_detailed_queue_messages_ready{deployment_environment=~\"$deployment_environment\", queue=\"news.articles\"})" } ]
+    },
+    {
+      "id": 2, "title": "Messages unacked", "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 50 } ] } }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [ { "refId": "A", "expr": "sum(rabbitmq_detailed_queue_messages_unacked{deployment_environment=~\"$deployment_environment\", queue=\"news.articles\"})" } ]
+    },
+    {
+      "id": 3, "title": "Consumers", "type": "stat",
+      "description": "0 while a backlog grows means the AI news consumer is down or disconnected.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+      "fieldConfig": { "defaults": { "unit": "short", "noValue": "0", "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] } }, "overrides": [] },
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [ { "refId": "A", "expr": "sum(rabbitmq_detailed_queue_consumers{deployment_environment=~\"$deployment_environment\", queue=\"news.articles\"})" } ]
+    },
+    {
+      "id": 4, "title": "Publish rate", "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+      "fieldConfig": { "defaults": { "unit": "mps", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [ { "refId": "A", "expr": "sum(rate(rabbitmq_global_messages_received_total{deployment_environment=~\"$deployment_environment\"}[$__rate_interval]))" } ]
+    },
+    {
+      "id": 5, "title": "Queue depth by queue", "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        { "refId": "ready", "expr": "sum by (queue) (rabbitmq_detailed_queue_messages_ready{deployment_environment=~\"$deployment_environment\"})", "legendFormat": "ready {{queue}}" },
+        { "refId": "unacked", "expr": "sum by (queue) (rabbitmq_detailed_queue_messages_unacked{deployment_environment=~\"$deployment_environment\"})", "legendFormat": "unacked {{queue}}" }
+      ]
+    },
+    {
+      "id": 6, "title": "Consumers by queue", "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "sum by (queue) (rabbitmq_detailed_queue_consumers{deployment_environment=~\"$deployment_environment\"})", "legendFormat": "{{queue}}" } ]
+    },
+    {
+      "id": 7, "title": "Message throughput", "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 13 },
+      "fieldConfig": { "defaults": { "unit": "mps", "custom": { "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        { "refId": "published", "expr": "sum(rate(rabbitmq_global_messages_received_total{deployment_environment=~\"$deployment_environment\"}[$__rate_interval]))", "legendFormat": "published" },
+        { "refId": "delivered", "expr": "sum(rate(rabbitmq_global_messages_delivered_total{deployment_environment=~\"$deployment_environment\"}[$__rate_interval]))", "legendFormat": "delivered" },
+        { "refId": "acked", "expr": "sum(rate(rabbitmq_global_messages_acknowledged_total{deployment_environment=~\"$deployment_environment\"}[$__rate_interval]))", "legendFormat": "acknowledged" },
+        { "refId": "redelivered", "expr": "sum(rate(rabbitmq_global_messages_redelivered_total{deployment_environment=~\"$deployment_environment\"}[$__rate_interval]))", "legendFormat": "redelivered" }
+      ]
+    },
+    {
+      "id": 8, "title": "Unroutable messages", "type": "timeseries",
+      "description": "Returned = mandatory publish bounced back to the producer (dead-letter publishes use mandatory). Dropped should stay 0.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 13 },
+      "fieldConfig": { "defaults": { "unit": "mps", "custom": { "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        { "refId": "returned", "expr": "sum(rate(rabbitmq_global_messages_unroutable_returned_total{deployment_environment=~\"$deployment_environment\"}[$__rate_interval]))", "legendFormat": "returned" },
+        { "refId": "dropped", "expr": "sum(rate(rabbitmq_global_messages_unroutable_dropped_total{deployment_environment=~\"$deployment_environment\"}[$__rate_interval]))", "legendFormat": "dropped" }
+      ]
+    },
+    { "id": 200, "type": "row", "title": "Broker", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 21 } },
+    {
+      "id": 10, "title": "Memory alarm", "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 22 },
+      "fieldConfig": { "defaults": { "unit": "short", "mappings": [ { "type": "value", "options": { "0": { "text": "OK", "color": "green" }, "1": { "text": "FIRING", "color": "red" } } } ], "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] } }, "overrides": [] },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [ { "refId": "A", "expr": "max(rabbitmq_alarms_memory_used_watermark{deployment_environment=~\"$deployment_environment\"})" } ]
+    },
+    {
+      "id": 11, "title": "Disk alarm", "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 22 },
+      "fieldConfig": { "defaults": { "unit": "short", "mappings": [ { "type": "value", "options": { "0": { "text": "OK", "color": "green" }, "1": { "text": "FIRING", "color": "red" } } } ], "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] } }, "overrides": [] },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [ { "refId": "A", "expr": "max(rabbitmq_alarms_free_disk_space_watermark{deployment_environment=~\"$deployment_environment\"})" } ]
+    },
+    {
+      "id": 12, "title": "File-descriptor alarm", "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 22 },
+      "fieldConfig": { "defaults": { "unit": "short", "mappings": [ { "type": "value", "options": { "0": { "text": "OK", "color": "green" }, "1": { "text": "FIRING", "color": "red" } } } ], "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] } }, "overrides": [] },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [ { "refId": "A", "expr": "max(rabbitmq_alarms_file_descriptor_limit{deployment_environment=~\"$deployment_environment\"})" } ]
+    },
+    {
+      "id": 13, "title": "Connections / channels / queues", "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 26 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        { "refId": "connections", "expr": "sum(rabbitmq_connections{deployment_environment=~\"$deployment_environment\"})", "legendFormat": "connections" },
+        { "refId": "channels", "expr": "sum(rabbitmq_channels{deployment_environment=~\"$deployment_environment\"})", "legendFormat": "channels" },
+        { "refId": "queues", "expr": "sum(rabbitmq_queues{deployment_environment=~\"$deployment_environment\"})", "legendFormat": "queues" }
+      ]
+    },
+    {
+      "id": 14, "title": "Memory used vs limit", "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 26 },
+      "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        { "refId": "used", "expr": "max(rabbitmq_process_resident_memory_bytes{deployment_environment=~\"$deployment_environment\"})", "legendFormat": "resident" },
+        { "refId": "limit", "expr": "max(rabbitmq_resident_memory_limit_bytes{deployment_environment=~\"$deployment_environment\"})", "legendFormat": "high watermark" }
+      ]
+    },
+    {
+      "id": 15, "title": "Disk space available vs alarm limit", "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 34 },
+      "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        { "refId": "available", "expr": "min(rabbitmq_disk_space_available_bytes{deployment_environment=~\"$deployment_environment\"})", "legendFormat": "available" },
+        { "refId": "limit", "expr": "max(rabbitmq_disk_space_available_limit_bytes{deployment_environment=~\"$deployment_environment\"})", "legendFormat": "alarm limit" }
+      ]
+    },
+    {
+      "id": 16, "title": "File descriptors", "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 34 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        { "refId": "open", "expr": "max(rabbitmq_process_open_fds{deployment_environment=~\"$deployment_environment\"})", "legendFormat": "open" },
+        { "refId": "max", "expr": "max(rabbitmq_process_max_fds{deployment_environment=~\"$deployment_environment\"})", "legendFormat": "max" }
+      ]
+    }
+  ]
+}

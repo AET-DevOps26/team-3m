@@ -246,6 +246,11 @@ upgrades and even uninstalls); the news and AI deployments read
 `RABBITMQ_PASSWORD` from that Secret, so no CI-injected RabbitMQ secret is
 needed. The management
 UI (15672) is cluster-internal only: `kubectl port-forward svc/<release>-rabbitmq 15672`.
+Metrics: `rabbitmq.metrics.enabled` (on by default) enables the
+`rabbitmq_prometheus` plugin on port 15692; the shared observability stack's
+Alloy gateway scrapes it (a NetworkPolicy opens the port to the monitoring
+namespace only when `observability.enabled`) and the **RabbitMQ** Grafana
+dashboard visualizes it.
 The queue is capped at 10,000 messages and 256 MiB with `reject-publish`; a
 positive publisher confirm plus no mandatory return is required before an
 article is marked pushed. Invalid or repeatedly failing consumer messages land
@@ -254,42 +259,6 @@ and drops its oldest entries when full. The AI consumer republishes terminal
 failures to the dead-letter exchange before acknowledging the original instead
 of adding immutable arguments to `news.articles`; a deployment after the
 producer-only version therefore does not recreate or discard that queue.
-
-## News service database
-
-The news aggregator owns a **dedicated Postgres StatefulSet, Service, Secret,
-and PVC** (see `news.db.*` values); it never connects to core's Postgres. Set
-the required `news.db.password` via secrets.yaml / `--set`, or point
-`news.db.existingSecret` at an externally managed Secret. Flyway
-inside the news service owns schema migrations. When `news.db.existingSecret`
-is managed outside Helm, bump `news.db.secretRevision` after rotating it to roll
-the database and news pods.
-
-The news Service is ClusterIP-only with no ingress route; the AI service consumes
-through RabbitMQ. Use `kubectl port-forward` to call the manual aggregation API.
-Manual aggregation requires a token carrying the `kontor-admin` realm role.
-Fresh realms define that role (preview's seeded user receives it); for an
-existing production realm, create the role if it predates this chart and assign
-it to the intended operator account before using the endpoint.
-
-## RabbitMQ
-
-The chart pulls the [CloudPirates RabbitMQ chart](https://github.com/CloudPirates-io/helm-charts)
-(official `rabbitmq` image, no CRDs) as a dependency — run
-`helm dependency build deploy/helm/kontor` before lint/template/deploy (CI does
-this automatically; `Chart.lock` is committed, `charts/` is gitignored). The
-news aggregator publishes crawled articles to the durable queue `news.articles`
-(exchange `kontor.news`); the AI service consumes from it and dead-letters
-terminal failures to `news.articles.dead`. Contract: `news/docs/asyncapi.yml`.
-
-Credentials: the subchart generates the password and Erlang cookie into the
-Secret `<release>-rabbitmq` (`helm.sh/resource-policy: keep` — values survive
-upgrades and even uninstalls); the news deployment reads `RABBITMQ_PASSWORD`
-from that Secret, so no CI-injected RabbitMQ secret is needed. The management
-UI (15672) is cluster-internal only: `kubectl port-forward svc/<release>-rabbitmq 15672`.
-The queue is capped at 10,000 messages and 256 MiB with `reject-publish`; a
-positive publisher confirm plus no mandatory return is required before an
-article is marked pushed.
 
 ## News service database
 
@@ -316,7 +285,10 @@ in this release; RabbitMQ accepts AMQP from news and AI; client/core only accept
 ingress from `ingress-nginx`; news accepts ingress from `ingress-nginx` (API docs
 only). When Keycloak is deployed it also gets locked-down
 policies (its DB accepts only Keycloak traffic; Keycloak HTTP accepts only
-ingress-nginx + core + ai + news).
+ingress-nginx + core + ai + news). When observability is enabled, the Alloy
+gateway in the monitoring namespace additionally gets scrape access to
+Keycloak's management port (9000), RabbitMQ's Prometheus port (15692), and the
+AI database's postgres_exporter port (9187).
 
 Egress is open in the reusable defaults and restricted in production/preview.
 Set `networkPolicy.restrictEgress: true` to

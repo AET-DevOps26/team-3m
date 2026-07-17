@@ -19,6 +19,8 @@ dependencies = [
     "opentelemetry-instrumentation-system-metrics>=0.50b0",
     "aio-pika>=10.0.1",
     "pgvector>=0.5.0",
+    "opentelemetry-instrumentation-aio-pika>=0.50b0",
+    "opentelemetry-instrumentation-sqlalchemy>=0.50b0",
 ]
 
 [project.scripts]

@@ -172,4 +172,3 @@ machine, override them: `NEWS_POSTGRES_PORT=15434 KEYCLOAK_PORT=18081 docker com
 
 - Retention job for old `crawled_article`/`aggregation_run` rows.
 - Cross-source dedup (same story under different URLs on multiple feeds is published twice).
-- RabbitMQ metrics into the shared LGTM stack (prometheus plugin + Alloy scrape).

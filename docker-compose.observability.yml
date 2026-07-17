@@ -59,15 +59,13 @@ services:
         condition: service_completed_successfully
     ports:
       - "127.0.0.1:${LOKI_PORT:-3100}:3100"
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3100/ready"]
-      interval: 10s
-      timeout: 3s
-      retries: 15
-      start_period: 20s
+    # No healthcheck: the image is distroless (no shell/wget), so exec-based
+    # checks can never pass; dependents wait on service_started and retry.
 
   tempo:
-    image: grafana/tempo:3.0.2
+    # Must stay on the same major as images.tempo in deploy/helm/observability/values.yaml:
+    # files/tempo/tempo.yaml is shared and uses the Tempo 2.x config format.
+    image: grafana/tempo:2.10.7
     command: ["-config.file=/etc/tempo/tempo.yaml", "-config.expand-env=true"]
     environment:
       S3_ACCESS_KEY: observability
@@ -80,12 +78,8 @@ services:
         condition: service_completed_successfully
     ports:
       - "127.0.0.1:${TEMPO_PORT:-3200}:3200"
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3200/ready"]
-      interval: 10s
-      timeout: 3s
-      retries: 15
-      start_period: 20s
+    # No healthcheck: the image is distroless (no shell/wget), so exec-based
+    # checks can never pass; dependents wait on service_started and retry.
 
   prometheus:
     image: prom/prometheus:v3.13.1
@@ -119,14 +113,16 @@ services:
       - ./deploy/helm/observability/files/alloy/gateway/receivers.alloy:/etc/alloy-config/receivers.alloy:ro
       - ./deploy/helm/observability/files/alloy/gateway/exporters.alloy:/etc/alloy-config/exporters.alloy:ro
       - ./deploy/helm/observability/files/alloy/compose/keycloak-scrape.alloy:/etc/alloy-config/keycloak-scrape.alloy:ro
+      - ./deploy/helm/observability/files/alloy/compose/rabbitmq-scrape.alloy:/etc/alloy-config/rabbitmq-scrape.alloy:ro
+      - ./deploy/helm/observability/files/alloy/compose/ai-db-scrape.alloy:/etc/alloy-config/ai-db-scrape.alloy:ro
       - ./deploy/helm/observability/files/alloy/compose/docker-logs.alloy:/etc/alloy-config/docker-logs.alloy:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - alloy_data:/var/lib/alloy/data
     depends_on:
       loki:
-        condition: service_healthy
+        condition: service_started
       tempo:
-        condition: service_healthy
+        condition: service_started
       prometheus:
         condition: service_healthy
     ports:
@@ -134,6 +130,16 @@ services:
       - "127.0.0.1:${OTLP_HTTP_PORT:-4318}:4318"
       - "127.0.0.1:${FARO_PORT:-12347}:12347"
       - "127.0.0.1:${ALLOY_UI_PORT:-12345}:12345"
+
+  ai-db-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:v0.17.1
+    environment:
+      DATA_SOURCE_URI: "ai-db:5432/${AI_POSTGRES_DB:-kontor_ai}?sslmode=disable"
+      DATA_SOURCE_USER: "${AI_POSTGRES_USER:-kontor_ai}"
+      DATA_SOURCE_PASS: "${AI_POSTGRES_PASSWORD:-change-me-local}"
+    depends_on:
+      ai-db:
+        condition: service_healthy
 
   grafana:
     image: grafana/grafana:13.1.0
@@ -153,9 +159,9 @@ services:
       prometheus:
         condition: service_healthy
       loki:
-        condition: service_healthy
+        condition: service_started
       tempo:
-        condition: service_healthy
+        condition: service_started
     ports:
       - "127.0.0.1:${GRAFANA_PORT:-3001}:3000"
 
@@ -180,6 +186,9 @@ services:
       OTEL_PYTHON_LOG_CORRELATION: "true"
       # Don't trace health probes at all (avoids orphaned ASGI child spans).
       OTEL_PYTHON_EXCLUDED_URLS: "health"
+      # Stable HTTP semconv so the ASGI instrumentation emits
+      # http_server_request_duration_seconds like the Java agent does.
+      OTEL_SEMCONV_STABILITY_OPT_IN: "http"
 
   keycloak:
     environment:

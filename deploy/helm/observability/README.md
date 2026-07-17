@@ -26,14 +26,19 @@ chart falls back to placeholder credentials for the cluster-internal SeaweedFS),
 | **Tempo** | Traces + span-metrics/service-graph generator | S3 → SeaweedFS + WAL PVC |
 | **Prometheus** | Metrics (remote-write receiver) | PVC |
 | **Grafana** | Dashboards, provisioned datasources + dashboards | PVC + ingress |
-| **Alloy (gateway)** | OTLP receiver → Tempo/Loki/Prometheus; scrapes Keycloak `/metrics` | — |
+| **Alloy (gateway)** | OTLP receiver → Tempo/Loki/Prometheus; scrapes Keycloak, RabbitMQ, and the AI Postgres exporter | — |
 | **Alloy (logs)** | Tails pod logs via the Kubernetes API → Loki | — |
 
 ## Signal flow
 
 - **Traces** — apps push OTLP → Alloy gateway → Tempo.
 - **Metrics** — core/news/ai push OTLP → Alloy → Prometheus remote-write; Keycloak's
-  built-in Micrometer `/metrics` (mgmt port 9000) is scraped by Alloy.
+  built-in Micrometer `/metrics` (mgmt port 9000) is scraped by Alloy, as are
+  RabbitMQ's `rabbitmq_prometheus` endpoints (15692, aggregated `/metrics` plus
+  per-queue `/metrics/detailed`) and the AI database's postgres_exporter sidecar
+  (9187, pgvector embedding store). The scrape jobs live in
+  `files/alloy/k8s-gateway/` (pod discovery, k8s) and `files/alloy/compose/`
+  (static targets, local).
 - **Logs** — the Alloy log collector reads pod logs through the Kubernetes API (no
   hostPath / no `/var/log` mount), labels them `deployment_environment`, `service`,
   `namespace`, `pod`, `container`, and writes to Loki. Apps print `trace_id` in log
@@ -47,6 +52,23 @@ apps    ──OTLP──▶ alloy(gateway) ──▶ Tempo / Loki / Prometheus �
 pods    ──k8s API──▶ alloy(logs) ───────────────────────────────▶ Loki ─┘
 browser ──Faro──▶ alloy(gateway:/collect) ──▶ Tempo (traces) + Loki (logs)
 ```
+
+## Dashboards
+
+Provisioned from `files/grafana/dashboards/json/` into the **Kontor** folder
+(shared by k8s and the local compose overlay); every dashboard filters on the
+`deployment_environment` variable:
+
+| Dashboard | Covers |
+|-----------|--------|
+| **Services Overview** | Request rate / error ratio / p95 per service (span metrics — any service that sends traces) |
+| **Traces** | RED stats, service graph, top operations, recent (error) traces |
+| **Logs** | Log volume + live tail with per-service filter and text search |
+| **Microservices — JVM & HTTP** | HTTP metrics for all OTLP backends (core, news, ai); JVM rows for the Java services |
+| **News Pipeline & Embedding Store** | AI news ingest (consume outcomes, embedding latency, queue backlog) + pgvector Postgres health via postgres_exporter |
+| **RabbitMQ** | news.articles queue depth/consumers, throughput, broker alarms/resources |
+| **Keycloak** | HTTP + JVM (Micrometer) for the auth server |
+| **Client Metrics** | Browser RUM: JS errors, Web Vitals, client span latency (Faro) |
 
 ## Retention (auto, strict for PRs)
 

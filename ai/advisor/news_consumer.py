@@ -3,6 +3,7 @@ import hashlib
 import json
 import logging
 import re
+import time
 from datetime import datetime
 
 import aio_pika
@@ -11,6 +12,13 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from .config import Settings
 from .db import session_factory
 from .embeddings import EmbeddingProvider, embed_text, resolve_embedding_provider
+from .metrics import (
+    OUTCOME_DEAD_LETTERED,
+    OUTCOME_INVALID,
+    OUTCOME_RETRIED,
+    OUTCOME_STORED,
+    news_ingest_metrics,
+)
 from .openai_client import MAX_RETRIES, REQUEST_TIMEOUT_SECONDS
 from .repository import save_news_article
 
@@ -57,7 +65,9 @@ async def _store(provider: EmbeddingProvider, news: NewsMessage, raw: dict) -> N
     title = sanitize(news.title)
     content = sanitize(news.content_text or news.summary or "")
     embed_input = f"{title}\n\n{content}".strip()
+    started = time.perf_counter()
     embedding = await asyncio.wait_for(embed_text(provider, embed_input), timeout=EMBEDDING_TIMEOUT_SECONDS)
+    news_ingest_metrics.record_embedding_duration(time.perf_counter() - started, model=provider.model)
     async with session_factory() as session:
         await save_news_article(
             session,
@@ -81,7 +91,8 @@ async def _dead_letter(
     exchange: aio_pika.abc.AbstractExchange,
     routing_key: str,
     reason: str,
-) -> None:
+) -> bool:
+    """Dead-letter ``message``; returns False when the publish failed and the message was requeued instead."""
     dead_letter = aio_pika.Message(
         body=message.body,
         content_type="application/json",
@@ -98,8 +109,9 @@ async def _dead_letter(
         # bounded only by this sleep. Add a redelivery cap / alert if the DLX can stay broken.
         await asyncio.sleep(TRANSIENT_BACKOFF_SECONDS)
         await message.nack(requeue=True)
-        return
+        return False
     await message.ack()
+    return True
 
 
 async def handle_message(
@@ -113,12 +125,14 @@ async def handle_message(
         news = NewsMessage.model_validate(payload)
     except (json.JSONDecodeError, UnicodeDecodeError, ValidationError, TypeError) as exc:
         logger.warning("Dead-lettering unparsable news message: %s", exc)
-        await _dead_letter(message, dead_letter_exchange, dead_letter_routing_key, "invalid-message")
+        dead_lettered = await _dead_letter(message, dead_letter_exchange, dead_letter_routing_key, "invalid-message")
+        news_ingest_metrics.record_consumed(OUTCOME_INVALID if dead_lettered else OUTCOME_RETRIED)
         return
 
     try:
         await _store(provider, news, payload)
         await message.ack()
+        news_ingest_metrics.record_consumed(OUTCOME_STORED)
     except Exception as exc:
         # ponytail: `redelivered` doubles as our retry counter, but connect_robust also sets it after
         # a connection drop, so an in-flight message during an infra blip is dead-lettered (to the
@@ -126,9 +140,13 @@ async def handle_message(
         # producer adopts one.
         if message.redelivered:
             logger.error("News message failed after redelivery; dead-lettering", exc_info=exc)
-            await _dead_letter(message, dead_letter_exchange, dead_letter_routing_key, "processing-failed")
+            dead_lettered = await _dead_letter(
+                message, dead_letter_exchange, dead_letter_routing_key, "processing-failed"
+            )
+            news_ingest_metrics.record_consumed(OUTCOME_DEAD_LETTERED if dead_lettered else OUTCOME_RETRIED)
             return
         logger.error("News message processing failed; retrying once", exc_info=exc)
+        news_ingest_metrics.record_consumed(OUTCOME_RETRIED)
         await asyncio.sleep(TRANSIENT_BACKOFF_SECONDS)
         await message.nack(requeue=True)
 

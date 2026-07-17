@@ -128,6 +128,8 @@ spec:
 ---
 # RabbitMQ (subchart pods): AMQP (5672) only from the news producer and the AI
 # consumer. The management UI (15672) stays cluster-internal (kubectl port-forward).
+# The Prometheus endpoint (15692) opens only to the Alloy collector in the
+# monitoring namespace when observability is enabled.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -155,6 +157,18 @@ spec:
       ports:
         - protocol: TCP
           port: 5672
+    {{- if and .Values.observability.enabled .Values.rabbitmq.metrics.enabled }}
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.observability.collectorNamespace }}
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: alloy-gateway
+      ports:
+        - protocol: TCP
+          port: 15692
+    {{- end }}
 ---
 # News: ingress from ingress-nginx only, for the public API (/api/v1/news) and
 # API-docs paths routed through the ingress (in-cluster consumers get added
@@ -432,6 +446,8 @@ spec:
   {{- end }}
 ---
 # AI DB: only accept traffic from the AI service (migrations run as an AI init container).
+# The postgres_exporter sidecar (9187) opens only to the Alloy collector in the
+# monitoring namespace when observability is enabled.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -455,6 +471,18 @@ spec:
       ports:
         - protocol: TCP
           port: 5432
+    {{- if and .Values.observability.enabled .Values.ai.db.metrics.enabled }}
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.observability.collectorNamespace }}
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: alloy-gateway
+      ports:
+        - protocol: TCP
+          port: 9187
+    {{- end }}
 {{- if .Values.keycloak.deploy }}
 {{- if eq .Values.keycloak.database "postgres" }}
 ---

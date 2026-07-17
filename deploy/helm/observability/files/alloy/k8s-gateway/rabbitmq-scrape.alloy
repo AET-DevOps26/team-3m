@@ -1,0 +1,68 @@
+discovery.kubernetes "rabbitmq" {
+  role = "pod"
+
+  selectors {
+    role  = "pod"
+    label = "app.kubernetes.io/name=rabbitmq"
+  }
+}
+
+discovery.relabel "rabbitmq" {
+  targets = discovery.kubernetes.rabbitmq.targets
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_number"]
+    regex         = "15692"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    regex         = "team-3m(-pr-.+)?"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    regex         = "team-3m"
+    target_label  = "deployment_environment"
+    replacement   = "prod"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    regex         = "team-3m-pr-(.+)"
+    target_label  = "deployment_environment"
+    replacement   = "pr-$1"
+  }
+
+  rule {
+    target_label = "service"
+    replacement  = "rabbitmq"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label  = "namespace"
+  }
+}
+
+prometheus.scrape "rabbitmq" {
+  targets         = discovery.relabel.rabbitmq.output
+  metrics_path    = "/metrics"
+  scrape_interval = "30s"
+  forward_to      = [prometheus.remote_write.default.receiver]
+}
+
+// Per-queue depth/consumer gauges (rabbitmq_detailed_queue_*); the aggregated
+// /metrics endpoint has no per-queue labels.
+prometheus.scrape "rabbitmq_detailed" {
+  targets         = discovery.relabel.rabbitmq.output
+  metrics_path    = "/metrics/detailed"
+  scrape_interval = "30s"
+  forward_to      = [prometheus.remote_write.default.receiver]
+
+  params = {
+    "family" = ["queue_coarse_metrics", "queue_consumer_count"],
+  }
+}

@@ -1,0 +1,11 @@
+prometheus.scrape "ai_db" {
+  targets = [{
+    "__address__"            = "ai-db-exporter:9187",
+    "service"                = "kontor-ai-db",
+    "deployment_environment" = "local",
+  }]
+
+  metrics_path    = "/metrics"
+  scrape_interval = "15s"
+  forward_to      = [prometheus.remote_write.default.receiver]
+}

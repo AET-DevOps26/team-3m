@@ -131,7 +131,11 @@ redeploy on demand, no versioning). PR deploy/teardown never touches it.
 - **Signals**: core/news/ai/client/keycloak send **traces** (the client ships them via
   Faro → the Alloy `faro.receiver` → Tempo); service **logs** are collected from pod
   stdout by the Alloy log collector via the Kubernetes API, and Faro also ships
-  browser logs/Web-Vitals to Loki; **metrics** come from core, news, ai, and Keycloak.
+  browser logs/Web-Vitals to Loki; **metrics** come from core, news, ai, and Keycloak,
+  plus Alloy-scraped RabbitMQ (`rabbitmq_prometheus`, port 15692) and the AI
+  Postgres/pgvector `postgres_exporter` sidecar (port 9187). The ai service also
+  emits custom news-ingest metrics (`kontor_news_messages_consumed_total`,
+  `kontor_news_embedding_duration_seconds`).
 - **Filtering**: every signal is tagged `deployment_environment` (`prod`, `pr-<N>`,
   `local`) + `service`, so one Grafana variable switches across environments.
 - **Retention** (auto, strict for PRs): Loki per-stream prod 30d / pr 48h / default

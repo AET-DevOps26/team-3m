@@ -1,0 +1,132 @@
+{
+  "uid": "kontor-news-pipeline",
+  "title": "News Pipeline & Embedding Store",
+  "tags": ["kontor", "news", "ai", "pgvector"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "deployment_environment",
+        "label": "Environment",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "query": "label_values({__name__=~\"pg_up|kontor_news_messages_consumed_total\"}, deployment_environment)",
+        "includeAll": true,
+        "multi": true,
+        "refresh": 2,
+        "sort": 1
+      }
+    ]
+  },
+  "panels": [
+    { "id": 100, "type": "row", "title": "Ingest (kontor-ai news consumer)", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 } },
+    {
+      "id": 1, "title": "Messages consumed by outcome", "type": "timeseries",
+      "description": "Handling outcomes of news.articles messages: stored, retried, invalid (unparsable), dead_lettered.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 1 },
+      "fieldConfig": { "defaults": { "unit": "mps", "custom": { "fillOpacity": 10, "stacking": { "mode": "normal" } } }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "sum by (outcome) (rate(kontor_news_messages_consumed_total{deployment_environment=~\"$deployment_environment\"}[$__rate_interval]))", "legendFormat": "{{outcome}}" } ]
+    },
+    {
+      "id": 2, "title": "Embedding latency p50 / p95", "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 1 },
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "fillOpacity": 5 } }, "overrides": [] },
+      "targets": [
+        { "refId": "p50", "expr": "histogram_quantile(0.50, sum by (model, le) (rate(kontor_news_embedding_duration_seconds_bucket{deployment_environment=~\"$deployment_environment\"}[$__rate_interval])))", "legendFormat": "p50 {{model}}" },
+        { "refId": "p95", "expr": "histogram_quantile(0.95, sum by (model, le) (rate(kontor_news_embedding_duration_seconds_bucket{deployment_environment=~\"$deployment_environment\"}[$__rate_interval])))", "legendFormat": "p95 {{model}}" }
+      ]
+    },
+    {
+      "id": 3, "title": "Queue backlog (news.articles)", "type": "timeseries",
+      "description": "Ready messages waiting in the broker; a growing backlog with 0 consumers means ingest has stalled.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 9 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        { "refId": "ready", "expr": "sum(rabbitmq_detailed_queue_messages_ready{deployment_environment=~\"$deployment_environment\", queue=\"news.articles\"})", "legendFormat": "ready" },
+        { "refId": "consumers", "expr": "sum(rabbitmq_detailed_queue_consumers{deployment_environment=~\"$deployment_environment\", queue=\"news.articles\"})", "legendFormat": "consumers" }
+      ]
+    },
+    {
+      "id": 4, "title": "Ingest failures", "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 9 },
+      "fieldConfig": { "defaults": { "unit": "mps", "custom": { "fillOpacity": 10 }, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 0.1 } ] } }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "sum by (outcome) (rate(kontor_news_messages_consumed_total{deployment_environment=~\"$deployment_environment\", outcome!=\"stored\"}[$__rate_interval]))", "legendFormat": "{{outcome}}" } ]
+    },
+    { "id": 200, "type": "row", "title": "Embedding store (pgvector)", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 17 } },
+    {
+      "id": 10, "title": "DB up", "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 18 },
+      "fieldConfig": { "defaults": { "unit": "short", "noValue": "down", "mappings": [ { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } } ], "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] } }, "overrides": [] },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [ { "refId": "A", "expr": "min(pg_up{deployment_environment=~\"$deployment_environment\", service=\"kontor-ai-db\"})" } ]
+    },
+    {
+      "id": 11, "title": "DB size", "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 18 },
+      "fieldConfig": { "defaults": { "unit": "bytes", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [ { "refId": "A", "expr": "max(pg_database_size_bytes{deployment_environment=~\"$deployment_environment\", service=\"kontor-ai-db\", datname!~\"template.*|postgres\"})" } ]
+    },
+    {
+      "id": 12, "title": "Backends", "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 18 },
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [ { "refId": "A", "expr": "sum(pg_stat_database_numbackends{deployment_environment=~\"$deployment_environment\", service=\"kontor-ai-db\", datname!~\"template.*|postgres\"})" } ]
+    },
+    {
+      "id": 13, "title": "Deadlocks (rate)", "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 18 },
+      "fieldConfig": { "defaults": { "unit": "short", "noValue": "0", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 0.01 } ] } }, "overrides": [] },
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [ { "refId": "A", "expr": "sum(rate(pg_stat_database_deadlocks{deployment_environment=~\"$deployment_environment\", service=\"kontor-ai-db\", datname!~\"template.*|postgres\"}[$__rate_interval]))" } ]
+    },
+    {
+      "id": 14, "title": "DB size over time", "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 22 },
+      "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "max by (datname) (pg_database_size_bytes{deployment_environment=~\"$deployment_environment\", service=\"kontor-ai-db\", datname!~\"template.*|postgres\"})", "legendFormat": "{{datname}}" } ]
+    },
+    {
+      "id": 15, "title": "Tuple writes (article ingest)", "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 22 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        { "refId": "inserted", "expr": "sum(rate(pg_stat_database_tup_inserted{deployment_environment=~\"$deployment_environment\", service=\"kontor-ai-db\", datname!~\"template.*|postgres\"}[$__rate_interval]))", "legendFormat": "inserted/s" },
+        { "refId": "updated", "expr": "sum(rate(pg_stat_database_tup_updated{deployment_environment=~\"$deployment_environment\", service=\"kontor-ai-db\", datname!~\"template.*|postgres\"}[$__rate_interval]))", "legendFormat": "updated/s" },
+        { "refId": "deleted", "expr": "sum(rate(pg_stat_database_tup_deleted{deployment_environment=~\"$deployment_environment\", service=\"kontor-ai-db\", datname!~\"template.*|postgres\"}[$__rate_interval]))", "legendFormat": "deleted/s (retention)" }
+      ]
+    },
+    {
+      "id": 16, "title": "Transactions", "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 30 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        { "refId": "commit", "expr": "sum(rate(pg_stat_database_xact_commit{deployment_environment=~\"$deployment_environment\", service=\"kontor-ai-db\", datname!~\"template.*|postgres\"}[$__rate_interval]))", "legendFormat": "commit/s" },
+        { "refId": "rollback", "expr": "sum(rate(pg_stat_database_xact_rollback{deployment_environment=~\"$deployment_environment\", service=\"kontor-ai-db\", datname!~\"template.*|postgres\"}[$__rate_interval]))", "legendFormat": "rollback/s" }
+      ]
+    },
+    {
+      "id": 17, "title": "Cache hit ratio", "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 30 },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1, "custom": { "fillOpacity": 10 }, "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 0.9 } ] } }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "sum(rate(pg_stat_database_blks_hit{deployment_environment=~\"$deployment_environment\", service=\"kontor-ai-db\", datname!~\"template.*|postgres\"}[$__rate_interval])) / clamp_min(sum(rate(pg_stat_database_blks_hit{deployment_environment=~\"$deployment_environment\", service=\"kontor-ai-db\", datname!~\"template.*|postgres\"}[$__rate_interval])) + sum(rate(pg_stat_database_blks_read{deployment_environment=~\"$deployment_environment\", service=\"kontor-ai-db\", datname!~\"template.*|postgres\"}[$__rate_interval])), 0.000001)", "legendFormat": "hit ratio" } ]
+    }
+  ]
+}

@@ -11,6 +11,10 @@ data:
 {{ .Files.Get "files/alloy/gateway/exporters.alloy" | indent 4 }}
   keycloak-scrape.alloy: |
 {{ .Files.Get "files/alloy/k8s-gateway/keycloak-scrape.alloy" | indent 4 }}
+  rabbitmq-scrape.alloy: |
+{{ .Files.Get "files/alloy/k8s-gateway/rabbitmq-scrape.alloy" | indent 4 }}
+  ai-db-scrape.alloy: |
+{{ .Files.Get "files/alloy/k8s-gateway/ai-db-scrape.alloy" | indent 4 }}
 ---
 apiVersion: v1
 kind: Service
@@ -43,7 +47,7 @@ spec:
       labels:
         {{- include "obs.componentLabels" (dict "root" . "component" "alloy-gateway") | nindent 8 }}
       annotations:
-        checksum/config: {{ printf "%s%s%s" (.Files.Get "files/alloy/gateway/receivers.alloy") (.Files.Get "files/alloy/gateway/exporters.alloy") (.Files.Get "files/alloy/k8s-gateway/keycloak-scrape.alloy") | sha256sum }}
+        checksum/config: {{ printf "%s%s%s%s%s" (.Files.Get "files/alloy/gateway/receivers.alloy") (.Files.Get "files/alloy/gateway/exporters.alloy") (.Files.Get "files/alloy/k8s-gateway/keycloak-scrape.alloy") (.Files.Get "files/alloy/k8s-gateway/rabbitmq-scrape.alloy") (.Files.Get "files/alloy/k8s-gateway/ai-db-scrape.alloy") | sha256sum }}
     spec:
       serviceAccountName: alloy
       securityContext:

@@ -205,6 +205,11 @@ news:
 rabbitmq:
   auth:
     username: news
+  # Enables the rabbitmq_prometheus plugin and exposes port 15692 on the pod and
+  # Service; the shared observability stack's Alloy gateway scrapes it (both the
+  # aggregated /metrics and per-queue /metrics/detailed endpoints).
+  metrics:
+    enabled: true
   replicaCount: 1
   persistence:
     enabled: true
@@ -275,6 +280,22 @@ ai:
     password: ""
     # Existing Secret with keys: POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD, DATABASE_URL.
     existingSecret: ""
+    # postgres_exporter sidecar (port 9187) so the embedding store (pgvector)
+    # shows up in the shared observability stack. Scraped by the Alloy gateway.
+    metrics:
+      enabled: true
+      image:
+        registry: quay.io
+        repository: prometheuscommunity/postgres-exporter
+        tag: "v0.17.1"
+        pullPolicy: ""
+      resources:
+        requests:
+          cpu: 10m
+          memory: 32Mi
+        limits:
+          cpu: 100m
+          memory: 64Mi
     persistence:
       enabled: true
       size: 8Gi

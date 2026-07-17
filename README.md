@@ -250,8 +250,10 @@ Alloy OTLP gateway serves all environments (prod and every PR preview). It has
 its own chart ([`deploy/helm/observability/`](deploy/helm/observability/README.md)),
 namespace (`team-3m-monitoring`), and `workflow_dispatch` workflow
 (`.github/workflows/observability.yml`) — PR deploy/teardown never touches it.
-Core and the AI service push traces/metrics via OTel, the client ships browser
-RUM via Grafana Faro, and pod logs are collected into Loki. Every signal is
+The core, news, and AI services push traces/metrics via OTel, the client ships
+browser RUM via Grafana Faro, and pod logs are collected into Loki. Alloy also
+scrapes Keycloak, the RabbitMQ broker (`rabbitmq_prometheus`), and the AI
+database's postgres_exporter (pgvector embedding store). Every signal is
 tagged with `deployment_environment`, so one Grafana variable switches between
 environments.
 

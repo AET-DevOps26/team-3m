@@ -111,6 +111,10 @@ spec:
             # Don't trace health probes at all (avoids orphaned ASGI child spans).
             - name: OTEL_PYTHON_EXCLUDED_URLS
               value: "health"
+            # Stable HTTP semconv so the ASGI instrumentation emits
+            # http_server_request_duration_seconds like the Java agent does.
+            - name: OTEL_SEMCONV_STABILITY_OPT_IN
+              value: "http"
             {{- else }}
             # The image always launches via opentelemetry-instrument; disable the SDK
             # when no collector is wired so it stays a no-op.

@@ -154,7 +154,12 @@ The consumer runs in the API process and remains isolated from recommendation se
 ## Observability
 
 The service is instrumented with `opentelemetry-distro` /
-`opentelemetry-instrument` (FastAPI + logging instrumentation); in deployments
-with observability enabled, traces and metrics are pushed via OTLP to the
-shared LGTM stack. See
+`opentelemetry-instrument` (FastAPI, logging, aio-pika, and SQLAlchemy
+instrumentation); in deployments with observability enabled, traces and
+metrics are pushed via OTLP to the shared LGTM stack. The news consumer also
+emits custom ingest metrics — `kontor_news_messages_consumed_total`
+(labeled by outcome: `stored`, `retried`, `invalid`, `dead_lettered`) and the
+`kontor_news_embedding_duration_seconds` histogram (labeled by embedding
+model) — visualized in the **News Pipeline & Embedding Store** Grafana
+dashboard alongside postgres_exporter metrics from the pgvector database. See
 [`deploy/helm/observability/README.md`](../deploy/helm/observability/README.md).

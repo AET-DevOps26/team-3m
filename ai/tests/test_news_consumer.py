@@ -260,3 +260,73 @@ async def test_open_channel_raises_for_unroutable_mandatory_publish() -> None:
 
     assert channel == "channel"
     connection.channel.assert_awaited_once_with(publisher_confirms=True, on_return_raises=True)
+
+
+# --- ingest metrics ------------------------------------------------------------------
+
+
+def _capture_metrics(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    captured = MagicMock()
+    monkeypatch.setattr(nc, "news_ingest_metrics", captured)
+    return captured
+
+
+async def test_handle_message_records_stored_outcome(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured = _capture_metrics(monkeypatch)
+    monkeypatch.setattr(nc, "_store", AsyncMock())
+
+    await nc.handle_message(_provider(), _message(json.dumps(PRODUCER_MESSAGE).encode()), _exchange(), "dead.route")
+
+    captured.record_consumed.assert_called_once_with(nc.OUTCOME_STORED)
+
+
+async def test_handle_message_records_invalid_outcome(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured = _capture_metrics(monkeypatch)
+
+    await nc.handle_message(_provider(), _message(b"{not valid json"), _exchange(), "dead.route")
+
+    captured.record_consumed.assert_called_once_with(nc.OUTCOME_INVALID)
+
+
+async def test_handle_message_records_retried_when_dead_letter_publish_fails(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured = _capture_metrics(monkeypatch)
+    monkeypatch.setattr(nc.asyncio, "sleep", AsyncMock())
+    exchange = MagicMock()
+    exchange.publish = AsyncMock(side_effect=RuntimeError("broker gone"))
+
+    await nc.handle_message(_provider(), _message(b"{not valid json"), exchange, "dead.route")
+
+    captured.record_consumed.assert_called_once_with(nc.OUTCOME_RETRIED)
+
+
+async def test_handle_message_records_retried_then_dead_lettered(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured = _capture_metrics(monkeypatch)
+    monkeypatch.setattr(nc, "_store", AsyncMock(side_effect=RuntimeError("boom")))
+    monkeypatch.setattr(nc.asyncio, "sleep", AsyncMock())
+
+    first_delivery = _message(json.dumps(PRODUCER_MESSAGE).encode())
+    await nc.handle_message(_provider(), first_delivery, _exchange(), "dead.route")
+
+    redelivery = _message(json.dumps(PRODUCER_MESSAGE).encode())
+    redelivery.redelivered = True
+    await nc.handle_message(_provider(), redelivery, _exchange(), "dead.route")
+
+    assert [call.args[0] for call in captured.record_consumed.call_args_list] == [
+        nc.OUTCOME_RETRIED,
+        nc.OUTCOME_DEAD_LETTERED,
+    ]
+
+
+async def test_store_records_embedding_duration(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured = _capture_metrics(monkeypatch)
+    monkeypatch.setattr(nc, "save_news_article", AsyncMock())
+    monkeypatch.setattr(nc, "embed_text", AsyncMock(return_value=[0.1]))
+    monkeypatch.setattr(nc, "session_factory", lambda: _FakeSession())
+    news = nc.NewsMessage.model_validate(PRODUCER_MESSAGE)
+
+    await nc._store(_provider(), news, {"raw": True})
+
+    captured.record_embedding_duration.assert_called_once()
+    seconds = captured.record_embedding_duration.call_args.args[0]
+    assert seconds >= 0
+    assert captured.record_embedding_duration.call_args.kwargs["model"] == "test-embed"

@@ -1,0 +1,55 @@
+discovery.kubernetes "ai_db" {
+  role = "pod"
+
+  selectors {
+    role  = "pod"
+    label = "app.kubernetes.io/component=ai-db"
+  }
+}
+
+discovery.relabel "ai_db" {
+  targets = discovery.kubernetes.ai_db.targets
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_number"]
+    regex         = "9187"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    regex         = "team-3m(-pr-.+)?"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    regex         = "team-3m"
+    target_label  = "deployment_environment"
+    replacement   = "prod"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    regex         = "team-3m-pr-(.+)"
+    target_label  = "deployment_environment"
+    replacement   = "pr-$1"
+  }
+
+  rule {
+    target_label = "service"
+    replacement  = "kontor-ai-db"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label  = "namespace"
+  }
+}
+
+prometheus.scrape "ai_db" {
+  targets         = discovery.relabel.ai_db.output
+  metrics_path    = "/metrics"
+  scrape_interval = "30s"
+  forward_to      = [prometheus.remote_write.default.receiver]
+}

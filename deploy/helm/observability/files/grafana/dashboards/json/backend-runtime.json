@@ -1,6 +1,7 @@
 {
   "uid": "kontor-backend-runtime",
   "title": "Microservices \u2014 JVM & HTTP",
+  "description": "HTTP panels cover every OTLP backend (core, news, ai); the JVM rows only have data for the Java services.",
   "tags": [
     "kontor",
     "jvm",
@@ -25,7 +26,7 @@
           "type": "prometheus",
           "uid": "prometheus"
         },
-        "query": "label_values(jvm_thread_count, deployment_environment)",
+        "query": "label_values(http_server_request_duration_seconds_count, deployment_environment)",
         "includeAll": true,
         "multi": true,
         "refresh": 2,
@@ -39,7 +40,7 @@
           "type": "prometheus",
           "uid": "prometheus"
         },
-        "query": "label_values(jvm_thread_count{deployment_environment=~\"$deployment_environment\"}, service)",
+        "query": "label_values(http_server_request_duration_seconds_count{deployment_environment=~\"$deployment_environment\"}, service)",
         "includeAll": true,
         "multi": true,
         "refresh": 2,

@@ -170,6 +170,8 @@ root-only file, and loses Key Vault access again before Compose starts.
 
 The app is available at `https://azure.kontor.live` once Traefik has issued the TLS certificate (first start can take ~30 s).
 
+When `AZURE_KEYCLOAK_SEED_DEV_USER` is `true`, a demo login is seeded: username `dev`, password `kontor-dev` (from the `AZURE_KEYCLOAK_DEV_PASSWORD` secret).
+
 > Pinning to a different domain? Set `DOMAIN` in `.env` accordingly and add a
 > CNAME for it pointing at the Azure FQDN before bringing the stack up —
 > Keycloak's realm import and the Traefik routers all read this single variable.

@@ -2,7 +2,7 @@
 #
 #   docker compose -f docker-compose.yml -f docker-compose.local-llm.yml up --build
 #
-# Use this when you don't have a LOGOS_API_KEY and don't want to run Ollama natively.
+# Use this when you don't have an AI_API_KEY and don't want to run Ollama natively.
 # It runs Ollama in a container, pulls the model once into a named volume, and points the
 # ai service at it over the internal network. Note: containerized Ollama on macOS is
 # CPU-only (no Metal passthrough), so a native host Ollama is much faster — see the README.

@@ -17,12 +17,12 @@ class LlmProvider:
 
 
 def resolve_llm_provider(settings: Settings) -> LlmProvider | None:
-    """Logos when a key is set, else local Ollama when configured, else None (feature off)."""
-    if settings.logos_api_key:
-        logger.info("LLM provider: logos (%s)", settings.logos_model)
+    """Use the hosted provider when keyed, else local Ollama when configured."""
+    if settings.ai_api_key:
+        logger.info("LLM provider: hosted (%s)", settings.ai_chat_model)
         return LlmProvider(
-            client=shared_async_openai(api_key=settings.logos_api_key, base_url=settings.logos_base_url),
-            model=settings.logos_model,
+            client=shared_async_openai(api_key=settings.ai_api_key, base_url=settings.ai_base_url),
+            model=settings.ai_chat_model,
             is_local=False,
         )
 

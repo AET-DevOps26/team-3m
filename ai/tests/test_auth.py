@@ -8,7 +8,7 @@ from jwt.exceptions import InvalidTokenError
 from advisor.auth import require_authenticated_user
 from advisor.config import Settings
 
-SETTINGS = Settings(logos_api_key="lg-test")
+SETTINGS = Settings(ai_api_key="hosted-test")
 CREDENTIALS = HTTPAuthorizationCredentials(scheme="Bearer", credentials="a.b.c")
 
 

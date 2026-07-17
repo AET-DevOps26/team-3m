@@ -101,9 +101,9 @@ function RecommendationResult({ result }: { result: RecommendationResponse }) {
       <p className="text-sm leading-relaxed text-muted-foreground">
         {result.rationale}
       </p>
-      {result.news_summary && (
+      {(result.news_summary || (result.news_references?.length ?? 0) > 0) && (
         <NewsSummary
-          summary={result.news_summary}
+          summary={result.news_summary ?? ""}
           references={result.news_references ?? []}
         />
       )}
@@ -127,9 +127,11 @@ function NewsSummary({
       <Separator />
       <div className="space-y-2">
         <p className="text-sm font-medium">In the news</p>
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          {summary}
-        </p>
+        {summary && (
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {summary}
+          </p>
+        )}
         {references.length > 0 && (
           <ul className="space-y-1">
             {references.map((reference) => (

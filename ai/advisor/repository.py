@@ -7,6 +7,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .models import NewsArticle, Recommendation
 
+# ponytail: lenient cosine-distance cut (pgvector 0=identical, 2=opposite) so clearly
+# unrelated news is not grounded as evidence. Tune against real embeddings if recall suffers.
+MAX_NEWS_COSINE_DISTANCE = 0.6
+
 
 async def save_recommendation(
     session: AsyncSession,
@@ -99,11 +103,9 @@ async def find_relevant_news(
     found: dict = {}
 
     if symbols:
-        # Deliberate interim no-op today: _store persists symbols=[] until the aggregator
-        # emits ticker tags, so this branch matches nothing yet. The semantic path below is
-        # the live retrieval mechanism; symbol match goes live once articles carry symbols.
-        # ponytail: unindexed jsonb-overlap filter; symbols are stored uppercased, so no
-        # per-row normalization. Add a default-jsonb_ops GIN on (symbols::jsonb) if volume grows.
+        # ponytail: dead until the news aggregator emits ticker tags — _store persists symbols=[],
+        # so this branch matches no rows today. Unindexed jsonb-overlap filter; symbols are stored
+        # uppercased, so no per-row normalization. Add a default-jsonb_ops GIN if volume grows.
         symbol_stmt = (
             select(NewsArticle)
             .where(
@@ -125,6 +127,7 @@ async def find_relevant_news(
             .where(
                 NewsArticle.embedding_model == embedding_model,
                 NewsArticle.embedding_dim == len(query_embedding),
+                NewsArticle.embedding.cosine_distance(query_embedding) <= MAX_NEWS_COSINE_DISTANCE,
             )
             .order_by(NewsArticle.embedding.cosine_distance(query_embedding))
             .limit(limit)

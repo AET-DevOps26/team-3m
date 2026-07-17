@@ -296,8 +296,10 @@ services:
       KEYCLOAK_ISSUER: "https://${KEYCLOAK_DOMAIN:-auth.${DOMAIN}}/realms/kontor"
       KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/realms/kontor/protocol/openid-connect/certs"
       KEYCLOAK_AUDIENCE: "${KEYCLOAK_AUDIENCE:-kontor-api}"
-      LOGOS_API_KEY: "${LOGOS_API_KEY:-}"
-      LOGOS_EMBEDDING_MODEL: "${LOGOS_EMBEDDING_MODEL:-Qwen/Qwen3-Embedding-8B}"
+      AI_API_KEY: "${AI_API_KEY:?AI_API_KEY is required}"
+      AI_BASE_URL: "${AI_BASE_URL:-https://api.openai.com/v1}"
+      AI_CHAT_MODEL: "${AI_CHAT_MODEL:-gpt-5.4-mini}"
+      AI_EMBEDDING_MODEL: "${AI_EMBEDDING_MODEL:-text-embedding-3-small}"
       LOCAL_LLM_BASE_URL: ""
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: "5672"

@@ -22,3 +22,13 @@ output "app_url" {
   description = "URL of the deployed application."
   value       = "https://${azurerm_public_ip.main.fqdn}"
 }
+
+output "app_key_vault_name" {
+  description = "Key Vault used to deliver the application runtime environment to the VM."
+  value       = azurerm_key_vault.app.name
+}
+
+output "vm_principal_id" {
+  description = "Object ID of the VM's system-assigned managed identity."
+  value       = azurerm_linux_virtual_machine.main.identity[0].principal_id
+}

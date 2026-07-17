@@ -29,15 +29,23 @@ cluster.
 cp deploy/helm/kontor/secrets.example.yaml deploy/helm/kontor/secrets.yaml
 $EDITOR deploy/helm/kontor/secrets.yaml   # gitignored
 
-# 2. Render once to sanity-check.
+# 2. Apply the provider key out-of-band so it never enters Helm history.
+kubectl create secret generic kontor-ai-provider \
+  -n team-3m \
+  --from-literal=AI_API_KEY="$AI_API_KEY" \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+# 3. Render once to sanity-check.
 helm template kontor ./deploy/helm/kontor \
   -n team-3m \
-  -f deploy/helm/kontor/secrets.yaml | less
+  -f deploy/helm/kontor/secrets.yaml \
+  --set-string ai.existingSecret=kontor-ai-provider | less
 
-# 3. Install / upgrade.
+# 4. Install / upgrade.
 helm upgrade --install kontor ./deploy/helm/kontor \
   -n team-3m \
-  -f deploy/helm/kontor/secrets.yaml
+  -f deploy/helm/kontor/secrets.yaml \
+  --set-string ai.existingSecret=kontor-ai-provider
 ```
 
 ## Environment overlays
@@ -56,7 +64,8 @@ Combine with `-f`:
 ```bash
 helm upgrade --install kontor ./deploy/helm/kontor -n team-3m \
   -f deploy/helm/kontor/values-prod.yaml \
-  -f deploy/helm/kontor/secrets.yaml
+  -f deploy/helm/kontor/secrets.yaml \
+  --set-string ai.existingSecret=kontor-ai-provider
 ```
 
 `ingress.hosts` is a list, so each environment can advertise several domains
@@ -68,8 +77,8 @@ when `hosts` is empty.
 The manual `helm` flow above is mirrored in CI. A reusable workflow
 (`.github/workflows/deploy.yml`) owns all helm/kubectl logic; it authenticates
 through the Rancher proxy with a kubeconfig stored in the `KUBECONFIG_B64`
-repository secret (see `deploy/rbac/`). Passwords are passed via
-`--set-string` from environment secrets — never written to disk.
+repository secret (see `deploy/rbac/`). The hosted AI key is applied as a
+Kubernetes Secret before Helm runs, which keeps it out of Helm release history.
 
 - **Prod** — on push to `main`, `ci-cd.yml` runs semantic-release, builds images
   tagged with the released version, then `deploy-prod` upgrades the `kontor`
@@ -78,17 +87,20 @@ repository secret (see `deploy/rbac/`). Passwords are passed via
   and stands up an ephemeral release in `team-3m-pr-<N>`, templating
   `values-pr.template.yaml` per PR. The namespace is created in the team's Rancher
   project (`RANCHER_PROJECT_ID`). Removing the label or closing the PR tears the
-  namespace down.
+  namespace down. Hosted AI runs in previews too (it is a requirement); the
+  workflow applies the provider Secret and sets `ai.existingSecret`. Provision a
+  separate, budget-capped `AI_API_KEY` in the `k8s-preview` environment so
+  pull-request-built code never holds the production credential.
 
 ### Required GitHub configuration
 
-| Kind | Name | Notes |
-|------|------|-------|
-| Variable | `RANCHER_PROJECT_ID` | `c-f49m7:p-xj8vv` — places namespaces in the team project (quota + RBAC). |
-| Variable | `LOGOS_EMBEDDING_MODEL` | Optional override of the Logos embedding model for news RAG (default `Qwen/Qwen3-Embedding-8B`). |
-| Secret (repo) | `KUBECONFIG_B64` | base64 of `deploy/rbac/extract-kubeconfig.sh` output. |
-| Secret (env `k8s-prod`) | `POSTGRES_PASSWORD`, `NEWS_POSTGRES_PASSWORD`, `AI_DB_PASSWORD`, `KEYCLOAK_ADMIN_PASSWORD`, `KEYCLOAK_DB_PASSWORD`, `LOGOS_API_KEY`, `TWELVE_DATA_API_KEY` | `NEWS_POSTGRES_PASSWORD` / `AI_DB_PASSWORD` are the dedicated news/AI DB credentials (`AI_DB_PASSWORD` falls back to `POSTGRES_PASSWORD` when unset). `LOGOS_API_KEY` and `TWELVE_DATA_API_KEY` enable the AI and market-data features. |
-| Secret (env `k8s-preview`) | `POSTGRES_PASSWORD`, `NEWS_POSTGRES_PASSWORD`, `AI_DB_PASSWORD`, `KEYCLOAK_ADMIN_PASSWORD`, `LOGOS_API_KEY`, `TWELVE_DATA_API_KEY` | `dev-mem` Keycloak needs no DB password. |
+| Kind                       | Name                                                                                             | Notes                                                                     |
+| -------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| Variable                   | `RANCHER_PROJECT_ID`                                                                             | `c-f49m7:p-xj8vv` — places namespaces in the team project (quota + RBAC). |
+| Variable (env `k8s-prod`)  | `AI_BASE_URL`, `AI_CHAT_MODEL`, `AI_EMBEDDING_MODEL` | Hosted provider endpoint and models; CI has course-gateway fallbacks. |
+| Secret (repo)              | `KUBECONFIG_B64`                                                                                 | base64 of `deploy/rbac/extract-kubeconfig.sh` output.                     |
+| Secret (env `k8s-prod`)    | `POSTGRES_PASSWORD`, `NEWS_POSTGRES_PASSWORD`, `AI_DB_PASSWORD`, `KEYCLOAK_ADMIN_PASSWORD`, `KEYCLOAK_DB_PASSWORD`, `AI_API_KEY`, `TWELVE_DATA_API_KEY` | `NEWS_POSTGRES_PASSWORD` / `AI_DB_PASSWORD` are the dedicated news/AI DB credentials (`AI_DB_PASSWORD` falls back to `POSTGRES_PASSWORD` when unset). `AI_API_KEY` authenticates the hosted OpenAI-compatible provider; `TWELVE_DATA_API_KEY` enables market data. |
+| Secret (env `k8s-preview`) | `POSTGRES_PASSWORD`, `NEWS_POSTGRES_PASSWORD`, `AI_DB_PASSWORD`, `KEYCLOAK_ADMIN_PASSWORD`, `AI_API_KEY`, `TWELVE_DATA_API_KEY` | `dev-mem` Keycloak needs no DB password. `AI_API_KEY` is required (the preview deploy hard-fails without it); use a separate, budget-capped key from the prod one. |
 
 The `k8s-prod` / `k8s-preview` GitHub Environments can be created with the
 `Bootstrap Environments` workflow (`workflow_dispatch`, takes the environment
@@ -184,8 +196,8 @@ The cluster is shared across the entire `devops26` cohort. Other namespaces
 cannot read Secrets in `team-3m`, but anyone with `get secret` in `team-3m`
 can. Keep that in mind when granting RBAC.
 
-Required secret values (the render `fail`s if these are empty, unless
-`*.existingSecret` is set):
+Required secret values stored through Helm (the render `fail`s if these are
+empty, unless `*.existingSecret` is set):
 
 | Value                     | When required                                                 |
 | ------------------------- | ------------------------------------------------------------- |
@@ -195,21 +207,28 @@ Required secret values (the render `fail`s if these are empty, unless
 | `keycloak.admin.password` | When `keycloak.deploy=true`.                                  |
 | `keycloak.db.password`    | When `keycloak.deploy=true` and `keycloak.database=postgres`. |
 
-`ai.logosApiKey` and `core.twelveDataApiKey` are not render-required, but
-without them the AI recommendations (unless a local LLM fallback is reachable)
-and live market data are disabled at runtime.
+The hosted AI credential (`AI_API_KEY`, supplied via `ai.existingSecret`) and
+`core.twelveDataApiKey` are not render-required, but without them the AI
+recommendations (unless a local LLM fallback is reachable) and live market data
+are disabled at runtime.
 
 - Pass them via the gitignored `secrets.yaml` (templated from
   `secrets.example.yaml`) or `--set` on the CLI; never commit real secrets.
 - `.gitignore` matches `deploy/helm/*/secrets.yaml` so the real file cannot
   be accidentally committed; `.helmignore` keeps it out of packaged charts.
+- When `ai.hostedEnabled=true`, create a Secret containing `AI_API_KEY`
+  out-of-band and set `ai.existingSecret` to its name. The chart intentionally
+  has no `ai.apiKey` value, so provider credentials cannot enter Helm history.
+  CI also changes the non-secret `ai.secretRevision` marker on every production
+  deploy so rotated credentials roll the AI pods. For a manual rotation, run
+  `kubectl rollout restart deployment/<release>-ai -n <namespace>`.
 - `core` consumes credentials via `envFrom: secretRef`, and a `checksum/secret`
   pod annotation rolls the deployment when the secret changes.
 - Use `*.existingSecret: <name>` to reference a Secret created out-of-band
   (e.g. by SealedSecrets/ESO once available).
-- Hosted news ingest defaults `ai.embedding.logosModel` to
-  `Qwen/Qwen3-Embedding-8B`. Deployment workflows allow the
-  `LOGOS_EMBEDDING_MODEL` repository variable to override it.
+- Hosted chat and news ingest use `ai.baseUrl`, `ai.chatModel`, and
+  `ai.embeddingModel`. Deployment workflows read the corresponding generic
+  GitHub environment variables.
 
 ## RabbitMQ
 

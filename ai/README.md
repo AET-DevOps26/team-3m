@@ -43,9 +43,9 @@ set, audience `kontor-api`):
 
 ## LLM backends
 
-Requests go to **Logos** (TUM-hosted, OpenAI-compatible) when `LOGOS_API_KEY`
-is set; otherwise the service falls back to a local OpenAI-compatible LLM at
-`LOCAL_LLM_BASE_URL` (Ollama by default — see [Local LLM (offline
+Requests go to the hosted OpenAI-compatible provider (`AI_BASE_URL`) when
+`AI_API_KEY` is set; otherwise the service falls back to a local
+OpenAI-compatible LLM at `LOCAL_LLM_BASE_URL` (Ollama — see [Local LLM (offline
 AI)](../README.md#local-llm-offline-ai) in the root README for setup). With no
 backend configured, recommendation calls return `503`; when the configured
 backend is unreachable or returns an unparsable response, they return `502`.
@@ -57,12 +57,12 @@ Settings come from the environment (`advisor/config.py`, pydantic-settings):
 | Env var | Purpose | Default |
 |---------|---------|---------|
 | `DATABASE_URL` | Async SQLAlchemy Postgres URL | local dev database |
-| `LOGOS_API_KEY` | Logos API key (`lg-…`); empty enables the local fallback | empty |
-| `LOGOS_BASE_URL` | Logos endpoint | `https://logos.aet.cit.tum.de/v1` |
-| `LOGOS_MODEL` | Model served by Logos | `openai/gpt-oss-120b` |
-| `LOCAL_LLM_BASE_URL` | Fallback OpenAI-compatible endpoint; empty disables the fallback | `http://localhost:11434/v1` |
+| `AI_API_KEY` | Hosted provider API key; empty enables the local fallback | empty |
+| `AI_BASE_URL` | Hosted provider endpoint (OpenAI-compatible, HTTPS) | `https://api.openai.com/v1` |
+| `AI_CHAT_MODEL` | Hosted chat model | `gpt-5.4-mini` |
+| `LOCAL_LLM_BASE_URL` | Fallback OpenAI-compatible endpoint; empty disables the fallback | empty |
 | `LOCAL_LLM_MODEL` | Fallback model | `llama3.2` |
-| `LOGOS_EMBEDDING_MODEL` / `LOCAL_EMBEDDING_MODEL` | Embedding models for news RAG (hosted / local) | `Qwen/Qwen3-Embedding-8B` / `nomic-embed-text` |
+| `AI_EMBEDDING_MODEL` / `LOCAL_EMBEDDING_MODEL` | Embedding models for news RAG (hosted / local) | `text-embedding-3-small` / `nomic-embed-text` |
 | `RABBITMQ_URL` or `RABBITMQ_HOST/PORT/USERNAME/PASSWORD` | News broker connection; unset disables the consumer | unset |
 | `NEWS_QUEUE` | Producer-owned queue to consume | `news.articles` |
 | `NEWS_RETENTION_DAYS` / `NEWS_RETENTION_SWEEP_INTERVAL_SECONDS` | News store retention (0 days disables the sweeper) | `7` / `3600` |
@@ -92,64 +92,13 @@ are out of sync.
 
 ## Financial news (RAG)
 
-The `POST /ai/advisor/recommendation` use case grounds its advice in relevant
-financial news retrieved from a pgvector store. News is ingested by a background
-consumer and matched to the caller's holdings at generation time.
+`POST /ai/advisor/recommendation` grounds its advice in relevant financial news
+retrieved from a pgvector store, ingested by a background consumer and matched to the
+caller's holdings at generation time.
 
-### Ingest
-
-A background consumer (started in the FastAPI `lifespan` when a RabbitMQ URL or host is configured)
-subscribes to a RabbitMQ queue, embeds each article, and upserts it into the
-`news_article` table (pgvector). Each row also stores the embedding model + dimension,
-so switching embedding provider never mixes vector dimensions at query time.
-
-A background sweeper bounds the store: it deletes articles older than
-`NEWS_RETENTION_DAYS` (default 7) every `NEWS_RETENTION_SWEEP_INTERVAL_SECONDS`
-(default 3600), independently of ingest, so append-only RSS ingestion can't
-exhaust the shared database and take recommendation persistence down with it.
-
-Embeddings mirror the LLM provider resolution: **Logos** in hosted mode
-(`LOGOS_API_KEY` + `LOGOS_EMBEDDING_MODEL`), else **Ollama** (`LOCAL_EMBEDDING_MODEL`,
-default `nomic-embed-text`).
-
-### Retrieval
-
-At generation time the service retrieves the nearest news by cosine similarity to a
-query built from the holdings. The repository also supports optional symbol metadata,
-but the bundled aggregator currently publishes article text without ticker tags. The
-retrieved articles are serialized as delimiter-safe JSON and injected into the prompt
-as untrusted data; the response carries a `news_summary` and server-built
-`news_references` (grounded citations).
-
-### Queue contract
-
-The bundled news service owns the RabbitMQ exchanges and queues and publishes the
-contract in `news/docs/asyncapi.yml`. This consumer subscribes passively to
-`NEWS_QUEUE` (default `news.articles`) and republishes terminal failures to the
-producer-owned dead-letter exchange before acknowledging the original. Configure
-either `RABBITMQ_URL` for an external TLS/vhost broker or the discrete
-`RABBITMQ_HOST`, `RABBITMQ_PORT`, `RABBITMQ_USERNAME`, and `RABBITMQ_PASSWORD`
-settings used by Compose and Helm.
-
-Message bodies use the producer-owned camelCase schema. Unknown additive fields are
-ignored, while the required contract is validated before any embedding call.
-
-| Field         | Type          | Notes                                             |
-| ------------- | ------------- | ------------------------------------------------- |
-| `id`          | string        | Required 64-char URL hash and idempotency key.    |
-| `source`      | string        | Required configured feed name.                   |
-| `feedUrl`     | string        | Required source feed URL.                         |
-| `url`         | string        | Required article URL.                             |
-| `title`       | string        | Required article title.                           |
-| `summary`     | string/null   | Feed summary; content fallback when full text is absent. |
-| `contentText` | string/null   | Best-effort extracted article text.               |
-| `publishedAt` | datetime/null | Feed publication time.                            |
-| `fetchedAt`   | datetime      | Aggregator fetch time.                            |
-
-Delivery is at-least-once; ingest deduplicates on both `id` and the sanitized content
-hash. Invalid messages are rejected immediately. Processing failures are retried once,
-then rejected into the bounded `news.articles.dead` queue for inspection instead of cycling indefinitely.
-The consumer runs in the API process and remains isolated from recommendation serving.
+The agent specifications (recommendation agent, news ingest consumer, and the
+producer-owned queue contract) live in the root [`AGENTS.md`](../AGENTS.md#ai-agents),
+the single source of truth for agent documentation.
 
 ## Observability
 

@@ -5,13 +5,13 @@ name: Deploy to Azure
 # Secrets: AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_TENANT_ID,
 #          AZURE_SUBSCRIPTION_ID, AZURE_POSTGRES_PASSWORD,
 #          AZURE_NEWS_POSTGRES_PASSWORD, AZURE_RABBITMQ_PASSWORD,
-#          AZURE_AI_POSTGRES_PASSWORD, LOGOS_API_KEY,
+#          AZURE_AI_POSTGRES_PASSWORD, AI_API_KEY,
 #          AZURE_KEYCLOAK_POSTGRES_PASSWORD,
 #          AZURE_KEYCLOAK_ADMIN_PASSWORD, AZURE_KEYCLOAK_DEV_PASSWORD
 # Variables: AZURE_SSH_PUBLIC_KEY, AZURE_ACME_EMAIL, AZURE_KEYCLOAK_ADMIN_USER,
 #            AZURE_DOMAIN, AZURE_KEYCLOAK_SEED_DEV_USER, AZURE_AI_IMAGE_TAG,
-#            AZURE_NEWS_IMAGE_TAG, LOGOS_EMBEDDING_MODEL,
-#            AZURE_KEYCLOAK_IMAGE_TAG
+#            AZURE_NEWS_IMAGE_TAG, AZURE_KEYCLOAK_IMAGE_TAG,
+#            AI_BASE_URL, AI_CHAT_MODEL, AI_EMBEDDING_MODEL
 #
 # DNS model: `AZURE_DOMAIN` (default azure.kontor.live) is fronted by a single
 # CNAME in GoDaddy pointing at Terraform output `domain`
@@ -49,6 +49,74 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Validate hosted AI configuration
+        env:
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          AI_BASE_URL: ${{ vars.AI_BASE_URL || 'https://api.openai.com/v1' }}
+          AI_CHAT_MODEL: ${{ vars.AI_CHAT_MODEL || 'gpt-5.4-mini' }}
+          AI_EMBEDDING_MODEL: ${{ vars.AI_EMBEDDING_MODEL || 'text-embedding-3-small' }}
+        run: |
+          set -euo pipefail
+          : "${AI_API_KEY:?AI_API_KEY GitHub environment secret is required}"
+          python3 - <<'PY'
+          import os
+          from urllib.parse import urlparse
+
+          parsed = urlparse(os.environ["AI_BASE_URL"])
+          if parsed.scheme != "https" or not parsed.netloc or parsed.username or parsed.password:
+              raise SystemExit("AI_BASE_URL must be an absolute HTTPS URL without credentials")
+          PY
+
+          EMBEDDING_RESPONSE="$RUNNER_TEMP/ai-embedding-smoke.json"
+          EMBEDDING_STATUS="$(
+            jq -n --arg model "$AI_EMBEDDING_MODEL" \
+              '{model: $model, input: "Kontor deployment check"}' \
+              | curl --silent --show-error \
+                  --connect-timeout 10 --max-time 60 \
+                  --output "$EMBEDDING_RESPONSE" \
+                  --write-out '%{http_code}' \
+                  --request POST "${AI_BASE_URL%/}/embeddings" \
+                  --header "Authorization: Bearer $AI_API_KEY" \
+                  --header "Content-Type: application/json" \
+                  --data-binary @-
+          )"
+          if [[ "$EMBEDDING_STATUS" != 2* ]] \
+            || ! jq -e '.data[0].embedding | length > 0' "$EMBEDDING_RESPONSE" >/dev/null; then
+            echo "Embedding model smoke test failed with HTTP $EMBEDDING_STATUS." >&2
+            { jq -r '.error.message // "Provider returned an invalid embedding response."' \
+              "$EMBEDDING_RESPONSE" 2>/dev/null || cat "$EMBEDDING_RESPONSE"; } >&2
+            exit 1
+          fi
+
+          CHAT_RESPONSE="$RUNNER_TEMP/ai-chat-smoke.json"
+          CHAT_STATUS="$(
+            jq -n --arg model "$AI_CHAT_MODEL" \
+              '{
+                model: $model,
+                response_format: {type: "json_object"},
+                messages: [
+                  {role: "system", content: "Return a JSON object."},
+                  {role: "user", content: "Return {\"status\":\"ok\"}."}
+                ]
+              }' \
+              | curl --silent --show-error \
+                  --connect-timeout 10 --max-time 60 \
+                  --output "$CHAT_RESPONSE" \
+                  --write-out '%{http_code}' \
+                  --request POST "${AI_BASE_URL%/}/chat/completions" \
+                  --header "Authorization: Bearer $AI_API_KEY" \
+                  --header "Content-Type: application/json" \
+                  --data-binary @-
+          )"
+          if [[ "$CHAT_STATUS" != 2* ]] \
+            || ! jq -e '.choices[0].message.content | fromjson | type == "object"' \
+              "$CHAT_RESPONSE" >/dev/null; then
+            echo "Chat model smoke test failed with HTTP $CHAT_STATUS." >&2
+            { jq -r '.error.message // "Provider returned an invalid chat response."' \
+              "$CHAT_RESPONSE" 2>/dev/null || cat "$CHAT_RESPONSE"; } >&2
+            exit 1
+          fi
+
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v4
 
@@ -71,7 +139,17 @@ jobs:
           {
             echo "AZURE_FQDN=$(terraform output -raw domain)"
             echo "PUBLIC_IP=$(terraform output -raw public_ip_address)"
+            echo "APP_KEY_VAULT_NAME=$(terraform output -raw app_key_vault_name)"
+            echo "VM_PRINCIPAL_ID=$(terraform output -raw vm_principal_id)"
           } >> "$GITHUB_ENV"
+
+      - name: Sign in to Azure CLI
+        run: |
+          az login --service-principal \
+            --username "$ARM_CLIENT_ID" \
+            --password "$ARM_CLIENT_SECRET" \
+            --tenant "$ARM_TENANT_ID" \
+            --output none
 
       - name: Resolve public domain
         env:
@@ -89,7 +167,7 @@ jobs:
           echo "  auth.$DOMAIN  CNAME  $AZURE_FQDN"
           echo "Traefik's ACME challenge will fail until both CNAMEs resolve."
 
-      - name: Deploy app
+      - name: Store application environment in Key Vault
         env:
           ENV_FILE: |
             DOMAIN=${{ env.DOMAIN }}
@@ -100,8 +178,10 @@ jobs:
             AI_POSTGRES_DB=kontor_ai
             AI_POSTGRES_USER=kontor_ai
             AI_POSTGRES_PASSWORD=${{ secrets.AZURE_AI_POSTGRES_PASSWORD }}
-            LOGOS_API_KEY=${{ secrets.LOGOS_API_KEY }}
-            LOGOS_EMBEDDING_MODEL=${{ vars.LOGOS_EMBEDDING_MODEL || 'Qwen/Qwen3-Embedding-8B' }}
+            AI_API_KEY=${{ secrets.AI_API_KEY }}
+            AI_BASE_URL=${{ vars.AI_BASE_URL || 'https://api.openai.com/v1' }}
+            AI_CHAT_MODEL=${{ vars.AI_CHAT_MODEL || 'gpt-5.4-mini' }}
+            AI_EMBEDDING_MODEL=${{ vars.AI_EMBEDDING_MODEL || 'text-embedding-3-small' }}
             KEYCLOAK_POSTGRES_PASSWORD=${{ secrets.AZURE_KEYCLOAK_POSTGRES_PASSWORD }}
             KEYCLOAK_ADMIN_USER=${{ vars.AZURE_KEYCLOAK_ADMIN_USER }}
             KEYCLOAK_ADMIN_PASSWORD=${{ secrets.AZURE_KEYCLOAK_ADMIN_PASSWORD }}
@@ -111,15 +191,114 @@ jobs:
             KONTOR_AI_IMAGE_TAG=${{ vars.AZURE_AI_IMAGE_TAG || 'latest' }}
             KONTOR_NEWS_IMAGE_TAG=${{ vars.AZURE_NEWS_IMAGE_TAG || 'latest' }}
             KONTOR_KEYCLOAK_IMAGE_TAG=${{ vars.AZURE_KEYCLOAK_IMAGE_TAG || 'latest' }}
-          DEPLOY_REF: ${{ github.ref }}
         run: |
+          set -euo pipefail
+          umask 077
+          APP_ENV_FILE="$RUNNER_TEMP/kontor-app.env"
+          trap 'rm -f "$APP_ENV_FILE"' EXIT
+          printf '%s' "$ENV_FILE" > "$APP_ENV_FILE"
+          az keyvault secret set \
+            --vault-name "$APP_KEY_VAULT_NAME" \
+            --name app-env \
+            --file "$APP_ENV_FILE" \
+            --encoding utf-8 \
+            --output none
+
+      - name: Wait for VM provisioning
+        run: |
+          az vm run-command invoke \
+            --resource-group "Kontor" \
+            --name "kontor-vm" \
+            --command-id RunShellScript \
+            --scripts "
+              set -eu
+              cloud-init status --wait
+              printf '%s\n' \
+                '[Unit]' \
+                'Description=Block Docker containers from Azure Instance Metadata Service' \
+                'After=docker.service' \
+                'Requires=docker.service' \
+                'PartOf=docker.service' \
+                '' \
+                '[Service]' \
+                'Type=oneshot' \
+                'ExecStart=/bin/sh -c \"/usr/sbin/iptables -w -C DOCKER-USER -d 169.254.169.254/32 -j REJECT || /usr/sbin/iptables -w -I DOCKER-USER 1 -d 169.254.169.254/32 -j REJECT\"' \
+                'RemainAfterExit=yes' \
+                '' \
+                '[Install]' \
+                'WantedBy=multi-user.target' \
+                > /etc/systemd/system/kontor-block-container-imds.service
+              systemctl daemon-reload
+              systemctl enable kontor-block-container-imds.service
+              systemctl restart kontor-block-container-imds.service
+            "
+
+      - name: Grant VM temporary access to app environment secret
+        run: |
+          az keyvault set-policy \
+            --name "$APP_KEY_VAULT_NAME" \
+            --object-id "$VM_PRINCIPAL_ID" \
+            --secret-permissions get \
+            --output none
+
+      - name: Prepare app configuration
+        run: |
+          az vm run-command invoke \
+            --resource-group "Kontor" \
+            --name "kontor-vm" \
+            --command-id RunShellScript \
+            --scripts "
+              set -eu
+
+              APP_ENV=
+              for i in \$(seq 1 12); do
+                TOKEN=\$(curl -fsS --connect-timeout 5 --max-time 15 -H Metadata:true \
+                  'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fvault.azure.net' \
+                  | python3 -c 'import json, sys; print(json.load(sys.stdin).get(\"access_token\", \"\"))' \
+                  || true)
+                if [ -n \"\$TOKEN\" ]; then
+                  RESPONSE=\$(curl -fsS --connect-timeout 5 --max-time 15 \
+                    -H \"Authorization: Bearer \$TOKEN\" \
+                    \"https://${APP_KEY_VAULT_NAME}.vault.azure.net/secrets/app-env?api-version=7.4\" \
+                    || true)
+                  APP_ENV=\$(printf '%s' \"\$RESPONSE\" \
+                    | python3 -c 'import json, sys; print(json.load(sys.stdin).get(\"value\", \"\"))' \
+                    || true)
+                fi
+                [ -n \"\$APP_ENV\" ] && break
+                echo \"Application environment not available yet (attempt \$i/12); retrying in 5s...\"
+                sleep 5
+              done
+              if [ -z \"\$APP_ENV\" ]; then
+                echo 'ERROR: VM managed identity could not retrieve app-env from Key Vault.' >&2
+                exit 1
+              fi
+
+              umask 077
+              install -m 0700 -d /etc/kontor
+              printf '%s\\n' \"\$APP_ENV\" > /etc/kontor/app.env
+              chmod 600 /etc/kontor/app.env
+              unset APP_ENV TOKEN RESPONSE
+            "
+
+      - name: Revoke VM access to app environment secret
+        if: always() && env.APP_KEY_VAULT_NAME != '' && env.VM_PRINCIPAL_ID != ''
+        run: |
+          set -euo pipefail
           az login --service-principal \
             --username "$ARM_CLIENT_ID" \
             --password "$ARM_CLIENT_SECRET" \
             --tenant "$ARM_TENANT_ID" \
             --output none
+          az keyvault delete-policy \
+            --name "$APP_KEY_VAULT_NAME" \
+            --object-id "$VM_PRINCIPAL_ID" \
+            --output none
 
-          ENV_B64=$(printf '%s' "$ENV_FILE" | base64 -w 0)
+      - name: Deploy app
+        env:
+          DEPLOY_REF: ${{ github.ref }}
+        run: |
           DEPLOY_REF_B64=$(printf '%s' "$DEPLOY_REF" | base64 -w 0)
 
           az vm run-command invoke \
@@ -128,8 +307,6 @@ jobs:
             --command-id RunShellScript \
             --scripts "
               set -eu
-              cloud-init status --wait
-
               REPO_DIR=/home/azureuser/team-3m
               DEPLOY_REF=\$(printf '%s' '$DEPLOY_REF_B64' | base64 -d)
 
@@ -141,7 +318,7 @@ jobs:
               git -C \"\$REPO_DIR\" fetch --depth 1 origin \"\$DEPLOY_REF\"
               git -C \"\$REPO_DIR\" checkout --force FETCH_HEAD
               git -C \"\$REPO_DIR\" clean -fdx
-              echo '$ENV_B64' | base64 -d > \"\$REPO_DIR/.env\"
+              install -m 600 /etc/kontor/app.env \"\$REPO_DIR/.env\"
 
               cd \"\$REPO_DIR\"
               docker compose -f docker-compose.azure.yml pull

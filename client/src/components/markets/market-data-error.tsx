@@ -2,13 +2,10 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { APIError } from "@/network/errors"
 
 /**
- * Error-boundary fallback for market-data failures. Shared by the market detail
- * page and the holdings chart dialog.
- *
- * Expected provider states — a paused feed (rate limit) or an instrument the
- * provider does not cover (unknown symbol) — are shown as calm, informational
- * notices rather than an alarming failure, so they do not read as a Kontor bug.
- * Genuine failures (provider down, network, parse) keep the destructive style.
+ * Error-boundary fallback for market-data failures, shared by the market detail
+ * page and the holdings chart dialog. Rate-limit (429) and unknown-instrument
+ * (404) render as calm informational notices; other failures use the
+ * destructive style.
  */
 export function marketDataErrorFallback(error: Error) {
   const status = error instanceof APIError ? error.status : undefined

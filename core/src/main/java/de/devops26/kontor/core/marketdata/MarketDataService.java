@@ -37,7 +37,7 @@ public class MarketDataService {
         }
         var payload = client.search(query.trim());
         var matches = payload.data().stream()
-                .filter(match -> match.symbol() != null && !match.symbol().isBlank())
+                .filter(MarketDataService::hasUsableSymbol)
                 .map(match -> new InstrumentSearchResult.Match(
                         match.symbol(),
                         match.instrumentName(),
@@ -90,7 +90,7 @@ public class MarketDataService {
 
     private String searchTicker(String isin) {
         var candidates = client.search(isin).data().stream()
-                .filter(match -> match.symbol() != null && !match.symbol().isBlank())
+                .filter(MarketDataService::hasUsableSymbol)
                 .toList();
         if (candidates.isEmpty()) {
             throw new UnknownSymbolException(isin);
@@ -100,6 +100,10 @@ public class MarketDataService {
                 .findFirst()
                 .orElse(candidates.getFirst())
                 .symbol();
+    }
+
+    private static boolean hasUsableSymbol(TwelveDataClient.SearchMatch match) {
+        return match.symbol() != null && !match.symbol().isBlank();
     }
 
     private static OffsetDateTime parseTimestamp(String datetime) {

@@ -117,7 +117,7 @@ Name of the Secret holding core market-data credentials (TWELVE_DATA_API_KEY).
 {{- end -}}
 
 {{/*
-Name of the Secret holding AI service credentials (LOGOS_API_KEY).
+Name of the Secret holding AI service credentials (AI_API_KEY).
 */}}
 {{- define "kontor.ai.secretName" -}}
 {{- if .Values.ai.existingSecret -}}

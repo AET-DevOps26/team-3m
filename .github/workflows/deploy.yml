@@ -133,6 +133,25 @@ jobs:
             | jq 'del(.metadata.annotations["kubectl.kubernetes.io/last-applied-configuration"]) | .spec.rules |= map(if .http.paths then .http.paths |= map(select(.path != "/ai")) else . end)' \
             | kubectl replace -f -
 
+      - name: Apply hosted AI secret (prod)
+        if: inputs.action == 'deploy' && inputs.environment == 'k8s-prod'
+        env:
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          NAMESPACE: ${{ inputs.namespace }}
+          RELEASE: ${{ inputs.release-name }}
+        run: |
+          set -euo pipefail
+          : "${AI_API_KEY:?AI_API_KEY GitHub environment secret is required}"
+          umask 077
+          AI_KEY_FILE="$RUNNER_TEMP/ai-api-key"
+          trap 'rm -f "$AI_KEY_FILE"' EXIT
+          printf '%s' "$AI_API_KEY" > "$AI_KEY_FILE"
+          kubectl create secret generic "${RELEASE}-ai-provider" \
+            -n "$NAMESPACE" \
+            --from-file=AI_API_KEY="$AI_KEY_FILE" \
+            --dry-run=client -o yaml \
+            | kubectl apply -f -
+
       - name: Helm deploy (prod)
         if: inputs.action == 'deploy' && inputs.environment == 'k8s-prod'
         env:
@@ -140,8 +159,9 @@ jobs:
           NEWS_POSTGRES_PASSWORD: ${{ secrets.NEWS_POSTGRES_PASSWORD }}
           KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
           KEYCLOAK_DB_PASSWORD: ${{ secrets.KEYCLOAK_DB_PASSWORD }}
-          LOGOS_API_KEY: ${{ secrets.LOGOS_API_KEY }}
-          LOGOS_EMBEDDING_MODEL: ${{ vars.LOGOS_EMBEDDING_MODEL || 'Qwen/Qwen3-Embedding-8B' }}
+          AI_BASE_URL: ${{ vars.AI_BASE_URL || 'https://logos.aet.cit.tum.de/v1' }}
+          AI_CHAT_MODEL: ${{ vars.AI_CHAT_MODEL || 'openai/gpt-oss-120b' }}
+          AI_EMBEDDING_MODEL: ${{ vars.AI_EMBEDDING_MODEL || 'Qwen/Qwen3-Embedding-8B' }}
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
           AI_DB_PASSWORD: ${{ secrets.AI_DB_PASSWORD }}
           GRAFANA_OAUTH_CLIENT_SECRET: ${{ secrets.GRAFANA_OAUTH_CLIENT_SECRET }}
@@ -164,12 +184,34 @@ jobs:
             --set-string news.db.password="$NEWS_POSTGRES_PASSWORD" \
             --set-string keycloak.admin.password="$KEYCLOAK_ADMIN_PASSWORD" \
             --set-string keycloak.db.password="$KEYCLOAK_DB_PASSWORD" \
-            --set-string ai.logosApiKey="$LOGOS_API_KEY" \
-            --set-string ai.embedding.logosModel="$LOGOS_EMBEDDING_MODEL" \
+            --set-string ai.existingSecret='${{ inputs.release-name }}-ai-provider' \
+            --set-string ai.secretRevision="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            --set-string ai.baseUrl="$AI_BASE_URL" \
+            --set-string ai.chatModel="$AI_CHAT_MODEL" \
+            --set-string ai.embeddingModel="$AI_EMBEDDING_MODEL" \
             --set-string core.twelveDataApiKey="$TWELVE_DATA_API_KEY" \
             --set-string ai.db.password="$AI_DB_PASSWORD" \
             "${EXTRA[@]}" \
             --rollback-on-failure --force-conflicts --wait --wait-for-jobs --timeout 4m
+
+      - name: Apply hosted AI secret (preview)
+        if: inputs.action == 'deploy' && inputs.environment == 'k8s-preview'
+        env:
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          NAMESPACE: ${{ inputs.namespace }}
+          RELEASE: ${{ inputs.release-name }}
+        run: |
+          set -euo pipefail
+          : "${AI_API_KEY:?AI_API_KEY GitHub environment secret is required}"
+          umask 077
+          AI_KEY_FILE="$RUNNER_TEMP/ai-api-key"
+          trap 'rm -f "$AI_KEY_FILE"' EXIT
+          printf '%s' "$AI_API_KEY" > "$AI_KEY_FILE"
+          kubectl create secret generic "${RELEASE}-ai-provider" \
+            -n "$NAMESPACE" \
+            --from-file=AI_API_KEY="$AI_KEY_FILE" \
+            --dry-run=client -o yaml \
+            | kubectl apply -f -
 
       - name: Helm deploy (preview)
         if: inputs.action == 'deploy' && inputs.environment == 'k8s-preview'
@@ -177,8 +219,9 @@ jobs:
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           NEWS_POSTGRES_PASSWORD: ${{ secrets.NEWS_POSTGRES_PASSWORD }}
           KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
-          LOGOS_API_KEY: ${{ secrets.LOGOS_API_KEY }}
-          LOGOS_EMBEDDING_MODEL: ${{ vars.LOGOS_EMBEDDING_MODEL || 'Qwen/Qwen3-Embedding-8B' }}
+          AI_BASE_URL: ${{ vars.AI_BASE_URL || 'https://logos.aet.cit.tum.de/v1' }}
+          AI_CHAT_MODEL: ${{ vars.AI_CHAT_MODEL || 'openai/gpt-oss-120b' }}
+          AI_EMBEDDING_MODEL: ${{ vars.AI_EMBEDDING_MODEL || 'Qwen/Qwen3-Embedding-8B' }}
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
           AI_DB_PASSWORD: ${{ secrets.AI_DB_PASSWORD }}
           PR_NUMBER: ${{ inputs.pr-number }}
@@ -201,8 +244,11 @@ jobs:
             --set-string postgres.password="$POSTGRES_PASSWORD" \
             --set-string news.db.password="$NEWS_POSTGRES_PASSWORD" \
             --set-string keycloak.admin.password="$KEYCLOAK_ADMIN_PASSWORD" \
-            --set-string ai.logosApiKey="$LOGOS_API_KEY" \
-            --set-string ai.embedding.logosModel="$LOGOS_EMBEDDING_MODEL" \
+            --set-string ai.existingSecret='${{ inputs.release-name }}-ai-provider' \
+            --set-string ai.secretRevision="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            --set-string ai.baseUrl="$AI_BASE_URL" \
+            --set-string ai.chatModel="$AI_CHAT_MODEL" \
+            --set-string ai.embeddingModel="$AI_EMBEDDING_MODEL" \
             --set-string core.twelveDataApiKey="$TWELVE_DATA_API_KEY" \
             --set-string ai.db.password="$AI_DB_PASSWORD" \
             --rollback-on-failure --force-conflicts --wait --wait-for-jobs --timeout 4m

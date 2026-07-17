@@ -19,6 +19,7 @@ from .metrics import (
     OUTCOME_STORED,
     news_ingest_metrics,
 )
+from .openai_client import MAX_RETRIES, REQUEST_TIMEOUT_SECONDS
 from .repository import save_news_article
 
 logger = logging.getLogger(__name__)
@@ -26,6 +27,9 @@ logger = logging.getLogger(__name__)
 MAX_NEWS_CHARS = 2000
 PREFETCH_COUNT = 10
 TRANSIENT_BACKOFF_SECONDS = 2.0
+# Outer bound must cover the client's full retry budget (timeout x attempts) plus a margin,
+# so a transiently slow provider retries instead of being cancelled and dead-lettered.
+EMBEDDING_TIMEOUT_SECONDS = REQUEST_TIMEOUT_SECONDS * (MAX_RETRIES + 1) + 15.0
 
 _CONTROL_CHARS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 _WHITESPACE = re.compile(r"\s+")
@@ -62,7 +66,7 @@ async def _store(provider: EmbeddingProvider, news: NewsMessage, raw: dict) -> N
     content = sanitize(news.content_text or news.summary or "")
     embed_input = f"{title}\n\n{content}".strip()
     started = time.perf_counter()
-    embedding = await embed_text(provider, embed_input)
+    embedding = await asyncio.wait_for(embed_text(provider, embed_input), timeout=EMBEDDING_TIMEOUT_SECONDS)
     news_ingest_metrics.record_embedding_duration(time.perf_counter() - started, model=provider.model)
     async with session_factory() as session:
         await save_news_article(
@@ -101,6 +105,8 @@ async def _dead_letter(
             raise RuntimeError("dead-letter publish was not confirmed")
     except Exception as exc:
         logger.error("Failed to publish news message to dead-letter queue; requeueing", exc_info=exc)
+        # ponytail: a persistently unroutable DLX hot-loops (parse-fail -> DLX-fail -> requeue),
+        # bounded only by this sleep. Add a redelivery cap / alert if the DLX can stay broken.
         await asyncio.sleep(TRANSIENT_BACKOFF_SECONDS)
         await message.nack(requeue=True)
         return False
@@ -128,10 +134,10 @@ async def handle_message(
         await message.ack()
         news_ingest_metrics.record_consumed(OUTCOME_STORED)
     except Exception as exc:
-        # ponytail: `redelivered` is the only retry signal the producer-owned queue exposes,
-        # so any broker/connection blip that redelivers an in-flight message dead-letters it
-        # (not lost) instead of retrying. Upgrade path: a quorum queue with x-delivery-count,
-        # or a producer-incremented retry-count header, once the producer adopts one.
+        # ponytail: `redelivered` doubles as our retry counter, but connect_robust also sets it after
+        # a connection drop, so an in-flight message during an infra blip is dead-lettered (to the
+        # DLQ, not lost) rather than retried. Switch to a quorum queue's x-delivery-count if the
+        # producer adopts one.
         if message.redelivered:
             logger.error("News message failed after redelivery; dead-lettering", exc_info=exc)
             dead_lettered = await _dead_letter(

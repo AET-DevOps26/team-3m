@@ -32,13 +32,20 @@ cp .env.example .env
 
 The defaults in `.env` match the Compose defaults, so the stack runs as-is. Update `.env` to change the Postgres credentials, Keycloak database credentials, or the shared local Keycloak dev-user password — and to set the API keys described below.
 
-The AI service uses a **Logos API key** (`LOGOS_API_KEY=lg-…`) in `.env` when available. The Logos endpoint is only reachable from the TUM network or via eduVPN. When the key is missing, the AI service **automatically falls back to a local LLM** (see [Local LLM (offline AI)](#local-llm-offline-ai) below). If no local LLM is configured either (`LOCAL_LLM_BASE_URL` empty), recommendation calls return `503`; if a local LLM is configured but not running, they return `502` ("Local LLM is not reachable").
+The AI service accepts any hosted OpenAI-compatible provider through
+`AI_API_KEY`, `AI_BASE_URL`, `AI_CHAT_MODEL`, and `AI_EMBEDDING_MODEL`. The local
+and Kubernetes defaults point at the TUM course gateway and therefore require
+TUM network or eduVPN access; Azure defaults to OpenAI. When `AI_API_KEY` is
+missing, the service automatically falls back to a local LLM (see
+[Local LLM (offline AI)](#local-llm-offline-ai) below). If no local LLM is
+configured either (`LOCAL_LLM_BASE_URL` empty), recommendation calls return
+`503`; if a local LLM is configured but not running, they return `502`
+("Local LLM is not reachable").
 
 Live stock/ETF market data (quotes, price history, the holdings chart) is sourced from [Twelve Data](https://twelvedata.com) via a **`TWELVE_DATA_API_KEY`** in `.env`. See [Market data (Twelve Data)](#market-data-twelve-data) below for how to get a free key and what the free-tier rate limit means for the app.
 
-Hosted news ingest uses `Qwen/Qwen3-Embedding-8B` by default through Logos'
-OpenAI-compatible embeddings endpoint. The `LOGOS_EMBEDDING_MODEL` repository
-variable can override that model for Helm and Azure deployments.
+Hosted news ingest uses the same provider key and base URL as chat, with an
+independently configurable `AI_EMBEDDING_MODEL`.
 
 The Compose Keycloak service is for local development only. It builds the custom Keycloak image from `infra/keycloak/theme/` (Keycloak with the Kontor login theme baked in), runs `start-dev`, imports `infra/keycloak/realms/kontor-realm.json`, and stores Keycloak state in the `keycloak_postgres_data` Docker volume. The realm import is skipped once the realm already exists, so delete that volume if you need to re-apply the import from scratch. The first `docker compose up --build` builds the theme image (Node + Maven), which takes a few minutes; subsequent runs use the cached layer.
 
@@ -93,7 +100,12 @@ The holdings chart on the dashboard should now render live prices.
 
 ### Local LLM (offline AI)
 
-When `LOGOS_API_KEY` is empty, the AI service falls back to a local [Ollama](https://ollama.com/) model so the AI features keep working without TUM network access. There are two ways to provide it.
+When `AI_API_KEY` is empty, the AI service falls back to a local
+[Ollama](https://ollama.com/) model so the AI features keep working without
+hosted-provider access. The fallback is opt-in: `LOCAL_LLM_BASE_URL` is unset
+by default, so a bare `advisor` run (no Compose) returns `503` until you point it
+at a local model. Compose sets it explicitly; hosted Helm and Azure deployments
+require an API key. There are two ways to provide it.
 
 **Native Ollama (recommended on macOS).** A native Ollama uses the Mac GPU and is much faster than a container:
 
@@ -222,14 +234,28 @@ There is also a standalone single-VM deployment on Azure (Terraform + Docker
 Compose + Traefik), served at `https://azure.kontor.live` and documented in
 [`deploy/azure/README.md`](deploy/azure/README.md).
 
-For a manual install, copy `deploy/helm/kontor/secrets.example.yaml` to `secrets.yaml` and fill in all `REPLACE_ME` values, including `ai.logosApiKey` (the `lg-…` key from your tutor — requires TUM network / eduVPN). Set `ai.embedding.logosModel` to a Logos embedding model to enable hosted news ingest:
+For a manual install, copy `deploy/helm/kontor/secrets.example.yaml` to `secrets.yaml`
+and fill in all `REPLACE_ME` values. Create the hosted-provider Secret out-of-band so
+the API key is not retained in Helm release history. The course gateway URL and model
+defaults live in `values.yaml` (and the deploy workflow's `vars.AI_* || fallback`
+expressions), not in `values-prod.yaml`; change `ai.baseUrl`, `ai.chatModel`,
+and `ai.embeddingModel` to use another OpenAI-compatible provider:
 
 ```sh
+kubectl create secret generic kontor-ai-provider \
+  -n team-3m \
+  --from-literal=AI_API_KEY="$AI_API_KEY"
+
 helm upgrade --install kontor ./deploy/helm/kontor \
   -n team-3m \
   -f deploy/helm/kontor/values-prod.yaml \
-  -f deploy/helm/kontor/secrets.yaml
+  -f deploy/helm/kontor/secrets.yaml \
+  --set-string ai.existingSecret=kontor-ai-provider
 ```
+
+PR previews run hosted AI too (it is a requirement). The `k8s-preview` GitHub
+environment supplies its own `AI_API_KEY`; use a separate, budget-capped key
+there so pull-request-built code never holds the production credential.
 
 ### Keycloak Login Theme
 

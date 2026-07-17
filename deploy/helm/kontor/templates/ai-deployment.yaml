@@ -1,3 +1,15 @@
+{{- if and .Values.ai.hostedEnabled (not .Values.ai.existingSecret) }}
+{{- fail "ai.existingSecret is required when ai.hostedEnabled=true. The Secret must contain AI_API_KEY." -}}
+{{- end }}
+{{- if and .Values.ai.hostedEnabled (not .Values.ai.baseUrl) }}
+{{- fail "ai.baseUrl is required." -}}
+{{- end }}
+{{- if and .Values.ai.hostedEnabled (not .Values.ai.chatModel) }}
+{{- fail "ai.chatModel is required." -}}
+{{- end }}
+{{- if and .Values.ai.hostedEnabled (not .Values.ai.embeddingModel) }}
+{{- fail "ai.embeddingModel is required." -}}
+{{- end }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -16,13 +28,13 @@ spec:
       labels:
         {{- include "kontor.labels" . | nindent 8 }}
         app.kubernetes.io/component: ai
-      {{- if or (not .Values.ai.db.existingSecret) .Values.ai.logosApiKey }}
+      {{- if or (not .Values.ai.db.existingSecret) .Values.ai.secretRevision }}
       annotations:
         {{- if not .Values.ai.db.existingSecret }}
         checksum/ai-postgres-secret: {{ include (print $.Template.BasePath "/ai-postgres-secret.yaml") . | sha256sum }}
         {{- end }}
-        {{- if .Values.ai.logosApiKey }}
-        checksum/secret: {{ include (print $.Template.BasePath "/ai-secret.yaml") . | sha256sum }}
+        {{- with .Values.ai.secretRevision }}
+        kontor.dev/ai-secret-revision: {{ . | quote }}
         {{- end }}
       {{- end }}
     spec:
@@ -77,12 +89,14 @@ spec:
             {{- end }}
             - name: KEYCLOAK_AUDIENCE
               value: {{ .Values.oidc.audience | quote }}
-            {{- with .Values.ai.embedding.localModel }}
+            - name: AI_BASE_URL
+              value: {{ .Values.ai.baseUrl | quote }}
+            - name: AI_CHAT_MODEL
+              value: {{ .Values.ai.chatModel | quote }}
+            - name: AI_EMBEDDING_MODEL
+              value: {{ .Values.ai.embeddingModel | quote }}
+            {{- with .Values.ai.localEmbeddingModel }}
             - name: LOCAL_EMBEDDING_MODEL
-              value: {{ . | quote }}
-            {{- end }}
-            {{- with .Values.ai.embedding.logosModel }}
-            - name: LOGOS_EMBEDDING_MODEL
               value: {{ . | quote }}
             {{- end }}
             {{- if .Values.ai.newsConsumer.enabled }}
@@ -124,7 +138,7 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ include "kontor.ai.postgres.secretName" . }}
-            {{- if or .Values.ai.logosApiKey .Values.ai.existingSecret }}
+            {{- if .Values.ai.hostedEnabled }}
             - secretRef:
                 name: {{ include "kontor.ai.secretName" . }}
             {{- end }}

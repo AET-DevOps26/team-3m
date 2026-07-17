@@ -1,3 +1,4 @@
+import asyncio
 import json
 from datetime import UTC, datetime
 from pathlib import Path
@@ -107,6 +108,21 @@ async def test_store_embeds_and_saves_sanitized(monkeypatch: pytest.MonkeyPatch)
     assert saved["external_id"] == PRODUCER_MESSAGE["id"]
     assert saved["published_at"] == datetime(2026, 7, 14, 8, 30, tzinfo=UTC)
     assert saved["content_hash"]
+
+
+async def test_store_times_out_when_embedding_hangs(monkeypatch: pytest.MonkeyPatch) -> None:
+    async def hanging_embed(*args: object, **kwargs: object) -> list[float]:
+        await asyncio.sleep(1)
+        return [0.0]
+
+    monkeypatch.setattr(nc, "EMBEDDING_TIMEOUT_SECONDS", 0.01)
+    monkeypatch.setattr(nc, "embed_text", hanging_embed)
+    monkeypatch.setattr(nc, "save_news_article", AsyncMock())
+    monkeypatch.setattr(nc, "session_factory", lambda: _FakeSession())
+    news = nc.NewsMessage.model_validate(PRODUCER_MESSAGE)
+
+    with pytest.raises(asyncio.TimeoutError):
+        await nc._store(_provider(), news, {"raw": True})
 
 
 async def test_store_uses_summary_when_full_text_is_unavailable(monkeypatch: pytest.MonkeyPatch) -> None:

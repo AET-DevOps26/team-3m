@@ -86,6 +86,24 @@ async def test_symbol_and_semantic_paths_run_on_postgres(pg_sessions: async_sess
     assert by_vector[0].content_hash == "aapl"
 
 
+async def test_semantic_query_filters_beyond_cosine_threshold(
+    pg_sessions: async_sessionmaker[AsyncSession],
+) -> None:
+    # query [1,0,0]: near article distance 0 (<= 0.6, kept); orthogonal article distance 1.0 (dropped).
+    async with pg_sessions() as session:
+        await save_news_article(session, content_hash="near", **_article(embedding=[1.0, 0.0, 0.0]))
+        await save_news_article(
+            session,
+            content_hash="far",
+            **_article(embedding=[0.0, 1.0, 0.0], title="Unrelated", content="off topic"),
+        )
+    async with pg_sessions() as session:
+        rows = await find_relevant_news(
+            session, symbols=[], query_embedding=[1.0, 0.0, 0.0], embedding_model="test-embed"
+        )
+    assert [a.content_hash for a in rows] == ["near"]
+
+
 async def test_delete_news_older_than_respects_cutoff(pg_sessions: async_sessionmaker[AsyncSession]) -> None:
     async with pg_sessions() as session:
         await save_news_article(session, content_hash="keep", **_article())

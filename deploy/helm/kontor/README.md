@@ -87,8 +87,10 @@ Kubernetes Secret before Helm runs, which keeps it out of Helm release history.
   and stands up an ephemeral release in `team-3m-pr-<N>`, templating
   `values-pr.template.yaml` per PR. The namespace is created in the team's Rancher
   project (`RANCHER_PROJECT_ID`). Removing the label or closing the PR tears the
-  namespace down. Hosted AI is disabled because pull-request-built code must not
-  receive a reusable provider credential.
+  namespace down. Hosted AI runs in previews too (it is a requirement); the
+  workflow applies the provider Secret and sets `ai.existingSecret`. Provision a
+  separate, budget-capped `AI_API_KEY` in the `k8s-preview` environment so
+  pull-request-built code never holds the production credential.
 
 ### Required GitHub configuration
 
@@ -98,7 +100,7 @@ Kubernetes Secret before Helm runs, which keeps it out of Helm release history.
 | Variable (env `k8s-prod`)  | `AI_BASE_URL`, `AI_CHAT_MODEL`, `AI_EMBEDDING_MODEL` | Hosted provider endpoint and models; CI has course-gateway fallbacks. |
 | Secret (repo)              | `KUBECONFIG_B64`                                                                                 | base64 of `deploy/rbac/extract-kubeconfig.sh` output.                     |
 | Secret (env `k8s-prod`)    | `POSTGRES_PASSWORD`, `NEWS_POSTGRES_PASSWORD`, `AI_DB_PASSWORD`, `KEYCLOAK_ADMIN_PASSWORD`, `KEYCLOAK_DB_PASSWORD`, `AI_API_KEY`, `TWELVE_DATA_API_KEY` | `NEWS_POSTGRES_PASSWORD` / `AI_DB_PASSWORD` are the dedicated news/AI DB credentials (`AI_DB_PASSWORD` falls back to `POSTGRES_PASSWORD` when unset). `AI_API_KEY` authenticates the hosted OpenAI-compatible provider; `TWELVE_DATA_API_KEY` enables market data. |
-| Secret (env `k8s-preview`) | `POSTGRES_PASSWORD`, `NEWS_POSTGRES_PASSWORD`, `AI_DB_PASSWORD`, `KEYCLOAK_ADMIN_PASSWORD`, `TWELVE_DATA_API_KEY` | `dev-mem` Keycloak needs no DB password; hosted AI is disabled. |
+| Secret (env `k8s-preview`) | `POSTGRES_PASSWORD`, `NEWS_POSTGRES_PASSWORD`, `AI_DB_PASSWORD`, `KEYCLOAK_ADMIN_PASSWORD`, `AI_API_KEY`, `TWELVE_DATA_API_KEY` | `dev-mem` Keycloak needs no DB password. `AI_API_KEY` is required (the preview deploy hard-fails without it); use a separate, budget-capped key from the prod one. |
 
 The `k8s-prod` / `k8s-preview` GitHub Environments can be created with the
 `Bootstrap Environments` workflow (`workflow_dispatch`, takes the environment

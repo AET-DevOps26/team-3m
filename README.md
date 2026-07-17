@@ -236,8 +236,9 @@ Compose + Traefik), served at `https://azure.kontor.live` and documented in
 
 For a manual install, copy `deploy/helm/kontor/secrets.example.yaml` to `secrets.yaml`
 and fill in all `REPLACE_ME` values. Create the hosted-provider Secret out-of-band so
-the API key is not retained in Helm release history. The production overlay contains
-the course gateway URL and model defaults; change `ai.baseUrl`, `ai.chatModel`,
+the API key is not retained in Helm release history. The course gateway URL and model
+defaults live in `values.yaml` (and the deploy workflow's `vars.AI_* || fallback`
+expressions), not in `values-prod.yaml`; change `ai.baseUrl`, `ai.chatModel`,
 and `ai.embeddingModel` to use another OpenAI-compatible provider:
 
 ```sh
@@ -252,8 +253,9 @@ helm upgrade --install kontor ./deploy/helm/kontor \
   --set-string ai.existingSecret=kontor-ai-provider
 ```
 
-Hosted AI is deliberately disabled in PR previews so pull-request-built code
-never receives a reusable provider credential.
+PR previews run hosted AI too (it is a requirement). The `k8s-preview` GitHub
+environment supplies its own `AI_API_KEY`; use a separate, budget-capped key
+there so pull-request-built code never holds the production credential.
 
 ### Keycloak Login Theme
 

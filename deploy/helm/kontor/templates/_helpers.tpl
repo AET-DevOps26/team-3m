@@ -234,6 +234,133 @@ Usage: include "kontor.observability.backendEnv" (dict "root" . "serviceName" "k
 {{- end -}}
 
 {{/*
+Single-instance Postgres StatefulSet, shared by the core, AI, and Keycloak
+databases (all use the plain envFrom-secret startup). The news database has a
+password-rotation lifecycle of its own and keeps its own template.
+
+Usage: include "kontor.postgres.statefulset" (dict
+  "root" .                     -- chart root context
+  "fullname" "..."             -- resource + serviceName
+  "component" "postgres"       -- app.kubernetes.io/component
+  "secretName" "..."           -- Secret with POSTGRES_* env
+  "db" .Values.postgres        -- image / security / resources / persistence
+  "scheduling" .Values.postgres -- nodeSelector / tolerations / affinity
+)
+The caller owns the enable guard so each database's condition stays visible.
+*/}}
+{{- define "kontor.postgres.statefulset" -}}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .fullname }}
+  labels:
+    {{- include "kontor.labels" .root | nindent 4 }}
+    app.kubernetes.io/component: {{ .component }}
+spec:
+  serviceName: {{ .fullname }}
+  replicas: 1
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: {{ .root.Values.pvcRetentionWhenDeleted }}
+    whenScaled: Retain
+  selector:
+    matchLabels:
+      {{- include "kontor.selectorLabels" .root | nindent 6 }}
+      app.kubernetes.io/component: {{ .component }}
+  template:
+    metadata:
+      labels:
+        {{- include "kontor.labels" .root | nindent 8 }}
+        app.kubernetes.io/component: {{ .component }}
+    spec:
+      securityContext:
+        {{- toYaml .db.podSecurityContext | nindent 8 }}
+      containers:
+        - name: postgres
+          image: {{ include "kontor.image" (dict "root" .root "component" .db) | quote }}
+          imagePullPolicy: {{ include "kontor.imagePullPolicy" (dict "root" .root "component" .db) }}
+          securityContext:
+            {{- toYaml .db.containerSecurityContext | nindent 12 }}
+          ports:
+            - name: postgres
+              containerPort: 5432
+              protocol: TCP
+          envFrom:
+            - secretRef:
+                name: {{ .secretName }}
+          env:
+            # Use a subdir of the mounted PVC so initdb doesn't trip on lost+found.
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - exec pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" -h 127.0.0.1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - exec pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" -h 127.0.0.1
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
+          resources:
+            {{- toYaml .db.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            - name: run
+              mountPath: /var/run/postgresql
+            - name: tmp
+              mountPath: /tmp
+      {{- with .scheduling.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .scheduling.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .scheduling.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: run
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+        {{- if not .db.persistence.enabled }}
+        - name: data
+          emptyDir: {}
+        {{- end }}
+  {{- if .db.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          {{- include "kontor.selectorLabels" .root | nindent 10 }}
+          app.kubernetes.io/component: {{ .component }}
+      spec:
+        accessModes:
+          {{- toYaml .db.persistence.accessModes | nindent 10 }}
+        {{- with .db.persistence.storageClass }}
+        storageClassName: {{ . | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .db.persistence.size | quote }}
+  {{- end }}
+{{- end -}}
+
+{{/*
 Resolve the OIDC issuer URL. Prefer an explicit `oidc.issuerUrl`; otherwise, when
 this release deploys Keycloak, derive it from the first hostname + realm.
 */}}

@@ -3,6 +3,13 @@ x-keycloak-oidc-env: &keycloak-oidc-env
   KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/realms/kontor/protocol/openid-connect/certs"
   KEYCLOAK_AUDIENCE: "${KEYCLOAK_AUDIENCE:-kontor-api}"
 
+x-postgres-healthcheck: &postgres-healthcheck
+  test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+  interval: 10s
+  timeout: 3s
+  retries: 5
+  start_period: 10s
+
 services:
   db:
     image: pgvector/pgvector:pg18-trixie
@@ -14,12 +21,7 @@ services:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-      start_period: 10s
+    healthcheck: *postgres-healthcheck
 
   news-db:
     image: postgres:18-trixie
@@ -31,12 +33,7 @@ services:
       - "127.0.0.1:${NEWS_POSTGRES_PORT:-5434}:5432"
     volumes:
       - news_postgres_data:/var/lib/postgresql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-      start_period: 10s
+    healthcheck: *postgres-healthcheck
 
   keycloak-db:
     image: postgres:18-trixie
@@ -46,12 +43,7 @@ services:
       POSTGRES_PASSWORD: "${KEYCLOAK_POSTGRES_PASSWORD:-change-me-local}"
     volumes:
       - keycloak_postgres_data:/var/lib/postgresql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-      start_period: 10s
+    healthcheck: *postgres-healthcheck
 
   ai-db:
     image: pgvector/pgvector:pg18-trixie
@@ -63,12 +55,7 @@ services:
       - "${AI_POSTGRES_PORT:-5433}:5432"
     volumes:
       - ai_postgres_data:/var/lib/postgresql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-      start_period: 10s
+    healthcheck: *postgres-healthcheck
 
   keycloak:
     # Built from the vendored Keycloakify theme so the Kontor login theme is

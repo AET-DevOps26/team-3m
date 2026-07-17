@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from .config import Settings
 from .db import session_factory
 from .embeddings import EmbeddingProvider, embed_text, resolve_embedding_provider
+from .openai_client import MAX_RETRIES, REQUEST_TIMEOUT_SECONDS
 from .repository import save_news_article
 
 logger = logging.getLogger(__name__)
@@ -18,7 +19,9 @@ logger = logging.getLogger(__name__)
 MAX_NEWS_CHARS = 2000
 PREFETCH_COUNT = 10
 TRANSIENT_BACKOFF_SECONDS = 2.0
-EMBEDDING_TIMEOUT_SECONDS = 30.0
+# Outer bound must cover the client's full retry budget (timeout x attempts) plus a margin,
+# so a transiently slow provider retries instead of being cancelled and dead-lettered.
+EMBEDDING_TIMEOUT_SECONDS = REQUEST_TIMEOUT_SECONDS * (MAX_RETRIES + 1) + 15.0
 
 _CONTROL_CHARS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 _WHITESPACE = re.compile(r"\s+")

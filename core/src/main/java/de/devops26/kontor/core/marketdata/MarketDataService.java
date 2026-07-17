@@ -22,6 +22,7 @@ public class MarketDataService {
 
     private static final DateTimeFormatter INTRADAY_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final Pattern ISIN_PATTERN = Pattern.compile("[A-Z]{2}[A-Z0-9]{9}[0-9]");
+    private static final String PREFERRED_LISTING_COUNTRY = "United States";
 
     private final TwelveDataClient client;
     private final Map<String, String> tickerByIsin = new ConcurrentHashMap<>();
@@ -36,7 +37,7 @@ public class MarketDataService {
         }
         var payload = client.search(query.trim());
         var matches = payload.data().stream()
-                .filter(match -> match.symbol() != null && !match.symbol().isBlank())
+                .filter(MarketDataService::hasUsableSymbol)
                 .map(match -> new InstrumentSearchResult.Match(
                         match.symbol(),
                         match.instrumentName(),
@@ -88,11 +89,21 @@ public class MarketDataService {
     }
 
     private String searchTicker(String isin) {
-        return client.search(isin).data().stream()
-                .map(TwelveDataClient.SearchMatch::symbol)
-                .filter(candidate -> candidate != null && !candidate.isBlank())
+        var candidates = client.search(isin).data().stream()
+                .filter(MarketDataService::hasUsableSymbol)
+                .toList();
+        if (candidates.isEmpty()) {
+            throw new UnknownSymbolException(isin);
+        }
+        return candidates.stream()
+                .filter(match -> PREFERRED_LISTING_COUNTRY.equalsIgnoreCase(match.country()))
                 .findFirst()
-                .orElseThrow(() -> new UnknownSymbolException(isin));
+                .orElse(candidates.getFirst())
+                .symbol();
+    }
+
+    private static boolean hasUsableSymbol(TwelveDataClient.SearchMatch match) {
+        return match.symbol() != null && !match.symbol().isBlank();
     }
 
     private static OffsetDateTime parseTimestamp(String datetime) {

@@ -117,8 +117,8 @@ test("shows the market-data error fallback for an unresolvable holding", async (
   await page.getByRole("button", { name: APPLE_ROW }).click()
 
   const dialog = page.getByRole("dialog")
-  await expect(dialog.getByText("Could not load market data")).toBeVisible()
+  await expect(dialog.getByText("No market data available")).toBeVisible()
   await expect(
-    dialog.getByText("No instrument found for symbol 'US0378331005'"),
+    dialog.getByText("We don’t have price data for this instrument."),
   ).toBeVisible()
 })

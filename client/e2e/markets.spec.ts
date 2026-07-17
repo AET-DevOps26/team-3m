@@ -109,9 +109,9 @@ test("shows a not-found message for an unknown symbol", async ({ page }) => {
   await primeSession(page)
   await page.goto("/markets/NOPE")
 
-  await expect(page.getByText("Could not load market data")).toBeVisible()
+  await expect(page.getByText("No market data available")).toBeVisible()
   await expect(
-    page.getByText("No instrument found for symbol 'NOPE'"),
+    page.getByText("We don’t have price data for this instrument."),
   ).toBeVisible()
 })
 

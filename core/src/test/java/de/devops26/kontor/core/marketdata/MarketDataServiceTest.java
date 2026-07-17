@@ -53,7 +53,8 @@ class MarketDataServiceTest {
     void search_validQuery_mapsMatches() {
         when(client.search("apple"))
                 .thenReturn(new SearchPayload(
-                        List.of(new SearchMatch("AAPL", "Apple Inc.", "NASDAQ", "Common Stock", "USD")),
+                        List.of(new SearchMatch(
+                                "AAPL", "Apple Inc.", "NASDAQ", "Common Stock", "USD", "United States")),
                         "ok",
                         null,
                         null));
@@ -75,9 +76,10 @@ class MarketDataServiceTest {
         when(client.search("apple"))
                 .thenReturn(new SearchPayload(
                         List.of(
-                                new SearchMatch(null, "Ghost", "X", "EQUITY", "USD"),
-                                new SearchMatch(" ", "Blank", "X", "EQUITY", "USD"),
-                                new SearchMatch("AAPL", "Apple Inc.", "NASDAQ", "Common Stock", "USD")),
+                                new SearchMatch(null, "Ghost", "X", "EQUITY", "USD", "United States"),
+                                new SearchMatch(" ", "Blank", "X", "EQUITY", "USD", "United States"),
+                                new SearchMatch(
+                                        "AAPL", "Apple Inc.", "NASDAQ", "Common Stock", "USD", "United States")),
                         "ok",
                         null,
                         null));
@@ -204,7 +206,8 @@ class MarketDataServiceTest {
     void getQuote_isinSymbol_resolvesToTicker() {
         when(client.search("US0378331005"))
                 .thenReturn(new SearchPayload(
-                        List.of(new SearchMatch("AAPL", "Apple Inc.", "NASDAQ", "Common Stock", "USD")),
+                        List.of(new SearchMatch(
+                                "AAPL", "Apple Inc.", "NASDAQ", "Common Stock", "USD", "United States")),
                         "ok",
                         null,
                         null));
@@ -231,7 +234,8 @@ class MarketDataServiceTest {
     void getHistory_isinSymbol_resolvesToTicker() {
         when(client.search("IE00B5BMR087"))
                 .thenReturn(new SearchPayload(
-                        List.of(new SearchMatch("CSPX", "iShares Core S&P 500 UCITS ETF", "LSE", "ETF", "USD")),
+                        List.of(new SearchMatch(
+                                "CSPX", "iShares Core S&P 500 UCITS ETF", "LSE", "ETF", "USD", "United Kingdom")),
                         "ok",
                         null,
                         null));
@@ -250,6 +254,43 @@ class MarketDataServiceTest {
     }
 
     @Test
+    @DisplayName("ISIN resolution prefers a US listing over a non-US first match")
+    void getQuote_isinWithNonUsFirstMatch_prefersUsListing() {
+        when(client.search("IE00B5BMR087"))
+                .thenReturn(new SearchPayload(
+                        List.of(
+                                new SearchMatch(
+                                        "IS.FF702", "iShares Core S&P 500 UCITS ETF", "TASE", "ETF", "ILA", "Israel"),
+                                new SearchMatch(
+                                        "CSTNL",
+                                        "iShares Core S&P 500 UCITS ETF",
+                                        "OTC",
+                                        "ETF",
+                                        "USD",
+                                        "United States")),
+                        "ok",
+                        null,
+                        null));
+        when(client.quote("CSTNL"))
+                .thenReturn(new QuotePayload(
+                        "CSTNL",
+                        "iShares Core S&P 500 UCITS ETF",
+                        "USD",
+                        new BigDecimal("812.56"),
+                        null,
+                        null,
+                        "ok",
+                        null,
+                        null));
+
+        var result = service.getQuote("IE00B5BMR087");
+
+        assertThat(result.symbol()).isEqualTo("CSTNL");
+        verify(client).quote("CSTNL");
+        verify(client, never()).quote("IS.FF702");
+    }
+
+    @Test
     @DisplayName("an ISIN with no search matches raises UnknownSymbolException without quoting")
     void getQuote_isinWithoutMatch_throwsUnknownSymbol() {
         when(client.search("US0378331005")).thenReturn(new SearchPayload(List.of(), "ok", null, null));
@@ -265,7 +306,8 @@ class MarketDataServiceTest {
     void resolveSymbol_repeatedIsin_searchesOnce() {
         when(client.search("US0378331005"))
                 .thenReturn(new SearchPayload(
-                        List.of(new SearchMatch("AAPL", "Apple Inc.", "NASDAQ", "Common Stock", "USD")),
+                        List.of(new SearchMatch(
+                                "AAPL", "Apple Inc.", "NASDAQ", "Common Stock", "USD", "United States")),
                         "ok",
                         null,
                         null));

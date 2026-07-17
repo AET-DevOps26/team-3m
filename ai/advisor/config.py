@@ -38,6 +38,10 @@ class Settings(BaseSettings):
             raise ValueError("AI_BASE_URL must be an absolute HTTPS URL when AI_API_KEY is set")
         if parsed.username or parsed.password:
             raise ValueError("AI_BASE_URL must not contain credentials")
+        # Deployed egress (Helm NetworkPolicy) only opens TCP 443, so a non-443 URL would
+        # pass config and then hang at the network layer. Fail fast instead.
+        if parsed.port is not None and parsed.port != 443:
+            raise ValueError("AI_BASE_URL must use port 443 when AI_API_KEY is set")
         return self
 
     @property

@@ -31,6 +31,8 @@ def test_ai_api_key_defaults_to_empty(monkeypatch: pytest.MonkeyPatch) -> None:
         "http://provider.test/v1",
         "provider.test/v1",
         "https://user:password@provider.test/v1",
+        "https://provider.test:8443/v1",
+        "https://provider.test:80/v1",
     ],
 )
 def test_hosted_provider_requires_safe_https_url(base_url: str) -> None:
@@ -38,9 +40,16 @@ def test_hosted_provider_requires_safe_https_url(base_url: str) -> None:
         Settings(ai_api_key="hosted-test-key", ai_base_url=base_url)
 
 
-def test_hosted_provider_accepts_absolute_https_url() -> None:
-    settings = Settings(ai_api_key="hosted-test-key", ai_base_url="https://provider.test/v1")
-    assert settings.ai_base_url == "https://provider.test/v1"
+@pytest.mark.parametrize(
+    "base_url",
+    [
+        "https://provider.test/v1",
+        "https://provider.test:443/v1",
+    ],
+)
+def test_hosted_provider_accepts_absolute_https_url(base_url: str) -> None:
+    settings = Settings(ai_api_key="hosted-test-key", ai_base_url=base_url)
+    assert settings.ai_base_url == base_url
 
 
 def test_news_consumer_defaults_match_aggregator_contract() -> None:

@@ -30,7 +30,7 @@
       "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
       "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 500 }, { "color": "red", "value": 5000 } ] } }, "overrides": [] },
       "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
-      "targets": [ { "refId": "A", "expr": "sum(rabbitmq_detailed_queue_messages_ready{deployment_environment=~\"$deployment_environment\"})" } ]
+      "targets": [ { "refId": "A", "expr": "sum(rabbitmq_detailed_queue_messages_ready{deployment_environment=~\"$deployment_environment\", queue=\"news.articles\"})" } ]
     },
     {
       "id": 2, "title": "Messages unacked", "type": "stat",
@@ -38,7 +38,7 @@
       "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
       "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 50 } ] } }, "overrides": [] },
       "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
-      "targets": [ { "refId": "A", "expr": "sum(rabbitmq_detailed_queue_messages_unacked{deployment_environment=~\"$deployment_environment\"})" } ]
+      "targets": [ { "refId": "A", "expr": "sum(rabbitmq_detailed_queue_messages_unacked{deployment_environment=~\"$deployment_environment\", queue=\"news.articles\"})" } ]
     },
     {
       "id": 3, "title": "Consumers", "type": "stat",
@@ -47,7 +47,7 @@
       "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
       "fieldConfig": { "defaults": { "unit": "short", "noValue": "0", "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] } }, "overrides": [] },
       "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
-      "targets": [ { "refId": "A", "expr": "sum(rabbitmq_detailed_queue_consumers{deployment_environment=~\"$deployment_environment\"})" } ]
+      "targets": [ { "refId": "A", "expr": "sum(rabbitmq_detailed_queue_consumers{deployment_environment=~\"$deployment_environment\", queue=\"news.articles\"})" } ]
     },
     {
       "id": 4, "title": "Publish rate", "type": "stat",

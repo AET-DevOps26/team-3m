@@ -157,7 +157,7 @@ spec:
       ports:
         - protocol: TCP
           port: 5672
-    {{- if .Values.observability.enabled }}
+    {{- if and .Values.observability.enabled .Values.rabbitmq.metrics.enabled }}
     - from:
         - namespaceSelector:
             matchLabels:

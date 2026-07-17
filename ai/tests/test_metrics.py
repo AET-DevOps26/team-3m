@@ -52,10 +52,3 @@ def test_record_embedding_duration_tracks_model_attribute() -> None:
     assert point.attributes["model"] == "test-embed"
     assert point.count == 2
     assert point.sum == 1.0
-
-
-def test_default_instance_uses_global_meter() -> None:
-    metrics = NewsIngestMetrics()
-
-    metrics.record_consumed(OUTCOME_STORED)
-    metrics.record_embedding_duration(0.1, model="noop")

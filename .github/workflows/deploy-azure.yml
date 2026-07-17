@@ -83,8 +83,8 @@ jobs:
           if [[ "$EMBEDDING_STATUS" != 2* ]] \
             || ! jq -e '.data[0].embedding | length > 0' "$EMBEDDING_RESPONSE" >/dev/null; then
             echo "Embedding model smoke test failed with HTTP $EMBEDDING_STATUS." >&2
-            jq -r '.error.message // "Provider returned an invalid embedding response."' \
-              "$EMBEDDING_RESPONSE" >&2
+            { jq -r '.error.message // "Provider returned an invalid embedding response."' \
+              "$EMBEDDING_RESPONSE" 2>/dev/null || cat "$EMBEDDING_RESPONSE"; } >&2
             exit 1
           fi
 
@@ -112,8 +112,8 @@ jobs:
             || ! jq -e '.choices[0].message.content | fromjson | type == "object"' \
               "$CHAT_RESPONSE" >/dev/null; then
             echo "Chat model smoke test failed with HTTP $CHAT_STATUS." >&2
-            jq -r '.error.message // "Provider returned an invalid chat response."' \
-              "$CHAT_RESPONSE" >&2
+            { jq -r '.error.message // "Provider returned an invalid chat response."' \
+              "$CHAT_RESPONSE" 2>/dev/null || cat "$CHAT_RESPONSE"; } >&2
             exit 1
           fi
 
@@ -233,7 +233,7 @@ jobs:
               systemctl restart kontor-block-container-imds.service
             "
 
-      - name: Grant VM temporary access to hosted AI key
+      - name: Grant VM temporary access to app environment secret
         run: |
           az keyvault set-policy \
             --name "$APP_KEY_VAULT_NAME" \
@@ -281,7 +281,7 @@ jobs:
               unset APP_ENV TOKEN RESPONSE
             "
 
-      - name: Revoke VM access to hosted AI key
+      - name: Revoke VM access to app environment secret
         if: always() && env.APP_KEY_VAULT_NAME != '' && env.VM_PRINCIPAL_ID != ''
         run: |
           set -euo pipefail

@@ -53,7 +53,7 @@ This means: no static-IP costs (the Standard-SKU public IP is the cheapest
 option after the Basic SKU retirement on 2025-09-30), no GoDaddy API
 integration, and no DNS update when the VM is recreated.
 
-The Azure FQDN, current public IP, and AI Key Vault name are exposed as
+The Azure FQDN, current public IP, and app Key Vault name are exposed as
 Terraform outputs (`domain`, `public_ip_address`, and `app_key_vault_name`) and
 used by the deploy workflow.
 

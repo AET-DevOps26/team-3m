@@ -25,7 +25,7 @@ output "app_url" {
 
 output "app_key_vault_name" {
   description = "Key Vault used to deliver the application runtime environment to the VM."
-  value       = azurerm_key_vault.ai.name
+  value       = azurerm_key_vault.app.name
 }
 
 output "vm_principal_id" {

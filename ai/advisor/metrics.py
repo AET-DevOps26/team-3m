@@ -4,6 +4,10 @@ from opentelemetry.metrics import Meter, get_meter
 
 CONSUMED_METRIC = "kontor.news.messages.consumed"
 EMBEDDING_DURATION_METRIC = "kontor.news.embedding.duration"
+# Durations are recorded in seconds; without this advisory the SDK applies its
+# millisecond-tuned default buckets and every sample lands below le=5.0,
+# making histogram_quantile() useless for sub-second latencies.
+EMBEDDING_DURATION_BUCKETS = [0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0]
 
 OUTCOME_STORED = "stored"
 OUTCOME_INVALID = "invalid"
@@ -25,6 +29,7 @@ class NewsIngestMetrics:
             EMBEDDING_DURATION_METRIC,
             unit="s",
             description="Duration of embedding-provider calls during news ingest",
+            explicit_bucket_boundaries_advisory=EMBEDDING_DURATION_BUCKETS,
         )
 
     def record_consumed(self, outcome: str) -> None:

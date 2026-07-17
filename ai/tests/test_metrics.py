@@ -3,6 +3,7 @@ from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 
 from advisor.metrics import (
     CONSUMED_METRIC,
+    EMBEDDING_DURATION_BUCKETS,
     EMBEDDING_DURATION_METRIC,
     OUTCOME_RETRIED,
     OUTCOME_STORED,
@@ -52,3 +53,12 @@ def test_record_embedding_duration_tracks_model_attribute() -> None:
     assert point.attributes["model"] == "test-embed"
     assert point.count == 2
     assert point.sum == 1.0
+
+
+def test_embedding_duration_uses_seconds_scale_buckets() -> None:
+    metrics, reader = _build()
+
+    metrics.record_embedding_duration(0.3, model="test-embed")
+
+    point = _points_by_name(reader, EMBEDDING_DURATION_METRIC)[0]
+    assert list(point.explicit_bounds) == EMBEDDING_DURATION_BUCKETS

@@ -227,12 +227,9 @@ ai:
   service:
     type: ClusterIP
     port: 8000
-  # -- Enable the hosted OpenAI-compatible provider. PR previews disable this
-  # because their images and manifests are built from pull-request code.
+  # -- Enable the hosted OpenAI-compatible provider. On by default in every
+  # environment, including PR previews (which supply a separate budget-capped key).
   hostedEnabled: true
-  # -- Allow HTTPS egress to an external AI provider even when hostedEnabled=false
-  # (e.g. a credentialless PR-preview endpoint). Prod relies on hostedEnabled.
-  externalProviderEgress: false
   # -- Hosted provider base URL and model IDs. Defaults target the Logos course
   # gateway (shared by all k8s environments); CI variables or the Azure compose
   # can point the same service at OpenAI or another compatible API.

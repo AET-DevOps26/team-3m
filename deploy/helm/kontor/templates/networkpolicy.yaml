@@ -403,7 +403,7 @@ spec:
         - protocol: TCP
           port: 4318
     {{- end }}
-    {{- if or .Values.ai.hostedEnabled .Values.ai.externalProviderEgress (not .Values.keycloak.deploy) }}
+    {{- if or .Values.ai.hostedEnabled (not .Values.keycloak.deploy) }}
     # Hosted provider or external OIDC over HTTPS. Kubernetes NetworkPolicy is
     # L3/L4-only, so private, link-local, cluster, and reserved IPv4 ranges are
     # excluded while the configured HTTPS hostname is validated by the app.

@@ -52,7 +52,8 @@ class MarketDataIntegrationTest {
     void search_validQuery_returnsMatches() throws Exception {
         when(twelveDataClient.search("apple"))
                 .thenReturn(new SearchPayload(
-                        List.of(new SearchMatch("AAPL", "Apple Inc.", "NASDAQ", "Common Stock", "USD")),
+                        List.of(new SearchMatch(
+                                "AAPL", "Apple Inc.", "NASDAQ", "Common Stock", "USD", "United States")),
                         "ok",
                         null,
                         null));

@@ -52,3 +52,12 @@ def test_record_embedding_duration_tracks_model_attribute() -> None:
     assert point.attributes["model"] == "test-embed"
     assert point.count == 2
     assert point.sum == 1.0
+
+
+def test_embedding_duration_uses_seconds_scale_buckets() -> None:
+    metrics, reader = _build()
+
+    metrics.record_embedding_duration(0.3, model="test-embed")
+
+    point = _points_by_name(reader, EMBEDDING_DURATION_METRIC)[0]
+    assert list(point.explicit_bounds) == [0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0]

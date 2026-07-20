@@ -83,17 +83,17 @@ class FinancialTransactionServiceTest {
     @Test
     @DisplayName("importCsv parses the repository example resource without validation errors")
     void importCsv_repoExampleResource_parsesAllRows() throws IOException {
-        when(repository.upsertAll(anyList(), any(UUID.class))).thenReturn(52);
+        when(repository.upsertAll(anyList(), any(UUID.class))).thenReturn(53);
 
         var exampleCsv = Path.of("..", "resources", "example-data", "transaction-csv.example.csv");
         try (var input = Files.newInputStream(exampleCsv)) {
             var result = service.importCsv(input, USER_ID);
-            assertThat(result.importedCount()).isEqualTo(52);
+            assertThat(result.importedCount()).isEqualTo(53);
         }
 
         verify(repository).upsertAll(rowsCaptor.capture(), eq(USER_ID));
         var rows = rowsCaptor.getValue();
-        assertThat(rows).hasSize(52);
+        assertThat(rows).hasSize(53);
         assertThat(rows).allSatisfy(row -> assertThat(row.amount()).isNotNull());
     }
 

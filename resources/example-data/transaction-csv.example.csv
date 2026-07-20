@@ -1,4 +1,5 @@
 datetime,date,account_type,category,type,asset_class,name,symbol,shares,price,amount,fee,tax,currency,original_amount,original_currency,fx_rate,description,transaction_id,counterparty_name,counterparty_iban,payment_reference,mcc_code
+2026-01-31T09:00:00.000000Z,2026-01-31,DEFAULT,CASH,CUSTOMER_INBOUND,,Opening balance,,,,15000.0,,,EUR,,,,"Opening balance",00000000-0000-4001-8000-000000000001,,,,
 2026-02-01T09:30:00.000000Z,2026-02-01,DEFAULT,CASH,CUSTOMER_INBOUND,,Jane Doe,,,,3200.0,,,EUR,,,,"Monthly salary February 2026",00000000-0000-4002-8000-000000000001,Jane Doe,DE89370400440532013000,,
 2026-02-01T10:00:00.000000Z,2026-02-01,DEFAULT,CASH,CUSTOMER_OUTBOUND,,Hausverwaltung Berlin Mitte,,,,-1200.0,,,EUR,,,,"Rent February 2026",00000000-0000-4002-8000-000000000002,Hausverwaltung Berlin Mitte,DE02120300000000202051,Miete 02/2026,
 2026-02-01T11:00:00.000000Z,2026-02-01,DEFAULT,CASH,CUSTOMER_OUTBOUND,,FitnessFi Sport GmbH,,,,-29.0,,,EUR,,,,"Monthly gym membership",00000000-0000-4002-8000-000000000003,FitnessFi Sport GmbH,DE56200400600534561800,Mitgliedschaft 02/2026,7997

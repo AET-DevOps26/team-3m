@@ -65,7 +65,7 @@ services:
   tempo:
     # Must stay on the same major as images.tempo in deploy/helm/observability/values.yaml:
     # files/tempo/tempo.yaml is shared and uses the Tempo 2.x config format.
-    image: grafana/tempo:2.10.7
+    image: grafana/tempo:3.0.2
     command: ["-config.file=/etc/tempo/tempo.yaml", "-config.expand-env=true"]
     environment:
       S3_ACCESS_KEY: observability

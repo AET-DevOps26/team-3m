@@ -8,7 +8,7 @@ x-otel-backend-env: &otel-backend-env
 
 services:
   seaweedfs:
-    image: chrislusf/seaweedfs:4.39
+    image: chrislusf/seaweedfs:4.44
     command:
       - server
       - -dir=/data
@@ -29,7 +29,7 @@ services:
       start_period: 10s
 
   seaweedfs-init:
-    image: chrislusf/seaweedfs:4.39
+    image: chrislusf/seaweedfs:4.44
     depends_on:
       seaweedfs:
         condition: service_healthy
@@ -46,7 +46,7 @@ services:
     restart: "no"
 
   loki:
-    image: grafana/loki:3.7.3
+    image: grafana/loki:3.7.7
     command: ["-config.file=/etc/loki/loki.yaml", "-config.expand-env=true"]
     environment:
       S3_ACCESS_KEY: observability
@@ -65,7 +65,7 @@ services:
   tempo:
     # Must stay on the same major as images.tempo in deploy/helm/observability/values.yaml:
     # files/tempo/tempo.yaml is shared and uses the Tempo 2.x config format.
-    image: grafana/tempo:2.10.7
+    image: grafana/tempo:2.10.8
     command: ["-config.file=/etc/tempo/tempo.yaml", "-config.expand-env=true"]
     environment:
       S3_ACCESS_KEY: observability
@@ -82,7 +82,7 @@ services:
     # checks can never pass; dependents wait on service_started and retry.
 
   prometheus:
-    image: prom/prometheus:v3.13.1
+    image: prom/prometheus:v3.14.0
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.path=/prometheus
@@ -103,7 +103,7 @@ services:
       start_period: 15s
 
   alloy:
-    image: grafana/alloy:v1.17.1
+    image: grafana/alloy:v1.19.2
     command:
       - run
       - --server.http.listen-addr=0.0.0.0:12345
@@ -142,7 +142,7 @@ services:
         condition: service_healthy
 
   grafana:
-    image: grafana/grafana:13.1.0
+    image: grafana/grafana:13.2.0
     environment:
       GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD:-admin}"
       GF_USERS_DEFAULT_THEME: light

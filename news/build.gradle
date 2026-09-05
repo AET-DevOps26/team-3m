@@ -1,11 +1,11 @@
 plugins {
 	id 'java'
 	id 'checkstyle'
-	id 'org.springframework.boot' version '4.1.0'
+	id 'org.springframework.boot' version '4.1.1'
 	id 'io.spring.dependency-management' version '1.1.7'
-	id 'com.diffplug.spotless' version '8.8.0'
-	id 'net.ltgt.errorprone' version '5.1.0'
-	id 'org.jooq.jooq-codegen-gradle' version '3.21.6'
+	id 'com.diffplug.spotless' version '8.10.1'
+	id 'net.ltgt.errorprone' version '5.1.1'
+	id 'org.jooq.jooq-codegen-gradle' version '3.21.7'
 }
 
 group = 'de.devops26.kontor'
@@ -37,11 +37,11 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-amqp'
 	implementation 'org.flywaydb:flyway-database-postgresql'
 	implementation 'com.rometools:rome:2.1.0'
-	implementation 'org.jsoup:jsoup:1.22.2'
+	implementation 'org.jsoup:jsoup:1.23.2'
 	implementation 'org.apache.httpcomponents.client5:httpclient5'
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.0'
 	runtimeOnly 'org.postgresql:postgresql'
-	jooqCodegen 'org.jooq:jooq-meta-extensions:3.21.6'
+	jooqCodegen 'org.jooq:jooq-meta-extensions:3.21.7'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
@@ -123,7 +123,7 @@ spotless {
 }
 
 checkstyle {
-	toolVersion = '13.7.0'
+	toolVersion = '13.11.0'
 	configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
 	maxWarnings = 0
 }

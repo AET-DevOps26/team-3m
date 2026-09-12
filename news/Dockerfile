@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM eclipse-temurin:25.0.3_9-jdk-alpine AS build
+FROM eclipse-temurin:25.0.4_7-jdk-alpine AS build
 
 WORKDIR /workspace
 
@@ -12,7 +12,7 @@ RUN chmod +x gradlew && ./gradlew --no-daemon dependencies
 COPY . .
 RUN ./gradlew --no-daemon bootJar
 
-FROM eclipse-temurin:25.0.3_9-jre-alpine
+FROM eclipse-temurin:25.0.4_7-jre-alpine
 
 WORKDIR /app
 

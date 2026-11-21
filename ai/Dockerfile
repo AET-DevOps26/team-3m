@@ -8,7 +8,7 @@ RUN uv sync --frozen --no-dev --no-install-project
 COPY advisor/ ./advisor/
 RUN uv sync --frozen --no-dev
 
-FROM python:3.14-alpine
+FROM python:3.15-alpine
 
 WORKDIR /app
 

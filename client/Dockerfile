@@ -11,7 +11,7 @@ COPY . .
 RUN npx vite-envs update-types
 RUN npm run build
 
-FROM nginxinc/nginx-unprivileged:1.29-alpine
+FROM nginxinc/nginx-unprivileged:1.31-alpine
 
 USER root
 WORKDIR /usr/share/nginx/html
